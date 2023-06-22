@@ -31,7 +31,7 @@ packages, as these are updated on a regular basis.
 
 ```bash
 wget -q -O - \
-  https://github.com/siemens/ghostwire/raw/master/deployments/wget/docker-compose.yaml \
+  https://github.com/siemens/ghostwire/raw/main/deployments/wget/docker-compose.yaml \
   | docker compose -f - up
 ```
 
