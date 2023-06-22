@@ -13,7 +13,7 @@ NERDCTL_VERSION=v1.4.0
 WGET_PREX="/tmp/nerdctl-and-friends"
 
 BINDIR=${BINDIR:-/usr/local/bin}
-CNIBINDIR=${CNIBINDIR:-/opt/cni/bin}
+CNIBINDIR=${CNIBINDIR:-/usr/lib/cni}
 
 ARCH=$(dpkg --print-architecture)
 echo "downloading tools for architecture ${ARCH}"
