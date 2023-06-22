@@ -69,7 +69,7 @@ jobs:
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
-          build-args: WSDISKPATHS=./gostwire
+          build-args: WSDISKPATHS=./ghostwire
           build-contexts: |
             webappsrc=./webui
             ${{ env.BUILDCONTEXTS }}

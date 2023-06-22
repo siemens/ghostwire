@@ -28,6 +28,9 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3
 
+      - name: Set up nerdctl and CNI plugins
+        run: ./scripts/setup-nerdctl-and-friends.sh
+
       - name: Test build of Go packages
         run: |
           go test -v -p 1 -tags=matchers -exec sudo ./...
