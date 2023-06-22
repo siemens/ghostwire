@@ -1,6 +1,6 @@
 # requires docker compose plugin (=v2)
 #
-# wget -q -O - https://github.com/siemens/ghostwire/raw/master/deployments/wget/docker-compose.yaml | docker compose -f - up
+# wget -q -O - https://github.com/siemens/ghostwire/raw/main/deployments/wget/docker-compose.yaml | docker compose -f - up
 name: lxkns
 services:
     gostwire:

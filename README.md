@@ -30,7 +30,7 @@ users it is strongly recommended to install docker-ce instead of docker.io
 packages, as these are updated on a regular basis.
 
 ```bash
-wget -q -O - \
+wget -q --no-cache -O - \
   https://github.com/siemens/ghostwire/raw/main/deployments/wget/docker-compose.yaml \
   | docker compose -f - up
 ```
