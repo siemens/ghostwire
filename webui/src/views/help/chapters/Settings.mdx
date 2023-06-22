@@ -1,0 +1,67 @@
+import SettingsIcon from '@mui/icons-material/Settings'
+
+# <SettingsIcon className="icon"/> Settings
+
+&#x200b;<Brand/>'s [settings](settings) apply to only the domain from which you loaded
+the <Brand/> user interface. This allows you to have different settings for
+different devices, to tune the display to your specific needs per individual
+device.
+
+## Appearance
+
+Choose between the **light** or **dark** theme. In some environments, the **user
+preference** choice will pick up the environment preference for either a light
+or dark theme. However, not all environments or browsers support this automatic
+detection at this time.
+
+## Display Filters Layer 2/3
+
+**Show IP address families** defaults to showing only IPv4 addresses and
+routes. Other options are showing both IP6 and IPv4 addresses, as well as only
+IPv6 addresses.
+
+**Show network namespaces** (virtual IP stacks) even if they **only contain a
+single "lo"** (loopback) network interface, but no other network interface.
+Normally, you won't want to see them, as these are network-wise isolated
+network namespaces, so this setting defaults to "off".
+
+**Show lo network interfaces** defaults to "off", hiding the loopback network
+interfaces in all views.
+
+**Show MAC layer addresses of network interfaces** also defaults to "off", not
+showing any MAC layer addresses. Please note that `00:00:00:00:00:00` MACs will
+*always be hidden* in order to reduce UI clutter.
+
+## Containee Details
+
+**Show "sandbox" containers** defaults to "off", hiding the so-called "sandbox"
+containers that are part of pods. These sandbox containers are automatically
+created by a container engine or orchestration system in order to create a
+common network namespace shared by all user containers of the same pod. Please
+do not confuse sandbox containers with the user's (application developer's)
+containers, the sandboxes are automatically managed by the container engine or
+orchestration system, but never by users or developers.
+
+**Show namespace identifiers** displays the Linux kernel-level namespace
+identifiers for network and PID namespaces. Technically, these namespace
+identifiers are inode numbers on the special "nsfs" filesystem. Please note that
+&#x200b;<Brand/> follows established Linux kernel practice and thus does *not
+show* the nsfs device number(s).
+
+## Detail Sections Default Expansion
+
+Controls when to expand or collapse the individual sections ("containees",
+"transport", "routes", and "network interfaces") of a network namespace detail
+card, based on the amount of items in a section. It is possible to automatically
+collapse huge sections, while keeping small sections expanded for quickly
+picking up the information displayed.
+
+For each section, you can choose between:
+
+- always collapsed, in case you don't want to see the details until you expand
+  them yourself.
+- always expanded, if you're always interested in them, regardless of how large
+  that section might get.
+- expand only up to a certain limit of items, above that threshold collapse the
+  section instead. This is most useful for the transport section, which can get
+  quite huge for the initial network namespace in busy hosts.

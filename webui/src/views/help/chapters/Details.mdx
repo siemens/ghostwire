@@ -1,0 +1,153 @@
+import { Box } from "@mui/material"
+import ExpandLess from '@mui/icons-material/ExpandLess'
+import ExpandMore from '@mui/icons-material/ExpandMore'
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import NetnsViewIcon from "icons/views/Details"
+import FullscreenIcon from "@mui/icons-material/Fullscreen"
+import ScreenshotIcon from 'icons/Screenshot'
+import { NetnsDetailCard } from "components/netnsdetailcard"
+import {
+  standaloneBox,
+  containerBox,
+  containerBoxProcess,
+  boundBox,
+  veth2Nif,
+} from "views/help/mockdata"
+import { initNetns, morbidNetns as morbid } from "views/help/mockdata"
+import JSBI from "jsbi"
+export const cbp = {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}
+export const morbidNetns = {
+  ...morbid,
+  containers: [{
+    ...containerBox,
+    ealdorman: cbp,
+    leaders: [cbp],
+  }]
+}
+
+# <NetnsViewIcon className="icon"/> Details View
+
+> &#32;<BookmarkBorderIcon className="icon"/> **Pro Tip:** you can bookmark all
+  views in your browser, especially when "zooming in" on a particular container
+  or process.
+
+> **Pro Tip:** you can easily create a complete screenshot of the details by
+  simply clicking on the screenshot <ScreenshotIcon className="icon"/> button in
+  the application bar. This allows downloading the details screenshot in PNG
+  image format, in user-selectable image density. Please note that the
+  screenshot button <ScreenshotIcon className="icon"/> only appears after the
+  details have been discovered successfully for the first time.
+
+The details view shows the discovered (virtual) IP stacks with lots
+communication details, but without any graphical wiring. Instead, network
+interfaces related to other network interfaces will show these "relatives" next
+to them.
+
+<Box m={2}>
+  <NetnsDetailCard netns={morbidNetns} />
+</Box>
+
+The detail information is grouped into five sections. Each section can be
+&#32;<ExpandMore className="icon" /> expanded and &#32;<ExpandLess
+className="icon" /> collapsed by clicking on the arrow icon in from of the
+section title. Sections can be individually configured in the
+[settings](/settings) to be either always collapsed or expanded, or to be
+expanded only up to a specific limit of items. The latter is especially useful
+for the transport section which can get really huge for the initial IP stack on
+a busy Linux host.
+
+##### Section "Containees"
+
+Lists one or more ["containees"](containees) using this (virtual) IP stack,
+among other things details about:
+
+- DNS configuration information read from a container's `/etc/hostname` (*as
+  opposed to the UTS hostname*), `/etc/hosts` (*name-address mappings*), and
+  `/etc/resolv.conf` (*DNS server IP addresses*, *domain name search list*).
+
+- the UTS hostname as returned by the [`gethostname(3)`
+  syscall](https://www.man7.org/linux/man-pages/man2/gethostname.2.html).
+
+- for containers: the list of labels (name-value pairs).
+
+- the Linux kernel-level PID and network namespace identifiers, when enabled in
+  [settings](/settings) (defaults to "off").
+
+- the "[bounding
+  capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html)"
+  limits the capabilities any process in this container can gain at most.
+  Capabilities that aren't in Docker's set of container default capabilities are
+  highlighted, such as `CAP_SYS_ADMIN` in the example above.
+
+##### Section "Neighborhood Services"
+
+This section appears only when a Docker container is attached to at least one
+non-default ("custom") bridge network. Otherwise, this section is hidden.
+
+Docker provides purely host-internal DNS names of services and their containers
+that are addressable from at least one of the Docker user-defined networks the
+currently shown container is attached to. This section thus depends on which
+container is being inspected, and the networks this container is attached to in
+particular.
+
+The left column shows the DNS names of a specific service, if defined. Please
+note that "stand-alone" containers created outside Docker composer are never
+considered to be services and the left column will be blank for them.
+
+The middle column shows the individual container or containers belonging to a
+particular service.
+
+The right column finally shows the DNS names for individual containers, either
+as part of a service or for a stand-alone container.
+
+##### Section "Port Forwarding"
+
+This section lists the transport-layer ports that are being forwarded, such as
+host ports getting forwarded to service containers. Where possible, this list
+does not only shows the addresses and ports to which traffic is being forwarded,
+but also the containees that are serving this traffic.
+
+Port forwarding information is gathered from these two places:
+
+- netfilter tables (including "legacy" iptables),
+
+- Docker proxy processes that forward traffic in user space,
+
+Please note that Docker containers that are connected to custom Docker networks
+(other than the default network) will show two forwarded ports on IP address
+`127.0.0.1` and port 53. These belong to Docker's embedded DNS server.
+
+##### Section "Transport"
+
+Shows the active and listening transport-layer communication of the processes
+using this particular (virtual) IP stack.
+
+> **Note**: <Brand/> has a truly unique feature in that it makes you clearly
+  aware of IPv6 sockets **also handling "mapped" IPv4 traffic** when either
+  bound to the *unspecified* `::` IPv6 address or to an IPv4-mapped IPv6 address
+  from the `::ffff:0.0.0.0/96` range. In these situations, an **"IPv6"**
+  indication will be shown in the "Socket" column. See also [RFC 4291, section
+  2.5.5.2](https://tools.ietf.org/html/rfc4291#section-2.5.5.2) for further
+  information on IPv4-mapped IPv6 addresses.
+
+> **Note**: a process may have listening and acitive transport-layer
+  communication *in more than one* IP stack simultaneously, despite the
+  restriction that any process can be attached to only exactly one (virtual) IP
+  stack at any point in time. This is possible, as processes can create sockets
+  in one network namespace and then switch into a different network namespace. A
+  common example are the Docker daemon `dockerd` process automatically opening a
+  UDP as well as a TCP endpoint bound to the IPv4 address `127.0.0.11` in
+  containers for handling container-local DNS server communication.
+
+##### Section "Routing"
+
+This section show the routing information, such as destination address blocks
+and even single addresses. For each route, additionally the outgoing network
+interface taken is shown, if any.
+
+##### Section "Network Interfaces"
+
+Network interfaces, including any _related_ network interfaces, such as in case
+of VETH peer-to-peer "wires", MACVLAN master-slave relations, et cetera. Network
+address information is shown in this section, as opposed to routing information
+that is per network stack, and not per network interface.

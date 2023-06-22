@@ -1,0 +1,101 @@
+import MenuIcon from '@mui/icons-material/Menu'
+import WiringViewIcon from 'icons/views/Wiring'
+import OpenHouseIcon from 'icons/views/OpenHouse'
+import NetnsViewIcon from 'icons/views/Details'
+import SettingsIcon from '@mui/icons-material/Settings'
+import HelpIcon from '@mui/icons-material/Help'
+import GhostwireIcon from 'icons/Ghostwire'
+import Privileged from 'icons/containeestates/Privileged'
+import Capable from 'icons/containeestates/Capable'
+import { ContaineeNavigator } from 'components/containeenavigator'
+import { initNetns, morbidNetns, containerBox, containerBoxProcess, podBox, pod } from '../mockdata'
+import { ContainerState, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
+import JSBI from "jsbi";
+export const netns = [
+  initNetns,
+  morbidNetns,
+  {...morbidNetns, containers: [{...containerBox, ealdorman: {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}, state: ContainerState.Paused, name: 'Patient_Penguin_1'}]},
+  {...morbidNetns, pods: [pod], containers: [podBox]},
+  {...morbidNetns, containers: [{...containerBox, name: 'Privileged_Pinhead_1', labels: {[GHOSTWIRE_LABEL_ROOT+'container.privileged']: 'True'}}]},
+]
+
+# <MenuIcon className="icon"/> Navigation Drawer
+
+## Views
+
+The top section of the **navigation drawer** gives you quick access to the
+different views in <Brand/> into the discovered virtual communication inside
+container hosts. This drawer is accessible either by clicking or tapping on the
+menu &#32;<MenuIcon className="icon"/> symbol in the application bar, or by
+swiping from the left side of the <Brand/> application.
+
+<p/>
+
+- &#32;<WiringViewIcon className="icon"/> shows <Brand/>'s trademark [wiring
+  view](wiring), graphically depicting how the (virtual) IP stacks are
+  interconnected with each other.
+
+- &#32;<OpenHouseIcon className="icon"/> shows the [host's open and forwarding
+  ports](lochla). This view basically is a combined and simplified view of the
+  host's open/listening ports as well as port forwardings from the host to
+  containers (pods, et cetera).
+
+- &#32;<NetnsViewIcon className="icon"/> shows the [detailed communication
+  parameters](details) of the (virtual) IP stacks, but without any
+  graphical wires.
+
+- &#32;<SettingsIcon className="icon"/> allows [configuring general
+  aspects](settings) of the views, such as the IP address families shown.
+
+- &#32;<HelpIcon className="icon"/> this help view.
+
+- &#32;<GhostwireIcon className="icon"/> shows the [copyright and versioning
+  information](/about) (for app and discovery engine).
+
+## Wiring/Details Navigation
+
+Only when the <WiringViewIcon className="icon" />&nbsp;wiring and
+&#32;<NetnsViewIcon className="icon"/>&nbsp;details views the navigation drawer
+will additionally show the list of available pods, containers, and stand-alone
+processes – the so-called ["containees"](containees). For instance:
+
+<p/>
+
+<Example style={{ maxWidth: '20em'}}>
+  <ContaineeNavigator nolink allnetns={netns} />
+</Example>
+
+<p/>
+
+##### Pods ./. Containers
+
+The so-called "pods" group containers with the same virtual IP stack, the
+navigation drawer only shows the pods, but not the individual grouped
+containers. This reduces clutter. In addition, pods get grouped by their
+namespaces into sections, to better visualize their organization.
+
+##### Status Color
+
+The icons signal the type of pod, container, standalone process, et cetera.
+Besides, the color of an icon signals the status of a containee, such as
+"running" or "paused".
+
+Please note that pods don't have any state though: from the perspective of
+&#x200b;<Brand/> a pod only exist when its virtual IP stack has been created, or
+that pod doesn't exist at all. Thus, pods show a neutral "pod" color instead.
+
+##### Privileged Docker Containers
+
+To foster better security awareness, <Brand/> shows an <Privileged
+className="icon" /> icon next to the name of a Docker container if it is
+privileged. Deploying containers as "privileged" should be avoided if possible
+and such containers instead be deployed with only the precise capabilities and
+security options necessary, instead of the heavy-handed "privileged" setting.
+
+##### Capable Containers
+
+Non-privileged containers can be quite capable from the Linux capabilities they
+have been granted. <Brand/> shows an <Capable className="icon" /> icon next to
+the name of any container that posseses capabilities not from the [Docker
+default
+capabilities](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities).

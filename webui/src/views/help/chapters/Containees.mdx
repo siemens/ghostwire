@@ -1,0 +1,38 @@
+import { ContaineeBadge } from 'components/containeebadge'
+import { standaloneBox, containerBox, containerBoxProcess, pod, boundBox } from 'views/help/mockdata'
+import { GHOSTWIRE_LABEL_ROOT, ContainerFlavors } from 'models/gw'
+import JSBI from "jsbi"
+export const priv = {...containerBox, name: 'Privileged_Pinhead_1', labels: {[GHOSTWIRE_LABEL_ROOT+'container/privileged']: ''}}
+export const cbp = {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}
+export const elev = {...containerBox, name: 'Capable_Captain_1', ealdorman: cbp, leaders: [cbp]}
+export const debugme = {...containerBox, name: 'Bug_Me_1', flavor: ContainerFlavors.IEAPP, labels: {
+  [GHOSTWIRE_LABEL_ROOT+'ieapp/debuggable']: '1',
+}}
+
+# Containees
+
+In short, "containees" is our general term for lumping together *pods*,
+*containers*, *stand-alone processes*, and process-less *"bind-mounted"* network
+namespaces.
+
+A core principle of Linux network namespaces (as well as any Linux namespace in
+general) is that they cannot simply exist out of their own will. Instead, they
+need processes attached to them, where these processes can be either outside or
+inside "containers" (managed by a container engine, such as Docker).
+Additionally, namespaces can also be "anchored" to the file system without any
+process (currently) attached to them. But without a process or a file system
+anchor, network namespaces will simply vanish -- and even our <Brand/> won't be
+able to detect any trace of them anymore.
+
+| Containee | Description |
+| --- | --- |
+| <ContaineeBadge containee={standaloneBox} /> | a **"stand-alone" process** (not part of any container); clicking on it navigates to a detailed view of the network namespace this process is currently attached to. |
+| <ContaineeBadge containee={containerBox} /> | a (named) **container**. The colored bar at the left edge signals the container state, with green indicating a running container, yellow signalling a paused container, and red showing an exited container (not to be confused with "Norwegian Blue"). Again, clicking on this container badge navigates to a detailed view of the network namespace this process is currently attached to. |
+| <ContaineeBadge containee={priv} /> | a **privileged Docker container**. Deploying containers as "privileged" should be avoided if possible and such containers instead be deployed with only the precise capabilities and security options necessary, instead of the heavy-handed "privileged" setting. |
+| <ContaineeBadge containee={elev} /> | a container with Linux capabilities other than or in addition to [Docker's default capabilities for containers](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities). |
+| <ContaineeBadge containee={pod} /> | a **pod** is a group of containers sharing the same virtual IP stack. Clicking on a pod badge navigates to a detailed view of the network namespace associated with this particular pod. |
+| <ContaineeBadge containee={debugme} /> | a **debuggable Industrial Edge App**. This information is shown only for IE runtimes of version 1.8 or later. |
+| <ContaineeBadge containee={boundBox} /> | a **process-less network namespace** that has been bound to a file system path in order to prevent the namespace from getting garbage collected. Such "bind-mounted" namespaces can serve both more permanent tasks in some segmented network setups, as well as temporarily appear while a container engine is configuring the networking of a new container and the container's initial process hasn't even started yet. As usual, clicking on this box navigates to a detailed view of the bind-mounted network namespace. |
+
+> **Note:** multiple containees can share the same virtual IP stack (network
+  namespace).

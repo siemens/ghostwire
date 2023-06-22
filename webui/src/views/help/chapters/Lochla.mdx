@@ -1,0 +1,39 @@
+import { Box } from "@mui/material"
+import ExpandLess from '@mui/icons-material/ExpandLess'
+import ExpandMore from '@mui/icons-material/ExpandMore'
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import NetnsViewIcon from "icons/views/Details"
+import FullscreenIcon from "@mui/icons-material/Fullscreen"
+import ScreenshotIcon from 'icons/Screenshot'
+import { NetnsDetailCard } from "components/netnsdetailcard"
+import {
+  standaloneBox,
+  containerBox,
+  containerBoxProcess,
+  boundBox,
+  veth2Nif,
+} from "views/help/mockdata"
+import { initNetns, morbidNetns as morbid } from "views/help/mockdata"
+import JSBI from "jsbi"
+export const cbp = {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}
+export const morbidNetns = {
+  ...morbid,
+  containers: [{
+    ...containerBox,
+    ealdorman: cbp,
+    leaders: [cbp],
+  }]
+}
+
+# <NetnsViewIcon className="icon"/> Open and Forwarded Host Ports View
+
+This view shows a table with the discovered open ports and forwarded ports of
+the host that are accept traffic. It is basically a combination and
+simplification of the "port forwarding" and "transport" tables, specifically for
+the host itself.
+
+This table is designed to give users a quick overview on what kind of traffic
+the host will accept. It does **not** show established connections. Please
+switch into the [detail view](details) for the host itself in order to also see
+established connections to host processes. For established connections to
+container services, please switch to the detail view of a particular container.

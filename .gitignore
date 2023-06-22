@@ -1,0 +1,8 @@
+/lsallnifs
+/gostwire
+/gostdump
+coverage.*
+node_modules/
+dist/
+.emptyctx/
+__debug_bin

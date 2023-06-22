@@ -1,0 +1,16 @@
+.git/
+.github/
+.vscode/
+.emptyctx/
+
+/lsallnifs
+/gostwire
+/gostdump
+coverage.*
+node_modules/
+dist/
+.emptyctx/
+__debug_bin
+decorator/ieappicon/tests/
+scripts/
+webui/

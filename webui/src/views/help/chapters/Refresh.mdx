@@ -1,0 +1,27 @@
+import RefreshIcon from '@mui/icons-material/Refresh'
+import SyncIcon from '@mui/icons-material/Sync'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+
+# <RefreshIcon className="icon"/> Discovery/Refresh
+
+If you don't see any communication information yet, manually refresh the display
+using the &#32;<RefreshIcon className="icon"/> button in the application bar. Do
+not use your browser's refresh button.
+
+Rest assured, this just starts the app-internal new discovery process and does
+not reload the web application itself. As soon as the discovery data becomes
+available, <Brand/>'s display will updated automatically. A circling throbber
+will appear around the &#32;<RefreshIcon className="icon"/> refresh button
+whenever discovery takes more time to notify you of an ongoing discovery.
+
+After discovery, first time users will automatically be shown the [wiring
+view](wiring): the virtual IP stacks found of containers, et cetera, with their
+virtual wiring connecting them to the host, to other containers, and so on.
+
+## Automatic Refresh Interval
+
+Alternatively, if you hate clicking refresh buttons, you can also set an
+automatic refresh interval using the &#32;<span style={{whiteSpace:
+'nowrap'}}><SyncIcon className="icon"/><ExpandMoreIcon className="icon"/></span>
+menu. However, please bear in mind that discoveries are putting some load on
+your host, so please opt for slower refresh intervals.

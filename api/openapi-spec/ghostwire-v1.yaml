@@ -1,0 +1,981 @@
+openapi: 3.0.2
+info:
+    title: Ghostwire Classic API
+    version: 1.0.1
+    x-logo:
+        url: gw-mascot.png
+        altText: Gostwire mascot
+servers:
+    -
+        url: /
+        description: Ghostwire-as-a-Service
+paths:
+    /json:
+        summary: Network topology and convfiguration discovery
+        get:
+            parameters:
+                -
+                    name: ieappicons
+                    description: Optionally request the discovery of Industrial Edge App icons.
+                    schema:
+                        enum:
+                            - ''
+                            - 'on'
+                            - 'off'
+                        type: string
+                    in: query
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DiscoveryResult'
+                    description: Network discovery results
+            summary: |-
+                Returns the discovered network namespaces, the (virtual) network
+                toplogy, the containers and processes using these network
+                namespaces, and their communication configuration, including DNS
+                client settings.
+    /mobyshark:
+        summary: Network capture target discovery
+        get:
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TargetDiscoveryResult'
+                    description: Network target capture discovery results
+            summary: Returns the discovered network capture targets.
+components:
+    schemas:
+        DiscoveryResult:
+            required:
+                - network-namespaces
+                - pid-namespaces
+            type: object
+            properties:
+                metadata:
+                    $ref: '#/components/schemas/Metadata'
+                network-namespaces:
+                    description: |-
+                        The flat(!) list of Linux kernel network namespaces;
+                        please note that Linux kernel network namespaces are
+                        flat, and never hierarchical, despite their misleading
+                        "namespace" name.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Netns'
+                pid-namespaces:
+                    description: |-
+                        The hierarchy of PID namespaces, with a single root
+                        (list) and child PID namespaces.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Pidns'
+        TargetDiscoveryResult:
+            description: The discovered capture target details.
+            type: object
+            properties:
+                metadata:
+                    $ref: '#/components/schemas/Metadata'
+                containers:
+                    description: The list of available capture targets.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Capture-Target'
+        Metadata:
+            title: Discovery result meta information
+            description: |-
+                Slightly useful meta information about this ghostwire model data
+                instance: such as creator tool, version, and creation timestamp,
+                et cetera. Please note that neither the metadata object itself,
+                nor any of its properties is mandatory, but only optional.
+            type: object
+            properties:
+                creation-timestamp:
+                    format: date-time
+                    description: |-
+                        The creation timestamp for this data model instance,
+                        in RFC 3339 format, section 5.6; for instance,
+                        "2018-11-12T12:24:16.093608Z".
+                    type: string
+                creator:
+                    description: |-
+                        The software that created this data, in a human-readable
+                        format. For instance: "Ghostwire Linux Virtual Network
+                        Diagnosis Tool 1.0.23".
+                    type: string
+                creator-id:
+                    description: |-
+                        The machine-readable identifer of the creator software,
+                        such as: "elc-ghostwire.
+                    type: string
+                creator-version:
+                    description: |-
+                        The version string of the creator software; for
+                        instance, "1.0.23".
+                    type: string
+                hostname:
+                    format: hostname
+                    description: |-
+                        The name of the host from which the data was discovered,
+                        either as a DNS label or FQDN. However, be careful that
+                        this might be the hostname of a Ghostwire container when
+                        deploying Ghostwire as a container in a cluster. For
+                        example: "ghostwire-ghostwire-2d9ql".
+                    type: string
+                kubernetes_node:
+                    description: |-
+                        The Kubernetes node name where the data was discovered,
+                        if known; such as: "ku-bubuntu-worker-1".
+                    type: string
+        Capture-Target:
+            description: |-
+                A capture target is a network namespace from which network
+                traffic can be captured. A target possesses just enough
+                information to make it both identifyable to users and also
+                within the Linux-managed system resources.
+            type: object
+            properties:
+                name:
+                    description: |-
+                        The name of a container, stand-alone process, or
+                        bind-mount for easy target identification by users.
+                    type: string
+                netns:
+                    description: |-
+                        The network namespace ID (inode number) of this capture
+                        target.
+                    type: integer
+                network-interfaces:
+                    description: |-
+                        The names of network interfaces available in this
+                        network namespace.
+                    type: array
+                    items:
+                        type: string
+                pid:
+                    description: |-
+                        The PID of a process associated with this network
+                        namespace, to be used for cross-checking that the
+                        network namespace ID hasn't been reused in the time
+                        between discovering this target and starting a capture
+                        on the target.
+                    type: integer
+                prefix:
+                    description: |-
+                        Optional "namespace" path of the target name in order to
+                        differentiate containers from different container engine
+                        and/or in container-in-container deployments.
+                    type: string
+                starttime:
+                    description: |-
+                        Linux-kernel starttime of the process identified by PID,
+                        to be used for cross-checking that the network namespace
+                        ID hasn't been reused in the time between discovering
+                        this target and starting a capture on the target.
+                    type: integer
+                type:
+                    description: |-
+                        Type of target, such as a "docker" container, "proc"
+                        process, et cetera.
+                    type: string
+        Netns:
+            required:
+                - id
+                - netnsid
+                - network-interfaces
+                - routes
+                - transport-ports
+                - containers
+                - container-groups
+            type: object
+            properties:
+                container-groups:
+                    description: |-
+                        The list of (network stack-aggregating) container
+                        groups: all containers in a group share the same network
+                        namespace, such as is the cased with Kubernetes pods.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Container-Group'
+                containers:
+                    description: |-
+                        The list of containers, stand-alone processes, and
+                        bind-mounts attached to this network namespace.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Container'
+                id:
+                    description: |-
+                        The JSON document-internal identifier for this network
+                        namespace; not to be mixed up with the Linux-kernel
+                        assigned netnsid (the latter being an inode number).
+                    type: string
+                netnsid:
+                    description: |-
+                        The network namespace identifer (inode number) as
+                        assigned by the Linux kernel. This identifier is stable
+                        only over the lifetime of this network namespace and
+                        might be reused (and usually quickly is) after this
+                        namespace has been deleted and another namespace is
+                        created anew.
+                    type: integer
+                network-interfaces:
+                    description: |-
+                        The list of network interfaces and their configuration
+                        data, belonging to the network stack of this network
+                        namespace.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Network-Interface'
+                routes:
+                    description: |-
+                        The list of routes (IPv4 and IPv6) for this network
+                        namespace (network stack). Please note that routes do
+                        not belong to individual network interfaces, but always
+                        to the network stack itself.
+                    required:
+                        - ipv4
+                        - ipv6
+                    type: object
+                    properties:
+                        ipv4:
+                            description: IPv4 routes.
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/IP-Route'
+                        ipv6:
+                            description: IPv6 routes.
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/IP-Route'
+                transport-ports:
+                    description: |-
+                        The transport-level (TCP/UDP) ports currently existing
+                        in this network namespace. These ports are discovered on
+                        the basis of the created network sockets.
+                    required:
+                        - ipv4
+                        - ipv6
+                    type: object
+                    properties:
+                        ipv4:
+                            description: |-
+                                IPv4 transport-level ports. Please note that the
+                                discovery adds synthetic IPv4 ports in the cases
+                                where there is an IPv6 socket that also handles
+                                IPv4 traffic (that socket would appear only in
+                                the IPv6 list and thus give an incomplete
+                                picture when looking only at IPv4 ports solely
+                                derived from IPv4 sockets).
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/IP-Port'
+                        ipv6:
+                            description: IPv6 transport-level ports.
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/IP-Port'
+        Container-Group:
+            description: |-
+                A set of containers grouped by some criteria (group type). In
+                this v1 API container groups only cover groups of containers
+                sharing the same network namespace, such as Kubernetes pods. In
+                contrast, logical groups of containers not (necessarily) sharing
+                a network namespace, are not covered, such as Docker composer
+                project groups.
+            required:
+                - id
+                - name
+                - type
+                - container-idrefs
+            type: object
+            properties:
+                container-idrefs:
+                    description: |-
+                        List of JSON document-internal identifiers referencing the
+                        containers grouped together by this group.
+                    type: array
+                    items:
+                        type: string
+                id:
+                    description: The JSON document-internal identifier of this group.
+                    type: string
+                name:
+                    description: The name of this group of containers.
+                    type: string
+                type:
+                    description: |-
+                        The type of group for type identification, such as pod, et
+                        cetera.
+                    type: string
+                type-text:
+                    description: |-
+                        The type of group suitable for user display (convenience
+                        information).
+                    type: string
+        Container:
+            description: |-
+                A container, stand-alone process, or bind-mount attached to a
+                specific network namespace; in this v1 API the related network
+                namespace always is that network namespace including this JSON
+                container element.
+            required:
+                - name
+                - id
+                - type
+                - type-text
+                - pid
+                - pidns
+                - pidns-idref
+                - status
+            type: object
+            properties:
+                cmdline:
+                    description: |-
+                        Command line of the initial container process or the
+                        stand-alone process; empty in case of a bind-mount.
+                    type: string
+                dns:
+                    $ref: '#/components/schemas/DNS-Configuration'
+                    description: |-
+                        The optional DNS configuration-related details; empty in
+                        case of bind-mounts, as there is no associated process with
+                        a mount namespace and thus no DNS client-level
+                        configuration.
+                group:
+                    description: The JSON document-internal identifier of a container group.
+                    type: string
+                id:
+                    description: |-
+                        The JSON document-internal identifier of a container. This
+                        JSON document-internal identifier is not to be confused with
+                        any container IDs managed by container engines: see the name
+                        property instead.
+                    type: string
+                name:
+                    description: |-
+                        The container name or container engine-assigned container
+                        ID.
+                    type: string
+                prefix:
+                    description: |-
+                        Optional "namespace" path of the target name in order to
+                        differentiate containers from different container engine
+                        and/or in container-in-container deployments.
+                    type: string
+                labels:
+                    description: 'Container labels, if any.'
+                    additionalProperties: true
+                api-path:
+                    description: |-
+                        The API path of the managing container engine, if any.
+                        This API path is relative to the host's initial mount namespace.
+                pid:
+                    description: |-
+                        PID of the initial container process, or 0 in case of
+                        bind-mounts.
+                    type: integer
+                pidns:
+                    description: |-
+                        The Linux-kernel ID (inode number) of the PID namespace the
+                        initial container process is attached to.
+                    type: integer
+                pidns-idref:
+                    description: |-
+                        The JSON document-internal identifier of the PID namespace
+                        the initial container process is attached to.
+                    type: string
+                capbnd:
+                    description: |-
+                        The bounding capabilities of the process in form of a
+                        stringified hex number. This works around problems with
+                        those JSON parsers that only support limited-size
+                        numbers (such as the 56 bit integers in Javscript with
+                        only 32 bit logical operations), while Linux
+                        capabilities are bitsets are already in the 40's range
+                        of capability bit numbers.
+                    type: string
+                status:
+                    enum:
+                        - created
+                        - running
+                        - paused
+                        - restarting
+                        - removing
+                        - exited
+                        - dead
+                    type: string
+                type:
+                    type: string
+                type-text:
+                    description: The container type in a form suitable for display to users.
+                    type: string
+        DNS-Configuration:
+            description: |-
+                Name resolution-related configuration, simply lumbed up under
+                the "DNS" moniker.
+            type: object
+            properties:
+                uts-hostname:
+                    description: |-
+                        The hostname as returned by uname (or sometimes
+                        gethostname) syscall (UTS namespace'd).
+                    type: string
+                etc-hostname:
+                    description: |-
+                        The hostname as specified in /etc/hostname in the VFS
+                        visible to the container/process.
+                    type: string
+                nameservers:
+                    description: |-
+                        The list of IP addresses of DNS servers configured in
+                        /etc/resolv.conf in the VFS visible to the
+                        container/process.
+                    type: array
+                    items:
+                        type: string
+                searchlist:
+                    description: |-
+                        The list of DNS search suffixes configured in
+                        /etc/resolv.conf in the VFS visible to the
+                        container/process..
+                    type: array
+                    items:
+                        type: string
+                domainname:
+                    description: |-
+                        The domain name as specified in /etc/domainname in the
+                        VFS visible to the container/process.
+                    type: string
+                etc-hosts:
+                    description: |-
+                        The list of host name-to-IP address mappings as
+                        configured in /etc/resolv.conf in the VFS visible to the
+                        container/process.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Name-IP'
+        Name-IP:
+            description: Maps a name to a single IP address (IPv4 or IPv6).
+            type: object
+            properties:
+                name:
+                    description: The (host) name.
+                    type: string
+                address:
+                    $ref: '#/components/schemas/IPvX-Address'
+                    description: The IP address associated with the (host) name.
+        Network-Interface:
+            description: |-
+                A network interface with its assigned IP addresses as well as
+                its related network interfaces.
+            required:
+                - id
+                - name
+                - index
+                - kind
+                - operstate
+                - physical
+                - addresses
+            type: object
+            properties:
+                addresses:
+                    description: |-
+                        The data-link layer (MAC) and network-layer (IPv4/IPv6)
+                        addresses assigned to this network interface.
+                    required:
+                        - mac
+                        - ipv4
+                        - ipv6
+                    type: object
+                    properties:
+                        ipv4:
+                            description: |-
+                                The list of IPv4 addresses (with prefix lengths,
+                                et cetera) assigned to this network interface.
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/IP-Address'
+                        ipv6:
+                            description: |-
+                                The list of IPv6 addresses (with prefix lengths,
+                                et cetera) assigned to this network interface.
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/IP-Address'
+                        mac:
+                            description: The MAC address assigned to this network interface.
+                            pattern: '^[0-9a-f]{2}(:[0-9a-f]{2}){5}$'
+                            type: string
+                alias:
+                    description: |-
+                        optional alias name assigned to this network interface.
+                        For instance, a Docker network name.
+                    type: string
+                id:
+                    description: |-
+                        The JSON document-internal identifier for this network
+                        interface.
+                    type: string
+                index:
+                    description: |-
+                        The interface index assigned by the Linux kernel to
+                        identify this network interface within its network
+                        namespace. This is not a Linux-kernel global identifier.
+                        Especially "lo"s usually all have an interface index of
+                        1, wherever they are.
+                    type: integer
+                kind:
+                    description: |-
+                        The "kind" (or type) of network interface. This is empty
+                        for "physical" interfaces with an associated Kernel
+                        hardware driver, including the "lo" loopback interface.
+                        For virtual interfaces it indicates the "kind" (Linux
+                        parlance) of virtual interface, such as "bridge",
+                        "veth", "macvlan", and so on.
+                    type: string
+                master:
+                    description: 'The related "master" network interface, if any.'
+                    required:
+                        - idref
+                        - name
+                        - index
+                    type: object
+                    properties:
+                        idref:
+                            description: |-
+                                The JSON document-internal reference identifier
+                                of the master network interface.
+                            type: string
+                        index:
+                            description: |-
+                                The interface index of the master interface;
+                                please note that this index might belong to a
+                                different network namespace!
+                            type: integer
+                        name:
+                            description: |-
+                                The name of the master interface; please note
+                                that this name might belong to a different
+                                network namespace!
+                            type: string
+                name:
+                    description: |-
+                        The name of this interface; for Linux, this is limited
+                        to at most 15 bytes (whether these are characters or not
+                        lies in the eye of the beholder). The name cannot be
+                        empty and it cannot contain "/" and whitespace.
+                    type: string
+                operstate:
+                    description: |-
+                        The operational state of the interface as a string and
+                        in UPPERCASE. Please note that Linux doesn't support/use
+                        all operational states defined for traditional *nix
+                        systems.
+                    enum:
+                        - UNKNOWN
+                        - NOTPRESENT
+                        - DOWN
+                        - UP
+                        - LOWERLAYERDOWN
+                    type: string
+                macvlan:
+                    description: 'Only for kind="macvlan" interfaces: the master interface.'
+                    required:
+                        - idref
+                        - name
+                        - index
+                    type: object
+                    properties:
+                        idref:
+                            description: |-
+                                The JSON document-internal reference identifier
+                                of the MACVLAN master interface.
+                            type: string
+                        index:
+                            description: |-
+                                The interface index of the master interface;
+                                please note that this index might (usually)
+                                belong to a different network namespace!
+                            type: integer
+                        name:
+                            description: |-
+                                The name of the master interface; please note
+                                that this name might (usually) belong to a
+                                different network namespace!
+                            type: string
+                macvlans:
+                    description: |-
+                        The list of "slave" network interfaces that are MACVLAN
+                        network interfaces.
+                    type: array
+                    items:
+                        required:
+                            - idref
+                            - name
+                            - index
+                        type: object
+                        properties:
+                            idref:
+                                description: |-
+                                    The JSON document-internal reference identifier
+                                    of the MACVLAN master interface.
+                                type: string
+                            index:
+                                description: |-
+                                    The interface index of the master interface;
+                                    please note that this index might (usually)
+                                    belong to a different network namespace!
+                                type: integer
+                            name:
+                                description: |-
+                                    The name of the master interface; please note
+                                    that this name might (usually) belong to a
+                                    different network namespace!
+                                type: string
+                peer:
+                    description: |-
+                        Only for kind="veth" interfaces: the related peer
+                        interface.
+                    required:
+                        - peer-idref
+                        - peer-name
+                        - peer-index
+                    type: object
+                    properties:
+                        peer-idref:
+                            description: |-
+                                The JSON document-internal reference identifier
+                                of the peer interface.
+                            type: string
+                        peer-index:
+                            description: |-
+                                The interface index of the peer interface;
+                                please note that this index might (usually)
+                                belong to a different network namespace!
+                            type: integer
+                        peer-name:
+                            description: |-
+                                The name of the peer interface; please note that
+                                this name might (usually) belong to a different
+                                network namespace!
+                            type: string
+                physical:
+                    description: |-
+                        Indicates if this interface has an associated kernel
+                        (virtual) hardware driver.
+                    type: boolean
+                promisc:
+                    description: Indicates if this interface is in promiscuous mode.
+                    type: boolean
+                slaves:
+                    description: |-
+                        The list of related "slave" interfaces, if any. This
+                        includes interfaces acting as bridge ports, VXLAN
+                        interface, VFs of PFs, and more.
+                    type: array
+                    items:
+                        description: A related "slave" network interface.
+                        required:
+                            - idref
+                            - name
+                            - index
+                        type: object
+                        properties:
+                            idref:
+                                description: |-
+                                    The JSON document-internal reference
+                                    identifier for the slave interface.
+                                type: string
+                            index:
+                                description: |-
+                                    The interface index of a slave interface;
+                                    please note that this index might belong to
+                                    a different network namespace!
+                                type: integer
+                            name:
+                                description: |-
+                                    The name of a slave interface; please note
+                                    that this name might belong to a different
+                                    network namespace!
+                                type: string
+                sr-iov-role:
+                    description: SR-IOV role PF(1) or VF(2)
+                    type: integer
+                pf:
+                    description: The PF of a VF.
+                    type: object
+                    properties:
+                        idref:
+                            description: |-
+                                The JSON document-internal reference
+                                identifier for the PF interface.
+                            type: string
+                        index:
+                            description: |-
+                                The interface index of a PF interface;
+                                please note that this index might belong to
+                                a different network namespace!
+                            type: integer
+                        name:
+                            description: |-
+                                The name of a PF interface; please note
+                                that this name might belong to a different
+                                network namespace!
+                            type: string
+        IP-Address:
+            description: |-
+                An IPv4/IPv6 address with associated information, such as
+                lifetimes, scope, et cetera.
+            type: object
+            properties:
+                address:
+                    $ref: '#/components/schemas/IPvX-Address'
+                    description: Either an IPv4 or an IPv6 address.
+                family:
+                    description: The IP address family.
+                    type: integer
+                index:
+                    description: |-
+                        The index of the network interface to which this address
+                        is assigned to.
+                    type: integer
+                preferred-lifetime:
+                    description: |-
+                        The lifetime in seconds during which this IP address is
+                        preferred.
+                    type: integer
+                prefixlen:
+                    description: The length of the prefix section of the IP address.
+                    type: integer
+                scope:
+                    description: The scope identifier (often mistaken for a zone).
+                    type: integer
+                valid-lifetime:
+                    description: |-
+                        The lifetime in seconds during which this IP address is
+                        considered valid.
+                    type: integer
+        IP-Route:
+            description: An IPv4 or IPv6 route.
+            required:
+                - family
+                - destination
+                - destination-prefixlen
+                - index
+                - network-interface-idref
+                - preference
+                - priority
+                - table
+            type: object
+            properties:
+                family:
+                    description: The IP address family of this route.
+                    type: integer
+                destination:
+                    $ref: '#/components/schemas/IPvX-Address'
+                    description: The destination prefix in form of an IP address.
+                destination-prefixlen:
+                    description: The length of the destination prefix.
+                    type: integer
+                index:
+                    description: |-
+                        The index of the network interface taken by this route
+                        (if any). If -1 or 0, then no network interface is
+                        passed, such as in case of blackhole routes.
+                    type: integer
+                network-interface-idref:
+                    description: |-
+                        The JSON document-internal identifier reference of the
+                        network interface taken by this route (if any). Missing
+                        for blackhole routes, et cetera.
+                    type: string
+                nexthop:
+                    $ref: '#/components/schemas/IPvX-Address'
+                    description: |-
+                        An optional IPv4/IPv6 address of the next hop, if there
+                        is any; otherwise missing in case of direct subnet
+                        routes.
+                preference:
+                    description: 'The preference of this route, in two digit binary form, such as "00", et cetera.'
+                    enum:
+                        - '00'
+                        - '01'
+                        - '10'
+                    type: string
+                priority:
+                    description: The priority of this route.
+                    type: integer
+                type:
+                    description: |-
+                        The type of route: this is a lower-case string derived
+                        from the RTN_ constant identifiers, with the RTN_ prefix
+                        removed. For instance, "unspec", "unicast", "local", et
+                        cetera.
+                    enum:
+                        - unspec
+                        - unicast
+                        - local
+                        - broadcast
+                        - anycast
+                        - multicast
+                        - blackhole
+                        - unreachable
+                        - prohibit
+                        - throw
+                        - nat
+                        - xresolve
+                    type: string
+                table:
+                    description: The route table index this route belongs to.
+                    type: integer
+        IPvX-Address:
+            oneOf:
+                -
+                    format: ipv4
+                    type: string
+                -
+                    format: ipv6
+                    type: string
+            description: |-
+                Represents either an IPv4 or IPv6 address (without prefix or any
+                associated lifetimes, et cetera)
+            type: string
+        IP-Port:
+            type: object
+            properties:
+                family:
+                    description: IP address family.
+                    type: integer
+                local-address:
+                    $ref: '#/components/schemas/IPvX-Address'
+                    description: |
+                        Local IP address.
+                local-port:
+                    description: Local transport port number.
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                local-servicename:
+                    description: 'Optional name of service for this port, if known.'
+                    type: string
+                remote-address:
+                    $ref: '#/components/schemas/IPvX-Address'
+                    description: |
+                        Remote IP address.
+                remote-port:
+                    description: |-
+                        Remote transport port number. For an unconnected
+                        transport connection the port is unknown and thus 0.
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
+                remote-servicename:
+                    description: 'Optional name of service for this port, if known.'
+                    type: string
+                state:
+                    description: The socket state.
+                    enum:
+                        - connected
+                        - SYN sent
+                        - syn sent
+                        - SYN received
+                        - syn received
+                        - FIN WAIT1
+                        - fin wait1
+                        - FIN WAIT2
+                        - fin wait2
+                        - time wait
+                        - closed
+                        - close wait
+                        - last ACK
+                        - last ack
+                        - listening
+                        - closing
+                        - new SYN received
+                        - new syn received
+                    type: string
+                macrostate:
+                    description: |-
+                        The simplified connection state for this port: either
+                        listening, connected, or unconnected. In case of a UDP
+                        port "connected" refers to the case where the port has
+                        been "connected" to a remote address and port.
+                    enum:
+                        - listening
+                        - connected
+                        - unconnected
+                    type: string
+                owners:
+                    description: List of associated processes using this port.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Owner'
+                protocol:
+                    description: The name of the transport protocol.
+                    enum:
+                        - tcp
+                        - udp
+                    type: string
+                network-interface-idrefs:
+                    description: |-
+                        JSON document-internal identifier references to the
+                        network interfaces having network addresses matching
+                        this port's local address.
+                    type: array
+                    items:
+                        type: string
+        Owner:
+            description: Information about a process associated with a transport port.
+            required:
+                - pid
+            type: object
+            properties:
+                cmdline:
+                    description: Command line of process.
+                    type: string
+                pid:
+                    description: PID of the process associated with this port.
+                    type: integer
+                container-idref:
+                    description: |-
+                        JSON document-internal identifer reference to a
+                        container (tenant).
+                    type: string
+        Pidns:
+            description: Information about a PID namespace.
+            required:
+                - pidnsid
+                - id
+                - children
+            type: object
+            properties:
+                children:
+                    description: List of child PID namespaces.
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Pidns'
+                container-idrefs:
+                    description: List of container identifier references.
+                    type: array
+                    items:
+                        type: string
+                id:
+                    description: |-
+                        JSON document-internal identifier for this PID
+                        namespace.
+                    type: string
+                netns-idref:
+                    description: |-
+                        JSON document-internal identifier reference to a network
+                        namespace. This network namespace reference is not of
+                        any real use, as it can be unreliable due to how the
+                        Ghostwire v1 discovery engine is designed (hint: it's
+                        crappy in this aspect). So do not use this element.
+                    type: string
+                pidnsid:
+                    description: The inode number of this PID namespace.
+                    type: integer

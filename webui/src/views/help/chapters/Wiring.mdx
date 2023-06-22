@@ -1,0 +1,68 @@
+import { Box } from '@mui/material'
+import WiringViewIcon from 'icons/views/Wiring'
+import ScreenshotIcon from 'icons/Screenshot'
+import FullscreenIcon from '@mui/icons-material/Fullscreen'
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import { Breadboard } from 'components/breadboard'
+import { NetnsPlainCard } from 'components/netnsplaincard'
+import { ContaineeBadge } from 'components/containeebadge'
+import { NifBadge } from 'components/nifbadge'
+import { standaloneBox, containerBox, boundBox, veth2Nif } from 'views/help/mockdata'
+import { initNetns, morbidNetns } from 'views/help/mockdata'
+
+# <WiringViewIcon className="icon"/> Wiring View
+
+> &#32;<BookmarkBorderIcon className="icon"/> **Pro Tip:** you can bookmark all
+  views in your browser, especially when "zooming in" on a particular container
+  or process.
+
+> **Pro Tip:** you can easily create a complete screenshot of the wiring by
+  simply clicking on the screenshot <ScreenshotIcon className="icon"/> button in
+  the application bar. This allows downloading the wiring screenshot in PNG
+  image format, in user-selectable image density. Please note that the
+  screenshot button <ScreenshotIcon className="icon"/> only appears after the
+  wiring has been discovered successfully for the first time.
+
+The wiring view shows the discovered (virtual) IP stacks, as well as the
+"virtual wiring" between the network interfaces of these IP stacks. For each IP
+stack (network namespace), <Brand/> also shows the ["containees"](containees)
+(pods, containers, stand-alone processes, et cetera) using that particular IP
+stack. For example:
+
+<Box m={2} style={{width: '25em'}}>
+  <Breadboard netns={[initNetns, morbidNetns]}>
+    <NetnsPlainCard netns={initNetns} />
+    <Box m={1}/>
+    <NetnsPlainCard netns={morbidNetns} />
+  </Breadboard>
+</Box>
+
+##### Zoom Into IP Stack Details
+
+**Click on a container or process** <ContaineeBadge containee={containerBox}
+endIcon={<FullscreenIcon/>}/> in order to navigate to a detail view showing
+detailed communication information about the IP stack used by that container or
+process. This zoom-in functionality is also indicated by the
+&#32;<FullscreenIcon className="icon"/> icon inside the badge.
+
+##### IP Addresses
+
+**Hover your mouse over a network interface** <NifBadge nif={veth2Nif}/> to see
+a tool tip showing a short description as well as the IP addresses assigned to
+this network interface. Additionally, all related network interfaces and their
+connecting "wires" will light up.
+
+##### Navigate to Connected Network Interfaces
+
+**Click on a network interface** <NifBadge nif={veth2Nif} button /> to pop up a
+navigation menu with a list of related (connected) network interfaces. For
+instance, for a "VETH" type network interface there is exactly one related peer
+network interface. Hardware network interfaces (which might rather be virtual)
+might have multiple related "MACVLAN" type network interfaces.
+
+##### Highlight a Virtual Wire
+
+Hover over a virtual wire for it to become highlighted and all other virtual
+wires getting dimmed. Click or tap on a wire to select it: this wire now will
+stay highlighted when moving the mouse away. This wire can be deselected by
+either clicking or tapping it again, or clicking or tapping somewhere else.

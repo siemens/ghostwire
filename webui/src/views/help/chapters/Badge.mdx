@@ -1,0 +1,67 @@
+import { Badge as MuiBadge } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SyncIcon from "@mui/icons-material/Sync";
+import MenuIcon from "@mui/icons-material/Menu";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
+# IP Stacks Galore!
+
+So, what's the meaning of the number badge hovering above our <Brand/> mascot in
+the application bar that appears after pressing the &#32;<RefreshIcon
+className="icon"/> button?
+
+It shows the _number_ of discovered "virtual IP network stacks" (including the
+host's own IP stack). This badge will only appear after discovery data has
+successfully been received from the <Brand/> discovery service. For instance:
+
+<FakeAppBar>
+  <b><Brand/></b>{" "}
+  <MuiBadge badgeContent="42" color="secondary">
+    <BrandIcon size="default" style={{ verticalAlign: "middle" }} />
+  </MuiBadge>
+</FakeAppBar>
+
+In case some IP stacks have been filtered from display (see
+[settings](settings)), this is indicated by a "+" after the number of IP stacks
+shown. With the default settings this can be the case when a host contains
+"isolated" network namespaces without any connections other than their own
+isolated loopback ("lo") network interface. Typical examples of applications
+creating isolated "sandbox" IP stacks are *Chrome*, *Firefox*, *haveged* (for
+generating random numbers and feeding the Linux random device), as well as
+others.
+
+<FakeAppBar>
+  <b><Brand/></b>{" "}
+  <MuiBadge badgeContent="42+" color="secondary">
+    <BrandIcon size="default" style={{ verticalAlign: "middle" }} />
+  </MuiBadge>
+</FakeAppBar>
+
+## Background: Virtual IP Stacks / Network Namespaces
+
+What we slightly sloppily call "virtual IP network stacks" are actually a highly
+useful Linux technology termed ["network
+namespaces"](https://man7.org/linux/man-pages/man7/network_namespaces.7.html).
+Despite the terminology and in a twist of irony, these Linux "namespaces" do
+_not_ have names. Historically, the first type of namespace in Linux was the
+"mount" namespace and thus is also about file system paths ... and this is where
+the meaning of "namespace" actually originates from.
+
+Thus, <Brand/> tries its best to give network namespaces useful names, for
+instance, taken from the names of containers or processes that are using these
+network namespaces. This enhances your user experience and makes diagnosing
+virtual communication so much easier: "morbid_moby" instead of a non-permanent
+inode number, such as "4026531905".
+
+Throughout <Brand/>, we use the term ["containees"](containees) whenever
+we are referring to containers, standalone processes, or even so-called
+"bind-mounted" network namespaces (without any process, not least any whacky
+container).
+
+## Background: Containers ≠ Namespaces
+
+While containers make use of Linux network namespaces, containers and namespaces
+are two completely separate technologies. _Containers_ are a user-space "lie" in
+that they don't exist at all at the level of the Linux kernel. But containers
+combine several "first class" kernel-space elements to make their lie more
+convincing, not least _network namespaces_.

@@ -1,0 +1,77 @@
+import CaptureIcon from 'icons/Capture'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import { ContaineeBadge } from 'components/containeebadge'
+import { NifBadge } from 'components/nifbadge'
+import { TargetCapture } from 'components/targetcapture'
+import { containerBox, pod, veth1Nif } from 'views/help/mockdata'
+
+# <CaptureIcon className="icon"/> Live Capture
+
+"Live capture" *streams* your captured network packets directly from the system
+you are looking at to a [Wireshark™](https://wireshark.org) network protocol
+analyzer on your desktop system. "Downloading" was before, 'tis now the
+*streaming* age. Live captures allow you to see network packets in "real time"
+(albeit with some delay due to transmitting them from the capture host to your
+desktop Wireshark).
+
+No more first having to do start and later stop some "blind" capturing and
+downloading a capture file afterwards – just to find out that you got it wrong,
+so you need to rinse and repeat, hoping it'll work this time.
+
+To start live captures, simply click on one of the <CaptureIcon
+className="icon"/> capture buttons.
+
+> **Important:** if you have restarted a container you want to capture from in
+  the meantime since last refreshing <Brand/>'s display, you must
+  &#32;<RefreshIcon className="icon"/> refresh before you capture. Otherwise the
+  capture might fail as the container's virtual IP stack got a different
+  identifier due to the container restart.
+
+Depending on which capture button you click on, the context of captured network
+traffic differs as follows: 
+
+| Element | Capture Context |
+| --- | --- |
+| <span style={{whiteSpace: "nowrap"}}><ContaineeBadge containee={containerBox} /><TargetCapture demo target={containerBox.netns} /></span> | captures from *all* network interfaces of the (virtual) IP stack used by the container, pod, et cetera. |
+| <span style={{whiteSpace: "nowrap"}}><ContaineeBadge containee={pod} /><TargetCapture demo target={containerBox.netns} /></span> | captures from all containers of this particular pod – *please see note below*. |
+| <span style={{whiteSpace: "nowrap"}}><NifBadge nif={veth1Nif} /><TargetCapture demo target={veth1Nif} /></span> | captures only from this particular network interface. |
+
+## Notes
+
+#### Live Capture Wireshark Plugin and Service
+
+To use live packet capture you'll need:
+
+- both the [ClusterShark external capture
+  plugin](https://github.com/siemens/cshargextcap) as well as a **Wireshark™
+  version 3.0.2** or later installed on your client system (Windows only at the
+  moment).
+
+- on the server side you'll need the [Packetflix live capture streaming
+  service](https://github.com/siemens/edgeshark) which simultaneously acts as
+  the combined service access point for Ghostwire. On an Industrial Edge simply
+  install the "Edgeshark" app via your Industrial Edge Management service.
+
+#### Capturing From All Network Interfaces
+
+Live packet capture streams include information about the network interface a
+particular packet was received on or transmitted from. This ensures a clear and
+unambiguous picture as to *where exactly* a packet came in or went out.
+
+Due to technical restrictions of the (OpenSource)
+[dumpcap](https://www.wireshark.org/docs/man-pages/dumpcap.html) capture tool
+used as the ultimate source of packet capture streams, <Brand/> **must specify
+the exact list of (operational) network interfaces to capture from at the time
+the capturing starts**.
+
+> If at any time later a new network interface gets added or an existing
+  non-operational network interface becomes operational then such network
+  interfaces will get ignored in the running capture stream.
+
+#### Many Containers, Same IP Stack
+
+When multiple containers share the same IP stack, it is **not possible to
+capture the traffic of a single container only**. This is due to the technical
+design of Linux containers and network namespaces. Please use capture filters to
+capture only traffic to or from a specific container. The transport ports table
+can help with identifying interesting traffic.

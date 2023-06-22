@@ -1,0 +1,15 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "go.buildTags": "matchers,pprof,kind",
+        "go.testFlags": ["-exec", "${workspaceFolder}/scripts/sudo-askpass.sh"],
+        "go.lintTool": "golangci-lint",
+        "go.lintFlags": [
+            "--build-tags=matchers,pprof,kind"
+        ]
+    }
+}

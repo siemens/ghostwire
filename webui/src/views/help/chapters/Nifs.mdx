@@ -1,0 +1,134 @@
+import HearingIcon from '@mui/icons-material/Hearing'
+import HwNicIcon from 'icons/nifs/HardwareNic'
+import VFNicIcon from 'icons/nifs/HardwareNicVF'
+import NicIcon from 'icons/nifs/Nic'
+import BridgeIcon from 'icons/nifs/Bridge'
+import UpStateIcon from 'icons/operstates/Up'
+import { NifBadge } from 'components/nifbadge'
+import { OperationalState, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
+import { eth0, veth1Nif } from 'views/help/mockdata'
+export const pf = { ...eth0, sriovrole: 1 }
+export const vf = { ...eth0, sriovrole: 2 }
+export const prometh0 = { ...eth0, isPromiscuous: true }
+export const pont0 = { ...eth0, name: 'pont0', isPhysical: false, kind: 'bridge' }
+export const int0 = { ...eth0, name: 'internal0', isPhysical: false, kind: 'bridge', labels: {[GHOSTWIRE_LABEL_ROOT+'network.internal']: 'True'} }
+export const mcvlan0 = { ...pont0, name: 'mcvlan0', kind: 'macvlan' }
+export const eth0mcmaster = { ...eth0, macvlans: [eth0] }
+export const vxlan0 = { ...pont0, name: 'vxlan0', kind: 'vxlan' }
+
+# Network Interfaces
+
+&#x200b;<Brand/> depicts network interfaces like this:
+
+<Example p={2} style={{ display: 'inline-block' }}>
+  <NifBadge nif={{...prometh0, alias: 'käschtle'}} />
+</Example>
+
+- network interface *name* as used by the Linux kernel,
+- optional (user-level) *~alias name*, such as a Docker network name,
+- *type* of network interface (<HwNicIcon className="icon" />, <BridgeIcon className="icon" />, ...),
+- *operational state* (such as <UpStateIcon className="icon" />, ...),
+- when <HearingIcon className="icon" /> *promiscuous mode* is activated.
+
+## <NicIcon className="icon" /> Types
+
+On a very high level, Linux separates network interfaces into just two
+varieties:
+
+1. &#32;<HwNicIcon className="icon" /> **hardware/physical** network interfaces are
+   network interfaces **with a "hardware" driver**. To make this terminology
+   slightly more awkward, this also encompasses "virtualized" – or rather,
+   *emulated* – network cards, such as E1000, RTL8139, et cetera. (These network
+   cards are sometimes also termed "vNICs", virtual network interface cards.)
+
+2. everything else are **virtual** network interfaces in the narrower meaning of
+   the Linux kernel where they have **direct kernel built-in support**, so no
+   "hardware driver". Some examples of virtual network interfaces are bridges,
+   virtual Ethernet "cable ends" (which only come in pairs), and overlay
+   networks.
+
+### <HwNicIcon className="icon" /> (Not-So) Physical Network Interfaces
+
+&#x200b;<Brand/> marks hardware/physical network interfaces (including vNICs)
+with &#32;<HwNicIcon className="icon" />. Please note that <Brand/> does not
+differentiate different types of hardware network interfaces and simply uses a
+unified "cable" icon for identification.
+
+| Network Interface | Description |
+| --- | --- |
+| <NifBadge nif={eth0} style={{whiteSpace: "nowrap"}} /> | a physical or (virtual) hardware network interface |
+
+<p/>
+
+The adorning <HwNicIcon className="icon" /> "NIC" icon however changes in case
+of SR-IOV PFs and VFs, which brings us to our next topic.
+
+The [SR-IOV
+specification](https://en.wikipedia.org/wiki/Single-root_input/output_virtualization)
+(for PCI Express/PCIe) allows network devices to slice their resources into
+several PCIe hardware functions, that is, several PCIe network cards
+(technically: in form of further devices and functions).
+
+| Network Interface | SR-IOV NIC Type |
+| --- | --- |
+| <NifBadge nif={pf} style={{whiteSpace: "nowrap"}} /> | **physical function** (PF), which is the *primary function* of the network device, advertises the device's SR-IOV capabilities, et cetera. It also acts as an "ordinary" network interface. |
+| <NifBadge nif={vf} style={{whiteSpace: "nowrap"}} /> | **virtual function** (VF) is a separate network device, which nevertheless isn't standalone but associated with a corresponding PF. For instance, the VFs share a network port with the PF and other VFs, with traffic being bridged between the port and the PF and VFs. |
+
+<p/>
+
+&#x200b;<Brand/> automatically discovers the PF-VF topology, even with VFs
+currently being placed into containers (non-initial network namespaces).
+
+### Virtual Network Interfaces
+
+For virtual network interfaces, <Brand/> shows the following icons, depending
+on the type of virtual network interface:
+
+| Network Interface | Type | Description |
+| --- | --- | --- |
+| <NifBadge nif={pont0} style={{whiteSpace: "nowrap"}} /> | **Bridge** | a virtual bridge: this is the network interface of the bridge itself and it always connects the bridge to the virtual IP stack, but never to anywhere else. Additional network interfaces will act as the (Ethernet) ports of the virtual bridge. |
+| <NifBadge nif={int0} style={{whiteSpace: "nowrap"}} /> | **Internal Bridge** | an "internal" Docker virtual bridge: this bridge has additional packet filters installed that block external traffic. Please note that the host itself is still reachable from containers on an internal bridge, as can the host reach the containers attached to this virtual bridge. |
+| <NifBadge nif={veth1Nif} style={{whiteSpace: "nowrap"}} /> | **VETH** | one of exactly two virtual Ethernet network interfaces connected to each other. |
+| <NifBadge nif={mcvlan0} style={{whiteSpace: "nowrap"}} /> | **MACVLAN** | an additional "virtual LAN" card to a hardware/physical network interface. The term "VLAN" might be totally misleading, as a MACVLAN network interface is not a separate VLAN in the IEEE 802 sense, but instead adds a separate MAC address on an existing hardware/physical network interface and handles its traffic through this separate network interface. |
+| <NifBadge nif={eth0mcmaster} style={{whiteSpace: "nowrap"}} /> | (**MACVLAN master**) | a hardware/physical network interface to which one or more MACVLAN network interfaces have been added (attached). This is signalled by an Ethernet plug and cable, but with side branches going off to the left and right. |
+| <NifBadge nif={vxlan0} style={{whiteSpace: "nowrap"}} /> | **VXLAN** | an overlay network interface for [virtual extensible LANs](https://en.wikipedia.org/wiki/Virtual_Extensible_LAN): it carries Ethernet traffic via UDP/IP datagrams. |
+
+## <UpStateIcon className="icon" /> Operational State
+
+The so-called "operational state" indicates the real working state of a network
+interface, as opposed to the desired "administrative" state. <Brand/> only
+depicts the operational state, as this is "where the rubber meets the road".
+
+| Network Interface | State | Description |
+| --- | --- | --- |
+| <NifBadge nif={{...eth0, operstate: OperationalState.Up}} style={{whiteSpace: "nowrap"}} /> | **up** | this network interface is operational "up" and can be used. |
+| <NifBadge nif={{...eth0, operstate: OperationalState.Unknown}} style={{whiteSpace: "nowrap"}} /> | **unknown** | while this network interface is in an unknown state (because no specific state is available), it is yet to be considered operational. For this reason, <Brand/> depicts the "unknown" state the same as the "up" state. A common example for network interfaces in "unknown" state are the "lo" loopback network interfaces. |
+| <NifBadge nif={{...eth0, operstate: OperationalState.Dormant}} style={{whiteSpace: "nowrap"}} /> | **dormant** | while the physical layer of this network interface is up, the network interface is waiting for an external event to become fully operational. |
+| <NifBadge nif={{...eth0, operstate: OperationalState.Down}} style={{whiteSpace: "nowrap"}} /> | **down** | this network interface is unable to transfer any data. |
+| <NifBadge nif={{...eth0, operstate: OperationalState.LowerLayerDown}} style={{whiteSpace: "nowrap"}} /> | **lower&nbsp;layer down** | this network interface is stacked onto another network interface, and the underlying network interface currently is "down". |
+
+## <HearingIcon className="icon" /> Promiscuous Mode
+
+A network interface operating in "promiscuous mode" passes all network traffic
+it receives to the network stack (virtual IP stack), instead of only the traffic
+specifically addressed to it. As promiscuous mode increases system load (because
+the system now has to process all traffic really destined for it) this mode is
+normally switched off on network interfaces, unless it is needed:
+
+- [capturing](capture) all traffic visible at a specific network interface
+  (even if just passing by). Please note that capturing does not strictly
+  require promiscuous mode, in this case only the part of traffic gets captured
+  that is specifically addressed to a network interface. However, capturing
+  tools often automatically request promiscuous during capture, unless
+  explicitly told to not do so.
+
+- briding network traffic between network interfaces of a virtual bridge.
+
+<p/>
+
+&#x200b;<Brand/> marks network interfaces in promiscuous mode with
+&#32;<HearingIcon className="icon" />.
+
+<Example p={2} style={{ display: 'inline-block' }}>
+  <NifBadge nif={prometh0} />
+</Example>

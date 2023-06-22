@@ -1,0 +1,41 @@
+version: "2.4"
+
+services:
+  service-a:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-a
+
+  service-b:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-a
+      - net-b
+
+  service-c:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-a
+      - net-b
+
+  service-x:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-X
+
+  service-z:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    network_mode: bridge # https://stackoverflow.com/a/43755216
+
+networks:
+  net-a:
+    name: ghostwire-test-net-a
+  net-b:
+    name: ghostwire-test-net-b
+  net-X:
+    name: ghostwire-test-net-X

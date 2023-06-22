@@ -1,0 +1,64 @@
+version: '3'
+services:
+
+    # Set of containers sharing the same network namespace.
+    sharednet0:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+    sharednet:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+        network_mode: 'service:sharednet0'
+
+    foo:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+        networks: 
+            - default
+            - othernetwork
+
+    foopaused:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+
+    foostopped:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+
+    foorestarted:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+
+    bar:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+        networks:
+            - othernetwork
+
+    macfoo:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+        networks:
+            - macvlan
+
+    vxlaner:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+
+    ieruntime:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+        container_name: edge-iot-core
+
+    ieapp:
+        image: busybox
+        command: ['/bin/sleep', '100000000']
+        labels: 
+            com_mwp_conf_something: foobar!
+
+networks: 
+    othernetwork:
+    macvlan:
+        driver: 'macvlan'
+        driver_opts: 
+            parent: ${MACMASTER}

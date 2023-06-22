@@ -1,0 +1,70 @@
+# Gostwire server in a container; further G(h)ostwire-aware projects can then
+# attach to its dedicated G(h)ostwire (internal) network.
+version: '2.4'
+services:
+    gostwire:
+        image: 'gostwire'
+        read_only: true
+        entrypoint:
+        - "/gostwire"
+        #- "--silent"
+        - "--debug"
+        - "--http"
+        - "[::]:5000"
+        mem_limit: 64M
+        memswap_limit: 64M
+        build:
+            context: ../..
+            dockerfile: deployments/gostwire/Dockerfile
+        # Please note: port remapping is only possible when using a separate
+        # network namespace, but *NOT* when using the host's network namespace.
+        # Also, remapping happens *OUTSIDE* the container, such as in the host,
+        # not at the container's "encasing".
+        ports:
+        - "5000:5000"
+        # Run as non-root user.
+        user: "65534"
+        security_opt:
+            # The default Docker container AppArmor profile blocks namespace
+            # discovery, due to reading from /proc/$PID/ns/* is considered to be
+            # ptrace read/ready operations.
+            - apparmor:unconfined #- apparmor:gostwire # only accepts profile name, not a profile file :(
+
+            # The default Docker container seccomp profile is adaptive and
+            # throws wide open all gates when showing it your capabilities. The
+            # default seccomp profile thus does not interfere. But we might want
+            # to slightly curb the powers of CRAP_SYS_ADMIN and
+            # CRAP_SYS_PTRACE...
+            - seccomp:seccomp/gostwire.json
+        # In order to set only exactly a specific set of capabilities without
+        # any additional Docker container default capabilities, we need to drop
+        # "all" capabilities. Regardless of the order (there ain't one) of YAML
+        # dictionary keys, Docker carries out dropping all capabilities first,
+        # and only then adds capabilities. See also:
+        # https://stackoverflow.com/a/63219871.
+        cap_drop:
+            - ALL
+        cap_add:
+            - SYS_ADMIN       # change namespaces
+            - SYS_CHROOT      # change mount namespaces
+            - SYS_PTRACE      # access nsfs namespace information
+            - DAC_READ_SEARCH # access/scan /proc/[$PID]/fd itself
+            - DAC_OVERRIDE    # access container engine unix domain sockets without being rude, erm, root.
+            - NET_RAW         # pingin' 'round
+            - NET_ADMIN       # readin' more than enough tables...
+        # Essential since we need full PID view.
+        pid: host
+        networks:
+            00-default:
+                priority: 200
+            99-ghost-in-da-box:
+                priority: 100
+networks:
+    # this is the usual the project's default network, for which ports can be
+    # exposed.
+    00-default:
+       name: gostwire_default
+    # host-internal network without any exposed ports.
+    99-ghost-in-da-box:
+       name: ghost-in-da-box
+       internal: true

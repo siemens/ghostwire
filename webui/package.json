@@ -1,0 +1,124 @@
+{
+  "name": "ghostwire-ui",
+  "version": "1.9.11",
+  "private": true,
+  "dependencies": {
+    "@craco/craco": "^7.0.0",
+    "@craco/types": "^7.0.0",
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@fontsource/roboto": "^4.5.8",
+    "@fontsource/roboto-mono": "^4.5.8",
+    "@mdx-js/loader": "^2.2.1",
+    "@mdx-js/mdx": "^2.2.1",
+    "@mdx-js/react": "^2.2.1",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/lab": "^5.0.0-alpha.114",
+    "@mui/material": "^5.11.3",
+    "@types/color-rgba": "^2.1.0",
+    "@types/mdx": "^2.0.3",
+    "@types/react": "18",
+    "@types/react-dom": "18",
+    "@types/react-transition-group": "^4.4.5",
+    "assert": "^2.0.0",
+    "beautiful-react-hooks": "^3.12.2",
+    "color-rgba": "^2.4.0",
+    "cypress": "^12.3.0",
+    "cypress-react-router": "^2.0.1",
+    "cypress-react-selector": "^3.0.0",
+    "html-to-image": "^1.11.11",
+    "ip6addr": "^0.2.5",
+    "jotai": "^1.12.1",
+    "jsbi": "^4.3.0",
+    "notistack": "^2.0.8",
+    "process": "^0.11.10",
+    "react": "18",
+    "react-dom": "18",
+    "react-inlinesvg": "^3.0.2",
+    "react-router-dom": "^6.6.1",
+    "react-scripts": "^5.0.1",
+    "react-transition-group": "^4.4.5",
+    "react-use-websocket": "^4.3.1",
+    "rehype-slug": "4.0.1",
+    "remark-gemoji": "^7.0.1",
+    "remark-gfm": "^3.0.1",
+    "remark-images": "^3.1.0",
+    "remark-textr": "^5.0.1",
+    "scroll-into-view-if-needed": "^3.0.6",
+    "stream": "^0.0.2",
+    "string-similarity": "^4.0.4",
+    "typescript": "^4.9.4",
+    "typographic-apostrophes": "^1.1.1",
+    "typographic-apostrophes-for-possessive-plurals": "^1.0.5",
+    "typographic-ellipses": "^1.0.11",
+    "typographic-em-dashes": "^1.0.2",
+    "typographic-en-dashes": "^1.0.1",
+    "typographic-quotes": "^2.0.1",
+    "util": "^0.12.5"
+  },
+  "resolutions": {
+    "nth-check": "^2.0.1",
+    "resq": "^1.11.0"
+  },
+  "scripts": {
+    "start": "REACT_APP_GIT_VERSION=$(git describe --tags) REACT_APP_ENABLE_MONOLITH=true craco start",
+    "unstrict": "REACT_APP_UNSTRICT=true REACT_APP_GIT_VERSION=$(git describe --tags) REACT_APP_ENABLE_MONOLITH=true craco start",
+    "build": "REACT_APP_GIT_VERSION=$(git describe --tags) craco build",
+    "imgbuild": "craco build",
+    "icons": "node genicons",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "styleguide": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist server",
+    "styleguide:build": "REACT_APP_GIT_VERSION=$(git describe --tags) npx styleguidist build"
+  },
+  "babel": {
+    "presets": [
+      "babel-preset-react-app"
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-proposal-private-property-in-object",
+        {
+          "loose": true
+        }
+      ]
+    ]
+  },
+  "eslintConfig": {
+    "extends": "react-app",
+    "overrides": [
+      {
+        "files": [
+          "**/*.ts?(x)"
+        ],
+        "rules": {}
+      }
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "homepage": ".",
+  "proxy": "http://localhost:5000",
+  "devDependencies": {
+    "@cypress/react": "^7.0.2",
+    "@cypress/webpack-dev-server": "^3.2.2",
+    "p-defer": "^4.0.0",
+    "p-defer-es5": "^2.0.1",
+    "react-docgen-typescript": "^2.2.2",
+    "react-styleguidist": "^13.0.0",
+    "svgo": "^3.0.0",
+    "ts-loader": "^9.4.2",
+    "ts-node": "^9.0.0",
+    "url-loader": "^4.1.1"
+  }
+}

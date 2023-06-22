@@ -1,0 +1,13 @@
+{
+    "theme": {
+        "colors": {
+            "primary": {
+                "main": "#009999"
+            }
+        },
+        "logo": {
+            "maxHeight": "5ex",
+            "maxWidth": "5ex"
+        }
+    }
+}

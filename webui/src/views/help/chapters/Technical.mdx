@@ -1,0 +1,45 @@
+# Technical Features
+
+**<Brand/>** supports different container engines (often also sloppily
+called "container runtimes").
+
+<p/>
+
+- [Docker](https://www.docker.com/) ([Moby](https://mobyproject.org/)),
+- [containerd](https://containerd.io/),
+- optionally [Podman](https://podman.io) (if built with support).
+
+<p/>
+
+There's more to <Brand/>, as it...
+
+<p/>
+
+- can be extended (or might already come packaged) with the "Packetflix" live
+  packet capture streaming service for easy remote network captures in remote
+  container hosts and container cluster systems.
+
+- discovers the topology of
+  [SR-IOV](https://en.wikipedia.org/wiki/Single-root_input/output_virtualization)
+  PF and VF network interfaces, even when VFs are placed in containers. SR-IOV
+  cards often are used in demanding contexts, such as data centers, not least in
+  hyper-convergent infrastructures.
+
+- is [Industrial
+  Edge-aware](https://new.siemens.com/global/en/products/automation/topic-areas/industrial-edge.html),
+  showing dedicated symbols for Industrial Edge app containers and the
+  containerized device runtime. If enabled in [settings](/settings), <Brand/>
+  can query an Industrial Edge device for the specific IE App icons and will
+  then display these – but please note that this is an _experimental_ function
+  with no guarantees.
+
+- is [Kubernetes](https://kubernetes.io/)-aware and understands
+  the concept of "pods" and Kubernetes "namespaces". And all this *without*
+  needing any access to Kubernetes API servers.
+
+- supports putting one container engine *into* another container (engine) or
+  running multiple container engines side-by-side.
+
+- understands and explicitly supports [Kind ("Kubernetes IN
+  Docker")](https://kind.sigs.k8s.io/docs/user/quick-start/) for running one or
+  more multi-node Kubernetes clusters inside a *single* Docker host.
