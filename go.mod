@@ -2,11 +2,6 @@ module github.com/siemens/ghostwire/v2
 
 go 1.20
 
-replace (
-	github.com/siemens/ieddata => ../ieddata
-	github.com/siemens/mobydig => ../mobydig
-)
-
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.12
 
 require (
@@ -25,8 +20,8 @@ require (
 	github.com/onsi/gomega v1.27.8
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/dockertest/v3 v3.10.0
-	github.com/siemens/ieddata v0.0.0-00010101000000-000000000000
-	github.com/siemens/mobydig v0.0.0-00010101000000-000000000000
+	github.com/siemens/ieddata v1.0.0
+	github.com/siemens/mobydig v1.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/thediveo/deferrer v0.1.0
