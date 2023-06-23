@@ -26,7 +26,7 @@ var defsVersionGoTemplate = template.Must(template.New("defs_version.go").Parse(
 
 package gostwire
 
-// SemVersion is the semantic version string of the gostwire module.
+// SemVersion is the semantic version string of the ghostwire module.
 const SemVersion = "{{ . }}"
 `))
 
