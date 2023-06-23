@@ -79,8 +79,8 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
             WSDISKPATHS=./ghostwire
-          build-contexts: |
             REACT_APP_GIT_VERSION=${{ github.ref_name }}
+          build-contexts: |
             webappsrc=./webui
             ${{ env.BUILDCONTEXTS }}
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Container virtual networks discovery service
