@@ -10,14 +10,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/onsi/gomega/gexec"
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/ghostwire/v2/test/nerdctl"
 	"github.com/siemens/ghostwire/v2/turtlefinder"
 	"github.com/siemens/ghostwire/v2/util"
-
-	"github.com/onsi/gomega/gexec"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher/containerd"
@@ -44,12 +43,12 @@ var _ = Describe("nerdctlnet decorator", func() {
 			goodfds := Filedescriptors()
 			goodgos := Goroutines() // avoid other failed goroutine tests to spill over
 
-			nerdctl.NerdctlIgnore("rm", testWorkloadName)
+			nerdctl.NerdctlIgnore("rm", "-f", testWorkloadName)
 			nerdctl.NerdctlIgnore("network", "rm", testNetworkName)
 
 			DeferCleanup(func() {
 				gexec.KillAndWait()
-				nerdctl.NerdctlIgnore("rm", testWorkloadName)
+				nerdctl.NerdctlIgnore("rm", "-f", testWorkloadName)
 				nerdctl.NerdctlIgnore("network", "rm", testNetworkName)
 
 				Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(250 * time.Millisecond).

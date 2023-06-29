@@ -19,12 +19,17 @@ import (
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/whalewatcher/watcher/containerd"
 )
 
-// NetworkConfigurationsGlob specifies the location and pattern of the CNI
-// network configuration list files.
-const NetworkConfigurationsGlob = "/etc/cni/net.d/nerdctl-*.conflist"
+// NetworkConfigurationsGlob specifies the location only of the CNI network
+// configuration list files.
+const NetworkConfigurationsDir = "/etc/cni/net.d"
+
+// NetworkConfigurationsGlob specifies the pattern of the CNI network
+// configuration list files.
+const NetworkConfigurationsGlob = "nerdctl-*.conflist"
 
 // GostwireNetworkNameKey defines the label key for storing the nerdctl "Docker"
 // network name of bridge networks.
@@ -104,7 +109,18 @@ func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 		engineNetns: allnetns[netnsid],
 		networks:    []nerdctlNetwork{},
 	}
-	configFilenames, err := filepath.Glob(NetworkConfigurationsGlob)
+	mntneer, err := mountineer.New(model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/mnt", engine.PID)}, nil)
+	if err != nil {
+		log.Errorf("cannot access mount namespace of nerdctl engine, reason: %w", err)
+		return nerdynets
+	}
+	defer mntneer.Close()
+	netwConfigsDir, err := mntneer.Resolve(NetworkConfigurationsDir)
+	if err != nil {
+		log.Errorf("cannot resolve CNI plugins configuration path, reason: %w", err)
+		return nerdynets
+	}
+	configFilenames, err := filepath.Glob(filepath.Join(netwConfigsDir, NetworkConfigurationsGlob))
 	if err != nil {
 		return nerdynets
 	}
