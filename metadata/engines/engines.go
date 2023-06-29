@@ -19,24 +19,22 @@ func init() {
 // EngineMeta contains meta-information about an individual container engine
 // with active workload.
 type EngineMeta struct {
-	ID      string `json:"id"`
-	Type    string `json:"type"`
-	Version string `json:"version"`
+	ID      string        `json:"id"`
+	Type    string        `json:"type"`
+	Version string        `json:"version"`
+	PID     model.PIDType `json:"pid"`
 }
 
-// Metadata returns metadata about the container engines currently with workload
-// (that is, alive containers).
+// Metadata returns metadata about the container engines, regardless of
+// currently with or without workload (that is, alive containers).
 func Metadata(r gostwire.DiscoveryResult) map[string]interface{} {
-	engines := map[*model.ContainerEngine]struct{}{}
-	for _, cntr := range r.Lxkns.Containers {
-		engines[cntr.Engine] = struct{}{}
-	}
-	enginesMeta := make([]EngineMeta, 0, len(engines))
-	for engine := range engines {
+	enginesMeta := make([]EngineMeta, 0, len(r.Engines))
+	for _, engine := range r.Engines {
 		enginesMeta = append(enginesMeta, EngineMeta{
 			ID:      engine.ID,
 			Type:    engine.Type,
 			Version: engine.Version,
+			PID:     engine.PID,
 		})
 	}
 	return map[string]interface{}{

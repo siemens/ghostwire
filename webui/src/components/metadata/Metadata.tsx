@@ -85,7 +85,7 @@ const Metadata = () => {
             .sort((engA, engB) => (engA["type"] + engA["version"]).localeCompare((engB["type"] + engB["version"])))
             .map((engine, idx) =>
                 <MetaRow key={idx} name="Container engine" value={
-                    `${engine["version"]} (type ${engine["type"]})`
+                    `${engine["version"]} (type ${engine["type"]}, PID ${engine["pid"]})`
                 } />)
         : null
 
