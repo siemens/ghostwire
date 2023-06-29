@@ -48,13 +48,18 @@ type nerdctlNetworks struct {
 // nerdctlNetwork describes the nerdctl-managed CNI configuration, which is a
 // superset of CNI's ordered list of networks.
 //
+// Note: recent nerdctl versions do not create the underlying bridge netdev when
+// creating a custom network, but only allocate a name. The bridge netdev will
+// only be created later when the first sandbox needs to be wired up to the
+// custom network.
+//
 // Note: as nerdctl has no official API we have to define our own versions of
 // how nerdctl stores network configuration information, to some extend
 // mirroring some things. Sigh.
 type nerdctlNetwork struct {
 	*libcni.NetworkConfigList
-	ID     uint         // internal network number.
-	Labels model.Labels // optionally attached labels.
+	ID     string       // nerdctl network ID.
+	Labels model.Labels // optionally attached labels ("nerdctlLabels").
 }
 
 // Plugin returns the plugin configuration information for the (first) plugin of
@@ -69,8 +74,11 @@ func (n *nerdctlNetwork) Plugin(typ string) *libcni.NetworkConfig {
 	return nil
 }
 
-// Plugin returns the string value of the specified field of the first plugin of
-// the specified type. Otherwise, returns "".
+// Plugin returns the string value of the specified field of the (first) plugin
+// of the specified type. Otherwise, it returns "".
+//
+// A typical example is to ask for the field "bridge" of the CNI plugin of type
+// "bridge": the bridge field then is the name of the virtual bridge netdev.
 func (n *nerdctlNetwork) PluginField(typ string, field string) string {
 	plugin := n.Plugin(typ)
 	if plugin == nil {
@@ -88,61 +96,30 @@ func (n *nerdctlNetwork) PluginField(typ string, field string) string {
 	return "" // either no such field or it ain't contain a string.
 }
 
-// Minimal JSON description of the nerdctl built-in network ID 0 named "bridge"
-// with its Linux bridge named "nerdctl0".
-const builtinBridgeNetworkJSON = `{
-	"cniVersion": "0.4.0",
-	"name": "bridge",
-	"nerdctlID": 0,
-	"plugins": [
-		{
-			"type": "bridge",
-			"bridge": "nerdctl0"
-		}
-	]
-}`
-
-// NetworkConfigList for the built-in nerdctl default bridge network.
-var builtinBridgeNetworkConfig *libcni.NetworkConfigList
-
-// Generate the NetworkConfigList for the nerdctl built-in default bridge
-// network which needs to be done only once during startup.
-func init() {
-	var err error
-	builtinBridgeNetworkConfig, err = libcni.ConfListFromBytes([]byte(builtinBridgeNetworkJSON))
-	if err != nil {
-		panic(err)
-	}
-}
-
 // newNerdctlNetworks returns configuration information about the
 // nerdctl-managed networks for the specified containerd engine.
 func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, allnetns network.NetworkNamespaces) nerdctlNetworks {
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
 	nerdynets := nerdctlNetworks{
 		engineNetns: allnetns[netnsid],
-		networks: []nerdctlNetwork{ // ...pre-populate with the built-in default network
-			{
-				ID:                0,
-				Labels:            model.Labels{},
-				NetworkConfigList: builtinBridgeNetworkConfig,
-			},
-		},
+		networks:    []nerdctlNetwork{},
 	}
 	configFilenames, err := filepath.Glob(NetworkConfigurationsGlob)
 	if err != nil {
 		return nerdynets
 	}
 	for _, configFilename := range configFilenames {
+		log.Debugf("found CNI configuration file %q", configFilename)
 		nerdynetworkconf, err := libcni.ConfListFromFile(configFilename)
 		if err != nil {
+			log.Errorf("invalid CNI configuration file %q, reason: %w", configFilename, err)
 			continue
 		}
 		// Oh well ... libcni puts the original raw JSON into the "Bytes"
 		// rucksack and we now try to extract the additional nerdctl-related
 		// fields out of it.
 		rawFields := struct {
-			ID     uint              `json:"nerdctlID"`
+			ID     string            `json:"nerdctlID"`
 			Labels map[string]string `json:"nerdctlLabels"`
 		}{}
 		if json.Unmarshal(nerdynetworkconf.Bytes, &rawFields) != nil {
@@ -191,6 +168,8 @@ func Decorate(
 				// silently ignore if this ain't a bridge-based network.
 				continue
 			}
+			log.Debugf("nerdctl bridge network %q (ID %q) uses netdev %q",
+				netw.Name, netw.ID, nifname)
 			netif, ok := nerdynets.engineNetns.NamedNifs[nifname]
 			if !ok {
 				// hmm, no such Linux bridge (yet), so skip it as it won't show
