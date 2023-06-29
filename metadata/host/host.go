@@ -60,7 +60,7 @@ func getHostOsrelVars() map[string]string {
 	}
 	vars, err := osrelease.NewFromNameErr(osrelPath)
 	if err != nil {
-		log.Warnf("cannot fetch OS release information, reason: %w", err)
+		log.Warnf("cannot fetch OS release information, reason: %s", err.Error())
 	}
 	log.Debugf("OS information...")
 	for key, value := range vars {

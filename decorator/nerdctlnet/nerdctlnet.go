@@ -111,13 +111,15 @@ func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	}
 	mntneer, err := mountineer.New(model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/mnt", engine.PID)}, nil)
 	if err != nil {
-		log.Errorf("cannot access mount namespace of nerdctl engine, reason: %w", err)
+		log.Errorf("cannot access mount namespace of nerdctl engine, reason: %s",
+			err.Error())
 		return nerdynets
 	}
 	defer mntneer.Close()
 	netwConfigsDir, err := mntneer.Resolve(NetworkConfigurationsDir)
 	if err != nil {
-		log.Errorf("cannot resolve CNI plugins configuration path, reason: %w", err)
+		log.Errorf("cannot resolve CNI plugins configuration path, reason: %s",
+			err.Error())
 		return nerdynets
 	}
 	configFilenames, err := filepath.Glob(filepath.Join(netwConfigsDir, NetworkConfigurationsGlob))
@@ -128,7 +130,8 @@ func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 		log.Debugf("found CNI configuration file %q", configFilename)
 		nerdynetworkconf, err := libcni.ConfListFromFile(configFilename)
 		if err != nil {
-			log.Errorf("invalid CNI configuration file %q, reason: %w", configFilename, err)
+			log.Errorf("invalid CNI configuration file %q, reason: %s",
+				configFilename, err.Error())
 			continue
 		}
 		// Oh well ... libcni puts the original raw JSON into the "Bytes"
