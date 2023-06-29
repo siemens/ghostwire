@@ -6,12 +6,12 @@
 
 # Ghostwire Virtual Communication Discovery
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/siemens/ghostwire)](https://pkg.go.dev/github.com/siemens/ghostwire)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/siemens/ghostwire/v2)](https://pkg.go.dev/github.com/siemens/ghostwire/v2)
 [![GitHub](https://img.shields.io/github/license/siemens/ghostwire)](https://img.shields.io/github/license/siemens/ghostwire)
 ![build and test](https://github.com/siemens/ghostwire/workflows/build%20and%20test/badge.svg?branch=main)
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
-[![Go Report Card](https://goreportcard.com/badge/github.com/siemens/ghostwire)](https://goreportcard.com/report/github.com/siemens/ghostwire)
+[![Go Report Card](https://goreportcard.com/badge/github.com/siemens/ghostwire/v2)](https://goreportcard.com/report/github.com/siemens/ghostwire/v2)
 ![Coverage](https://img.shields.io/badge/Coverage-76.2%25-yellow)
 
 **G(h)ostwire** discovers the virtual (or not) network configuration inside
