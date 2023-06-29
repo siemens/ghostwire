@@ -58,7 +58,15 @@ func getHostOsrelVars() map[string]string {
 		log.Errorf("cannot resolve /etc/os-release-container host path: %s", err.Error())
 		return nil
 	}
-	return osrelease.NewFromName(osrelPath)
+	vars, err := osrelease.NewFromNameErr(osrelPath)
+	if err != nil {
+		log.Warnf("cannot fetch OS release information, reason: %s", err.Error())
+	}
+	log.Debugf("OS information...")
+	for key, value := range vars {
+		log.Debugf("  %s: %s", key, value)
+	}
+	return vars
 }
 
 // getHostname picks up the host name from a discovery's process PID 1 DNS

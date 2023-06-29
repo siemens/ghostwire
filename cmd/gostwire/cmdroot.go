@@ -128,7 +128,7 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 	// And now for the real meat.
 	log.Infof("Gostwire \"The Sequel\" virtual network topology and configuration discovery service, version %s",
 		gostwire.SemVersion)
-	log.Infof("Copyright (c) Siemens AG 2018-2022")
+	log.Infof("Copyright (c) Siemens AG 2018-2023")
 
 	// De-base64 the brand icon in case it had been base-64 encoded. The web UI
 	// expects the brand icon to be SVG that then gets used in some places in
