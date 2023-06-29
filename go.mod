@@ -9,7 +9,7 @@ require (
 	github.com/containerd/containerd v1.7.2
 	github.com/containernetworking/cni v1.1.2
 	github.com/docker/docker v24.0.2+incompatible
-	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
+	github.com/dustinkirkland/golang-petname v0.0.0-20230626224747-e794b9370d49
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/google/nftables v0.1.0
 	github.com/gorilla/mux v1.8.0
@@ -27,17 +27,17 @@ require (
 	github.com/thediveo/deferrer v0.1.0
 	github.com/thediveo/fdooze v0.2.0
 	github.com/thediveo/go-plugger/v3 v3.0.0
-	github.com/thediveo/lxkns v0.26.7
+	github.com/thediveo/lxkns v0.26.8
 	github.com/thediveo/namspill v0.1.5
 	github.com/thediveo/netdb v1.0.2
 	github.com/thediveo/nufftables v0.7.3
-	github.com/thediveo/osrelease v1.0.0
+	github.com/thediveo/osrelease v1.0.1
 	github.com/thediveo/procfsroot v1.0.0
 	github.com/thediveo/success v1.0.1
 	github.com/thediveo/testbasher v1.0.7
 	github.com/thediveo/whalewatcher v0.8.6
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 	golang.org/x/sys v0.9.0
 	golang.org/x/text v0.10.0
 	sigs.k8s.io/kind v0.20.0
