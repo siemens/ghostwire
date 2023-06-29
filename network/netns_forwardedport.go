@@ -44,7 +44,7 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 	// reson is that nftables uses @mdlayher/netlink and that really is a major
 	// P.I.T.A. with its network namespace "support". Luckily, we have
 	// OpenInNetworkNamespace that properly supports the more complex use cases
-	// of namespace refernces so we simply wrap creating a netfilter netlink
+	// of namespace references so we simply wrap creating a netfilter netlink
 	// socket in it.
 	var conn *nftables.Conn
 	err := n.OpenInNetworkNamespace(func() error {
