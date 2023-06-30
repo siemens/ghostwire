@@ -176,6 +176,7 @@ require (
 	github.com/thediveo/go-mntinfo v1.0.1 // indirect
 	github.com/thediveo/ioctl v0.9.2 // indirect
 	github.com/thediveo/sealwatcher/v2 v2.0.0 // indirect
+	github.com/thediveo/spaserve v1.0.1
 	github.com/thediveo/wye v0.1.1 // indirect
 	github.com/theupdateframework/go-tuf v0.5.2 // indirect
 	github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 // indirect
