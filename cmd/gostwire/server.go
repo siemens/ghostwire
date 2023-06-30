@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"os"
 	"regexp"
 	"sync"
 	"time"
@@ -79,7 +78,7 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 	registerRouteHandlers(r)
 
 	r.PathPrefix("/").Handler(spaserve.NewSPAHandler(
-		os.DirFS("webui/build"), "index.html", spaserve.WithIndexRewriter(AddDynamicVars)))
+		uifs, "index.html", spaserve.WithIndexRewriter(AddDynamicVars)))
 
 	server = &http.Server{Handler: r}
 	go func() {

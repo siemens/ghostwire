@@ -4,8 +4,8 @@
 # - Go programs and Linux glibc versioning,
 #   https://utcc.utoronto.ca/~cks/space/blog/programming/GoAndGlibcVersioning
 
-GOSTATIC = -tags=osusergo,netgo,sqlite_omit_load_extension \
-	-ldflags="-s -w -extldflags=-static"
+GOSTATIC = -ldflags="-s -w -extldflags=-static" \
+	-tags=osusergo,netgo,sqlite_omit_load_extension
 
 GOGEN = go generate .
 
@@ -55,11 +55,10 @@ build: ## build the Gostwire stripped static binary
 	go build -v $(GOSTATIC) ./cmd/gostwire
 	@file gostwire
 
-rebuild: ## build the Gostwire stripped static binary, rebuiling everything
+build-embedded: ## build the Gostwire stripped static binary with embedded web UI
 	@$(APITOOLCHECK)
-	go build -a -v $(GOSTATIC) ./cmd/gostwire
+	go build -v $(GOSTATIC),webui ./cmd/gostwire
 	@file gostwire
-	@ls -lh gostwire
 
 pprof: ## build the Gostwire static binary with pprof support enabled
 	go run -exec sudo -v -tags osusergo,netgo,pprof -ldflags="-extldflags=-static" ./cmd/gostwire
