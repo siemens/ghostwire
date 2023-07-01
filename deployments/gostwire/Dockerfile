@@ -13,6 +13,10 @@ ARG ALPINE_PATCH=0
 ARG GO_VERSION=1.20.5
 ARG NODE_VERSION=16
 
+# Go build settings
+ARG LDFLAGS="-s -w -extldflags=-static"
+ARG TAGS="osusergo,netgo,sqlite_omit_load_extension"
+
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
 
@@ -22,7 +26,14 @@ FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
 # compiler ... and then we also need header files. Caching to the rescue at
 # least for local builds, so we start with the C-related stuff, which is kind of
 # base builder image stuff anyway.
+#
+# Please note that the gostwire binary expects the web UI files to be later made
+# available in the final image. We will later reuse this stage to build the
+# final gostwire binary with the web UI files embedded.
 FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+
+ARG LDFLAGS
+ARG TAGS
 
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
@@ -82,18 +93,14 @@ COPY network/ ./network/
 COPY turtlefinder/ ./turtlefinder/
 COPY *.go ./
 
-ARG LDFLAGS="-s -w -extldflags=-static"
-ARG TAGS="osusergo,netgo,sqlite_omit_load_extension"
-
 RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     xx-go build -v \
-        -tags=$"{TAGS}" \
+        -tags="${TAGS}" \
         -ldflags="${LDFLAGS}" \
         -o /gostwire ./cmd/gostwire && \
     xx-verify --static /gostwire
-RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override,cap_net_raw,cap_net_admin+ep" /gostwire
 
 # -- 2nd stage ---------------------------------------------------------------
 #
@@ -124,14 +131,40 @@ RUN echo "building: ${REACT_APP_GIT_VERSION}" && yarn imgbuild
 
 # -- 3. stage ---------------------------------------------------------------
 #
+# Complete the gostwire binary by embedding the web UI files this time.
+FROM --platform=${BUILDPLATFORM} builder AS embedder
+
+ARG LDFLAGS
+ARG TAGS
+
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+
+WORKDIR /ws/ghostwire
+
+# Now we need the webui package that simply consists of a go:embed directive and
+# the Webui fs.FS export.
+COPY --from=webappsrc webui.go ./webui/
+COPY --from=webui /webui/build/ ./webui/build/
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg \
+    xx-go build -v \
+        -tags="${TAGS},webui" \
+        -ldflags="${LDFLAGS}" \
+        -o /gostwire ./cmd/gostwire && \
+    xx-verify --static /gostwire
+RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override,cap_net_raw,cap_net_admin+ep" /gostwire
+
+# -- 4. stage ---------------------------------------------------------------
+#
 # In the final stage we now "only" need to install the gostwire service binary
 # and its web ui application into the final image.
 FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} as final
 LABEL maintainer="Harald Albrecht <harald.albrecht@siemens.com>"
 ARG ALPINE_VERSION
 ARG GOLANG_VERSION
-COPY --from=builder /gostwire /gostwire
-COPY --from=webui /webui/build /webui/build
+COPY --from=embedder /gostwire /gostwire
+#COPY --from=webui /webui/build /webui/build
 # Now bugger off...
 USER 65534
 # The ENTRYPOINT specifies the program to execute, as well as the "fixed"
