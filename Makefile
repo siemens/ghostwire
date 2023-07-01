@@ -57,6 +57,11 @@ build: ## build the Gostwire stripped static binary
 
 build-embedded: ## build the Gostwire stripped static binary with embedded web UI
 	@$(APITOOLCHECK)
+	( \
+		$(GETGITVERSION) \
+		cd webui \
+		REACT_APP_GIT_VERSION=$$GIT_VERSION yarn build \
+	)
 	go build -v $(GOSTATIC),webui ./cmd/gostwire
 	@file gostwire
 
