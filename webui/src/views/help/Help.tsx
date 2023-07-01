@@ -15,6 +15,7 @@ import { GwMarkdown } from 'components/gwmarkdown'
 import { MuiMarkdownProps } from 'components/muimarkdown'
 
 import { containeesCutoffAtom, nifsCutoffAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
+import { useHydrateAtoms } from 'jotai/utils'
 
 
 /**
@@ -23,7 +24,7 @@ import { containeesCutoffAtom, nifsCutoffAtom, portsCutoffAtom, routesCutoffAtom
  * @param name name (without .mdx extension and without any path) of a chapter
  * .mdx file; chapter files are located in the chapters/ subdirectory.
  */
-const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`))
+const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`)) as unknown as (props: any) => JSX.Element
 
 // DynamicVars represents an object "map" of dynamic variable passed into an
 // application by the server at load time (as opposed to static REACT_APP_
@@ -91,6 +92,10 @@ const FakeAppBar = ({ children }) => {
     )
 }
 
+const HydrateAtoms = ({ initialValues, children }) => {
+    useHydrateAtoms(initialValues)
+    return children
+}
 
 const shortcodes = { Brand, BrandIcon, Example, FakeAppBar }
 
@@ -104,28 +109,30 @@ const shortcodes = { Brand, BrandIcon, Example, FakeAppBar }
  * settings, the help viewer supplies its own jotai provider with well-defined
  * settings.
  */
-export const Help = () => (
-    <Provider initialValues={[
-        [showLoopbackAtom, false],
-        [showEmptyNetnsAtom, false],
-        [showMACAtom, true],
-        [showIpv4Atom, true],
-        [showIpv6Atom, true],
-        [containeesCutoffAtom, 100],
-        [portsCutoffAtom, 100],
-        [routesCutoffAtom, 100],
-        [nifsCutoffAtom, 100],
-        [showSandboxesAtom, false],
-        [showNamespaceIdsAtom, true],
-    ]}>
-        <HelpViewer
-            chapters={chapters}
-            baseroute="/help"
-            markdowner={markdowner}
-            shortcodes={shortcodes}
-            style={{ overflow: 'visible' }}
-        />
+export const Help = () => {
+    return <Provider>
+        <HydrateAtoms initialValues={[
+            [showLoopbackAtom, false],
+            [showEmptyNetnsAtom, false],
+            [showMACAtom, true],
+            [showIpv4Atom, true],
+            [showIpv6Atom, true],
+            [containeesCutoffAtom, 100],
+            [portsCutoffAtom, 100],
+            [routesCutoffAtom, 100],
+            [nifsCutoffAtom, 100],
+            [showSandboxesAtom, false],
+            [showNamespaceIdsAtom, true],
+        ]}>
+            <HelpViewer
+                chapters={chapters}
+                baseroute="/help"
+                markdowner={markdowner}
+                shortcodes={shortcodes}
+                style={{ overflow: 'visible' }}
+            />
+        </HydrateAtoms>
     </Provider>
-)
+}
 
 export default Help

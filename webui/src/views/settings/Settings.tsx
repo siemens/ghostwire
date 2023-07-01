@@ -4,8 +4,8 @@
 
 import React from 'react'
 
-import { atom, useAtom } from 'jotai'
-import { localStorageAtom } from 'utils/persistentsettings'
+import { atom, useAtom, useSetAtom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 
 import {
     Box,
@@ -54,38 +54,38 @@ const showMultiBroadcastRoutesKey = 'ghostwire.showmultibroadcastroutes'
 export const THEME_USERPREF = 0
 export const THEME_LIGHT = 1
 export const THEME_DARK = -1
-export const themeAtom = localStorageAtom(themeKey, THEME_USERPREF)
+export const themeAtom = atomWithStorage(themeKey, THEME_USERPREF)
 
-export const showLoopbackAtom = localStorageAtom(showLoopbackKey, false)
-export const showEmptyNetnsAtom = localStorageAtom(showEmptyNetnsKey, false)
-export const showMACAtom = localStorageAtom(showMACKey, false)
+export const showLoopbackAtom = atomWithStorage(showLoopbackKey, false)
+export const showEmptyNetnsAtom = atomWithStorage(showEmptyNetnsKey, false)
+export const showMACAtom = atomWithStorage(showMACKey, false)
 
 // The "IP families" setting actually consists of separate IPv4 and IPv6 boolean
 // settings.
-export const showIpv4Atom = localStorageAtom(showIpv4Key, true)
-export const showIpv6Atom = localStorageAtom(showIpv6Key, false) // this default is PAINFUL!
-export const showIpFamiliesAtom = atom(get => {
+export const showIpv4Atom = atomWithStorage(showIpv4Key, true)
+export const showIpv6Atom = atomWithStorage(showIpv6Key, false) // this default is PAINFUL!
+export const showIpFamiliesAtom = atom((get) => {
     let families = get(showIpv4Atom) ? [AddressFamily.IPv4] : []
     get(showIpv6Atom) && families.push(AddressFamily.IPv6)
     return families
 })
 
-export const containeesCutoffAtom = localStorageAtom(cutoffContaineesKey, 3)
-export const neighborhoodCutoffAtom = localStorageAtom(cutoffNeighborhoodKey, 10)
-export const portsCutoffAtom = localStorageAtom(cutoffPortsKey, 10)
-export const forwardedPortsCutoffAtom = localStorageAtom(cutoffForwardedPortsKey, 10)
-export const routesCutoffAtom = localStorageAtom(cutoffRoutesKey, 10)
-export const nifsCutoffAtom = localStorageAtom(cutoffNifsKey, NEVER)
+export const containeesCutoffAtom = atomWithStorage(cutoffContaineesKey, 3)
+export const neighborhoodCutoffAtom = atomWithStorage(cutoffNeighborhoodKey, 10)
+export const portsCutoffAtom = atomWithStorage(cutoffPortsKey, 10)
+export const forwardedPortsCutoffAtom = atomWithStorage(cutoffForwardedPortsKey, 10)
+export const routesCutoffAtom = atomWithStorage(cutoffRoutesKey, 10)
+export const nifsCutoffAtom = atomWithStorage(cutoffNifsKey, NEVER)
 
-export const showSandboxesAtom = localStorageAtom(showSandboxesKey, false)
+export const showSandboxesAtom = atomWithStorage(showSandboxesKey, false)
 
-export const showNamespaceIdsAtom = localStorageAtom(showNamespaceIds, false)
+export const showNamespaceIdsAtom = atomWithStorage(showNamespaceIds, false)
 
-export const snapshotDensityAtom = localStorageAtom(snapshotDensityKey, 1)
+export const snapshotDensityAtom = atomWithStorage(snapshotDensityKey, 1)
 
-export const showIEAppIconsAtom = localStorageAtom(showIEAppIconsKey, false)
+export const showIEAppIconsAtom = atomWithStorage(showIEAppIconsKey, false)
 
-export const showMultiBroadcastRoutesAtom = localStorageAtom(showMultiBroadcastRoutesKey, false)
+export const showMultiBroadcastRoutesAtom = atomWithStorage(showMultiBroadcastRoutesKey, false)
 
 const cutOffEm = 12
 
@@ -109,8 +109,8 @@ export const Settings = () => {
     const [showEmptyNetns, setShowEmptyNetns] = useAtom(showEmptyNetnsAtom)
     const [showMAC, setShowMAC] = useAtom(showMACAtom)
     const [showIpFamilies] = useAtom(showIpFamiliesAtom)
-    const [, setIpv4] = useAtom(showIpv4Atom)
-    const [, setIpv6] = useAtom(showIpv6Atom)
+    const setIpv4 = useSetAtom(showIpv4Atom)
+    const setIpv6 = useSetAtom(showIpv6Atom)
     const [showSandboxes, setShowSandboxes] = useAtom(showSandboxesAtom)
     const [showNamespaceIds, setShowNamespaceIds] = useAtom(showNamespaceIdsAtom)
     const [showIEAppIcons, setShowIEAppIcons] = useAtom(showIEAppIconsAtom)
@@ -128,7 +128,7 @@ export const Settings = () => {
     }
 
     const handleThemeChange = (event: SelectChangeEvent<number>) => {
-        setTheme(event.target.value)
+        setTheme(event.target.value as number)
     }
 
     return (
