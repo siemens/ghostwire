@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import React from 'react'
-import { localStorageAtom } from 'utils/persistentsettings'
+import { atomWithStorage } from 'jotai/utils'
 import { Collapse, IconButton, styled } from '@mui/material'
 import { useDiscovery } from 'components/discovery'
 import { useAtom } from 'jotai'
@@ -11,7 +11,7 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material'
 
 const expandMetadata = 'ghostwire.expandmd'
 
-const expandMetadataAtom = localStorageAtom(expandMetadata, true)
+const expandMetadataAtom = atomWithStorage(expandMetadata, true)
 
 const Section = styled('div')(({ theme }) => ({
     display: 'grid',

@@ -7,12 +7,17 @@ import { containerBox, pod, veth1Nif } from 'views/help/mockdata'
 
 # <CaptureIcon className="icon"/> Live Capture
 
-"Live capture" *streams* your captured network packets directly from the system
-you are looking at to a [Wireshark™](https://wireshark.org) network protocol
-analyzer on your desktop system. "Downloading" was before, 'tis now the
-*streaming* age. Live captures allow you to see network packets in "real time"
-(albeit with some delay due to transmitting them from the capture host to your
-desktop Wireshark).
+> "[Downloading](https://en.wikipedia.org/wiki/Download)" was ages ago, 'tis now
+> the *streaming* age.
+
+"Live capture" *streams* your captured network packets _immediately_ from the
+system you are looking at to a [Wireshark™](https://wireshark.org) network
+protocol analyzer on your desktop system. For this, you'll need to have our
+Wireshark [cshargextcap
+plugin](https://github.com/siemens/cshargextcap/releases) installed.
+
+Live captures allow you to see network packets in "real time" (albeit with some
+delay due to transmitting them from the capture host to your desktop Wireshark).
 
 No more first having to do start and later stop some "blind" capturing and
 downloading a capture file afterwards – just to find out that you got it wrong,
@@ -43,14 +48,18 @@ traffic differs as follows:
 To use live packet capture you'll need:
 
 - both the [ClusterShark external capture
-  plugin](https://github.com/siemens/cshargextcap) as well as a **Wireshark™
-  version 3.0.2** or later installed on your client system (Windows only at the
-  moment).
+  plugin](https://github.com/siemens/cshargextcap/releases) as well as a
+  **Wireshark™ version 3.0.2** or later installed on your client system.
+  Supported systems are:
+  - Linux x86 64 bit and ARM 64 bit,
+  - Windows x86 64 bit only.
 
 - on the server side you'll need the [Packetflix live capture streaming
   service](https://github.com/siemens/edgeshark) which simultaneously acts as
   the combined service access point for Ghostwire. On an Industrial Edge simply
   install the "Edgeshark" app via your Industrial Edge Management service.
+  Supported systems are:
+  - Linux (including WSL2) x86 64 bit and ARM 64 bit.
 
 #### Capturing From All Network Interfaces
 

@@ -11,15 +11,7 @@ GOGEN = go generate .
 
 GETGITVERSION = export GIT_VERSION=$$(awk -n 'match($$0, /^const SemVersion = "(.*)"$$/, v) { print v[1]; }' defs_version.go)
 
-APITOOLCHECK = \
-	if ! command -v redoc-cli >/dev/null 2>&1; then \
-		echo "warning: redoc-cli not found, please install"; \
-		echo "    sudo npm install -g redoc-cli"; \
-	else \
-		(redoc-cli build -o docs/api/index.html \
-			--options=redoc-theme.json \
-			api/openapi-spec/ghostwire-v1.yaml); \
-	fi
+GENAPIDOC = npx @redocly/cli build-docs -o docs/api/index.html api/openapi-spec/ghostwire-v1.yaml
 
 tools := gostwire gostdump lsallnifs
 
@@ -42,7 +34,7 @@ test-all: ## run tests as root as well as an ordinary user, including KinD
 	go test -v -p 1 -tags=matchers,kind ./...
 
 docsify: ## run a docsify HTTP server on port 3300 (and 3301)
-	@$(APITOOLCHECK)
+	@$(GENAPIDOC)
 	@scripts/docsify.sh ./docs
 
 redocsify: ## run redoc-cli in serve mode on port 3400
@@ -51,12 +43,17 @@ report: ## run goreportcard on this module
 	@./scripts/goreportcard.sh
 
 build: ## build the Gostwire stripped static binary
-	@$(APITOOLCHECK)
+	@$(GENAPIDOC)
 	go build -v $(GOSTATIC) ./cmd/gostwire
 	@file gostwire
 
 build-embedded: ## build the Gostwire stripped static binary with embedded web UI
-	@$(APITOOLCHECK)
+	@$(GENAPIDOC)
+	( \
+		$(GETGITVERSION) \
+		cd webui \
+		REACT_APP_GIT_VERSION=$$GIT_VERSION yarn build \
+	)
 	go build -v $(GOSTATIC),webui ./cmd/gostwire
 	@file gostwire
 
@@ -72,9 +69,9 @@ dist: ## build multi-arch image (amd64, arm64) and push to local running registr
 			--build-context webappsrc=./webui \
 	)
 
-deploy: ## deploy Gostwire service exposed on host port 5000
+deploy: ## deploy Gostwire service exposed on host port 5999
 	$(GOGEN)
-	@$(APITOOLCHECK)
+	@$(GENAPIDOC)
 	( \
 		$(GETGITVERSION) \
 		&& echo "deploying version" $$GIT_VERSION \

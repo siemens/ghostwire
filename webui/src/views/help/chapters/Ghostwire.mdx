@@ -2,8 +2,11 @@ import ScreenshotIcon from 'icons/Screenshot'
 
 # <Brand/>
 
+## Explore
+
 In a nutshell: **<Brand/>** lets you easily see and explore how the virtual
-network configuration inside your Linux host is set up...
+network configuration inside your Linux host (including
+[WSL2](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)) is set up...
 
 <p />
 
@@ -30,27 +33,33 @@ network configuration inside your Linux host is set up...
 
 <p />
 
+The discovery engine supports _multiple_ container engines/runtimes, even
+putting one container engine _into_ another one. Two prominent examples are
+[Kubernetes in Docker](https://github.com/kubernetes-sigs/kind) and [Docker
+Desktop on Windows](https://docs.docker.com/desktop/install/windows-install/).
+Please see also [Technical Features](tech) for more details.
+
+## Live Capture
+
 Where available, [live packet captures](capture) into
 [Wireshark™](https://wireshark.org) can be started directly from this web user
-interface with just a single click.
+interface with just a single click. For this, you'll need to have Wireshark and
+our Wireshark [cshargextcap
+plugin](https://github.com/siemens/cshargextcap/releases) installed. You can
+install this plugin at any time without the need to restart your browser
+(Chrome/Chromium, ...).
 
-The discovery engine supports several container engines/runtimes, even putting
-one container engine _into_ another one. Please see also [Technical
-Features](tech) for more details.
-
-<p/>
-
-###### Copyright
+## Copyright
 
 The [Edgeshark project](https://github.com/siemens/edgeshark) is (c) Siemens
 2023 and available under the MIT license.
 
-###### Trademarks
+## Trademarks
 
 All product names, logos, and brands mentioned in this help are property of
 their respective owners.
 
-###### Disclaimer of Liability
+## Disclaimer of Liability
 
 The information in this help is provided "as is" and without warranties of any
 kind, either express or implied, including, but not limited to, implied

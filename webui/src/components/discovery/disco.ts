@@ -34,7 +34,7 @@ const initialRefreshInterval = (() => {
  * The discovery refresh interval state; `null` means the refresh is disabled.
  * The refresh interval is automatically synced to the local storage.
  */
-export const discoveryRefreshIntervalAtom = atom<number, number>(
+export const discoveryRefreshIntervalAtom = atom(
     initialRefreshInterval,
     (_get, set, interval: number) => {
         set(discoveryRefreshIntervalAtom, interval)

@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 import React from 'react'
-import { useAtom, WritableAtom } from 'jotai'
-import { MenuItem, Select } from '@mui/material'
+import { PrimitiveAtom, useAtom } from 'jotai'
+import { MenuItem, Select, SelectChangeEvent } from '@mui/material'
 import useId from 'hooks/id/id'
 
 
@@ -14,7 +14,7 @@ export const NEVER = 1e6
 
 export interface CutoffSelectorProps {
     /** atom for storing the selected cutoff number. */
-    atom: WritableAtom<number, (update: number) => void>
+    atom: PrimitiveAtom<number>
     /** element name */
     element: string
     elements?: string
@@ -32,8 +32,8 @@ export const CutoffSelector = ({ atom, element, elements, em }: CutoffSelectorPr
 
     em = em >= 5 ? em : 5
 
-    const handleChange = (event) => {
-        setCutoff(event.target.value)
+    const handleChange = (event: SelectChangeEvent<number>) => {
+        setCutoff(event.target.value as number)
     }
 
     return (
