@@ -69,7 +69,7 @@ dist: ## build multi-arch image (amd64, arm64) and push to local running registr
 			--build-context webappsrc=./webui \
 	)
 
-deploy: ## deploy Gostwire service exposed on host port 5000
+deploy: ## deploy Gostwire service exposed on host port 5999
 	$(GOGEN)
 	@$(GENAPIDOC)
 	( \
