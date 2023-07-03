@@ -17,10 +17,9 @@ import {
 
 import HearingIcon from '@mui/icons-material/Hearing'
 import ConnectedIcon from 'icons/portstates/Connected'
-import ProcessIcon from 'icons/Process'
 
 import { AddressFamily, AddressFamilySet, containeeDisplayName, isContainer, NetworkNamespace, orderAddresses, orderByState, PortUser, TransportPort } from 'models/gw'
-import { ContaineeIcon } from 'utils/containeeicon'
+import { Process } from 'components/process'
 
 
 /**
@@ -145,46 +144,6 @@ const PortCell = styled(TableCell)(({ theme }) => ({
     fontFamily: 'Roboto Mono',
 }))
 
-const UserDetails = styled('span')(({ theme }) => ({
-    whiteSpace: 'nowrap',
-
-    '& .MuiSvgIcon-root': {
-        marginRight: '0.1em',
-        verticalAlign: 'baseline',
-        position: 'relative',
-        top: '0.2ex',
-        color: theme.palette.text.disabled,
-    },
-}))
-
-const ProcessDetails = styled('span')(({ theme }) => ({
-    display: 'inline-block',
-    whiteSpace: 'nowrap',
-}))
-
-const Cmdline = styled('span')(({ theme }) => ({
-    maxWidth: '16em',
-    // "overflow: hidden" needs either a block or inline-block, but in our
-    // case we need an inline-block.
-    display: 'inline-block',
-    // Now, "overflow: hidden" will cause the alignment to switch from
-    // baseline to bottom; but we need it to align with the same top as the
-    // following text, so it's vertical alignment to the top for us in this
-    // situation. Oh, well...
-    verticalAlign: 'top',
-    // Clip the command if it grows too long, and simply put in an ellipsis.
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-}))
-
-const PID = styled('span')(({ theme }) => ({
-    // Keep the same alignment as for the (potentially clipped) command
-    // information, as otherwise the rendered outcome will just suck.
-    display: 'inline-block',
-    verticalAlign: 'top',
-}))
-
 /**
  * Returns a stringified user name consisting of the process line, pod,
  * container, et cetera, suitable for sorting.
@@ -203,44 +162,6 @@ const userName = (user: PortUser) => {
     return components.join("/")
 }
 
-/** 
- * Renders "user" ("owner") transport port details, that is: group, container,
- * and process information.
- */
-const userDetails = (user: PortUser) => {
-    let info = []
-
-    // Good gracious! That took a long time to figure out that this seemingly
-    // function is a source of non-unique keys, grmpf. Adding keys to each and
-    // every array item finally silences the warnings.
-
-    const containee = user.containee
-    if (!!containee) {
-        if (isContainer(containee) && containee.pod) {
-            // This is a "pot'ed" container...
-            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }), containee.pod.name])
-        }
-        // Add the container details...
-        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' }), containeeDisplayName(containee)])
-    }
-    // And finally: the process details ... cmdline and PID.
-    info.push(
-        <ProcessDetails key="process">
-            <ProcessIcon fontSize="inherit" />
-            <Cmdline>{command(user.cmdline)}</Cmdline>
-            <PID>&nbsp;({user.pid})</PID>
-        </ProcessDetails>
-    )
-    // Finally return the detail elements, separated by commas; and no, we can't
-    // use Array.join() here, as we face JSX elements.
-    return info.reduce((list, element, index) => {
-        if (index) {
-            list.push(<span key={index}> · </span>)
-        }
-        list.push(element)
-        return list
-    }, []).flat()
-}
 
 /** Return last path component of first command line element. */
 const command = (cmdline: string[]) => {
@@ -429,9 +350,7 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
                             <PortCell>{(row.port.remotePort && `:${row.port.remotePort}`) || ''}</PortCell>
                             <TableCell>{row.port.remoteServicename}</TableCell>
                             <TableCell>
-                                <UserDetails>
-                                    {userDetails(row.user)}
-                                </UserDetails>
+                                <Process cmdline={row.user.cmdline} containee={row.user.containee} pid={row.user.pid} />
                             </TableCell>
                         </TableRow>
                     )}

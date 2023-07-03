@@ -25,8 +25,8 @@ const (
 // TunTapAttrs represents the attributes of a TUN/TAP network interface.
 type TunTapAttrs struct {
 	NifAttrs
-	Mode    TunTapMode
-	Process *model.Process
+	Mode       TunTapMode
+	Processors []*model.Process
 }
 
 var _ TunTap = (*TunTapAttrs)(nil)

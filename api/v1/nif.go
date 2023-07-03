@@ -6,6 +6,7 @@ package v1
 
 import (
 	"net"
+	"strings"
 
 	"github.com/siemens/ghostwire/v2/network"
 
@@ -55,10 +56,13 @@ type vxlanConfig struct {
 	RemotePort      uint16          `json:"remote-port"`
 }
 
+type processor owner
+
 // tuntapConfig is optional and carries TUN/TAP-specific network interface
 // information, especially whether it is a TAP or a TUN.
 type tuntapConfig struct {
-	Mode string `json:"mode"`
+	Mode       string      `json:"mode"`
+	Processors []processor `json:"processors"`
 }
 
 type sourceIP struct {
@@ -171,6 +175,15 @@ func newNif(nif network.Interface) networkInterface {
 		case network.TunTapModeTun:
 			tuntapcfg.Mode = "tun"
 		}
+		processors := make([]processor, 0, len(tt.Processors))
+		for _, proc := range tt.Processors {
+			processors = append(processors, processor{
+				PID:          proc.PID,
+				Cmdline:      strings.Join(proc.Cmdline, " "),
+				ContainerRef: cntrID(leader(proc)),
+			})
+		}
+		tuntapcfg.Processors = processors
 	}
 	// Handle a VLAN.
 	var vlancfg *vlanConfig

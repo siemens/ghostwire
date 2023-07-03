@@ -16,14 +16,12 @@ import {
     TableSortLabel,
 } from '@mui/material'
 
-import ProcessIcon from 'icons/Process'
-
 import { AddressFamily, AddressFamilySet, Containee, containeeDisplayName, isContainer, isPod, netnsId, NetworkNamespace, orderAddresses, PortUser, PrimitiveContainee } from 'models/gw'
-import { ContaineeIcon } from 'utils/containeeicon'
 import { ContaineeBadge } from 'components/containeebadge'
 import { scrollIdIntoView } from 'utils'
 import { useNavigate, useMatch } from 'react-router-dom'
 import { useContextualId } from 'components/idcontext'
+import { Process } from 'components/process'
 
 /**
  * A row in the forwarded port table is showing information for the (unique)
@@ -159,34 +157,6 @@ const UserDetails = styled('span')(({ theme }) => ({
     },
 }))
 
-const ProcessDetails = styled('span')(({ theme }) => ({
-    display: 'inline-block',
-    whiteSpace: 'nowrap',
-}))
-
-const Cmdline = styled('span')(({ theme }) => ({
-    maxWidth: '16em',
-    // "overflow: hidden" needs either a block or inline-block, but in our
-    // case we need an inline-block.
-    display: 'inline-block',
-    // Now, "overflow: hidden" will cause the alignment to switch from
-    // baseline to bottom; but we need it to align with the same top as the
-    // following text, so it's vertical alignment to the top for us in this
-    // situation. Oh, well...
-    verticalAlign: 'top',
-    // Clip the command if it grows too long, and simply put in an ellipsis.
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-}))
-
-const PID = styled('span')(({ theme }) => ({
-    // Keep the same alignment as for the (potentially clipped) command
-    // information, as otherwise the rendered outcome will just suck.
-    display: 'inline-block',
-    verticalAlign: 'top',
-}))
-
 /**
  * Returns a stringified user name consisting of the process line, pod,
  * container, et cetera, suitable for sorting.
@@ -203,45 +173,6 @@ const userName = (user: PortUser) => {
     components.push(command(user.cmdline))
     components.push(user.pid.toString())
     return components.join("/")
-}
-
-/** 
- * Renders "user" ("owner") forwarded port details, that is: group, container,
- * and process information.
- */
-const userDetails = (user: PortUser) => {
-    let info = []
-
-    // Good gracious! That took a long time to figure out that this seemingly
-    // function is a source of non-unique keys, grmpf. Adding keys to each and
-    // every array item finally silences the warnings.
-
-    const containee = user.containee
-    if (!!containee) {
-        if (isContainer(containee) && containee.pod) {
-            // This is a "pot'ed" container...
-            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }), containee.pod.name])
-        }
-        // Add the container details...
-        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' }), containeeDisplayName(containee)])
-    }
-    // And finally: the process details ... cmdline and PID.
-    info.push(
-        <ProcessDetails key="process">
-            <ProcessIcon fontSize="inherit" />
-            <Cmdline>{command(user.cmdline)}</Cmdline>
-            <PID>&nbsp;({user.pid})</PID>
-        </ProcessDetails>
-    )
-    // Finally return the detail elements, separated by commas; and no, we can't
-    // use Array.join() here, as we face JSX elements.
-    return info.reduce((list, element, index) => {
-        if (index) {
-            list.push(<span key={index}> · </span>)
-        }
-        list.push(element)
-        return list
-    }, []).flat()
 }
 
 /** Renders a network namespace's clickable containees in case we don't have any
@@ -337,7 +268,7 @@ const portrowkey = (port: ForwardedPort, user: PortUser) => (
 // only once and not on each component rerender.
 const getInitialTableRows = (netns: NetworkNamespace, families: AddressFamilySet) => {
     const keys: { [key: string]: number } = {}
-    const fw: { [key: string]: boolean} = {}
+    const fw: { [key: string]: boolean } = {}
     return sortTableRows(
         netns.forwardedPorts
             .filter(port => families.includes(port.address.family))
@@ -366,7 +297,7 @@ const getInitialTableRows = (netns: NetworkNamespace, families: AddressFamilySet
                 fw[`${row.port.protocol}-${row.port.address.address}-${row.port.port}`] = true
                 return row
             }).concat(netns.transportPorts
-                .filter(port => 
+                .filter(port =>
                     families.includes(port.localAddress.family)
                     && (port.protocol === 'udp' || port.macroState === 'listening'))
                 .map(port => port.users.map(user => {
@@ -383,7 +314,7 @@ const getInitialTableRows = (netns: NetworkNamespace, families: AddressFamilySet
                             return null
                         }
                         keys[key] = 0
-                        return {port : fwport, user: user, key: key} as PortRow
+                        return { port: fwport, user: user, key: key } as PortRow
                     }
                     return null
                 })).flat().filter(portrow => !!portrow)
@@ -496,7 +427,10 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
                             <TableCell>
                                 {row.user.pid > 0
                                     ? <UserDetails>
-                                        {userDetails(row.user)}
+                                        <Process
+                                            cmdline={row.user.cmdline}
+                                            containee={row.user.containee}
+                                            pid={row.user.pid} />
                                     </UserDetails>
                                     : targetNetns(row.port.netns, handleContaineeNavigation)}
                             </TableCell>

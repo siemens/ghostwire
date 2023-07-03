@@ -5,8 +5,11 @@
 package network
 
 import (
+	"fmt"
+	"os"
 	"time"
 
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/notwork/link"
 	"github.com/vishvananda/netlink"
@@ -21,7 +24,7 @@ import (
 
 const tapNamePrefix = "tap-"
 
-var _ = Describe("TAPs and TUNs", func() {
+var _ = FDescribe("TAPs and TUNs", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
@@ -43,13 +46,27 @@ var _ = Describe("TAPs and TUNs", func() {
 		defer tap.Fds[0].Close()
 
 		By("discovering the TAP")
-		allnetns, _ := discoverRedux()
+		allnetns, result := discoverRedux()
 		currentNetns := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		Expect(allnetns).To(HaveKey(currentNetns))
 		Expect(allnetns[currentNetns].NamedNifs).To(HaveKey(tap.Attrs().Name))
 		gwtap := allnetns[currentNetns].NamedNifs[tap.Attrs().Name].(TunTap)
 		Expect(gwtap.Nif().Kind).To(Equal("tuntap"))
 		Expect(gwtap.TunTap().Mode).To(Equal(TunTapModeTap))
+
+		By("discovering the processor")
+		Expect(iff(fmt.Sprintf("/proc/self/fdinfo/%d", tap.Fds[0].Fd()))).To(Equal(tap.Name))
+		processors := discoverProcessors(result.Processes)
+		var processor tuntapProcessor
+		Expect(processors).To(ContainElement(
+			HaveField("Process.PID", model.PIDType(os.Getpid())), &processor))
+		Expect(processor.NetnsID).To(Equal(
+			Successful(ops.NamespacePath("/proc/self/ns/net").ID())))
+		Expect(processor.NifName).To(Equal(tap.Attrs().Name))
+
+		By("updating the discovery results")
+		Expect(gwtap.TunTap().Processors).To(
+			ConsistOf(result.Processes[model.PIDType(os.Getpid())]))
 	})
 
 })

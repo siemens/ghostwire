@@ -11,8 +11,9 @@ import { AddressFamily, AddressFamilySet, PrimitiveContainee, NetworkInterface, 
 import { NifBadge } from 'components/nifbadge'
 import { RelatedNif } from 'components/relatednif'
 import { NifAddressList } from 'components/nifadresslist'
-import { VxlanDetails } from 'components/vxlandetails/VxlanDetails'
+import { VxlanDetails } from 'components/vxlandetails'
 import { NamespaceContainees } from 'components/namespacecontainees'
+import { TunTapDetails } from 'components/tuntapdetails';
 
 
 // Indent of (1) nif properties, addresses, etc.; (2) sub-level nifs.
@@ -58,6 +59,11 @@ const SubNifs = styled('div')(({ theme }) => ({
 }))
 
 const Addresses = styled(NifAddressList)(({ theme }) => ({
+    marginTop: theme.spacing(1),
+    marginLeft: nifPropsIndent,
+}))
+
+const TunTapInfo = styled(TunTapDetails)(({ theme }) => ({
     marginTop: theme.spacing(1),
     marginLeft: nifPropsIndent,
 }))
@@ -245,6 +251,9 @@ export const NifTree = ({ netns, filterLo, filterMAC, families, onNavigation, on
                                     families={families}
                                 />
                             </div>
+
+                            {/* optionally: TAP/TUN details */}
+                            {nif.tuntapDetails && <TunTapInfo nif={nif} />}
 
                             {/* optionally: VXLAN details */}
                             {nif.vxlanDetails && <VxlanInfo nif={nif} />}
