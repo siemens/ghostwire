@@ -1077,6 +1077,7 @@ github.com/thediveo/namspill v0.1.5/go.mod h1:5LM/Xs2s0Vygnc7K+T9zIGaugyLkDIwcXJ
 github.com/thediveo/netdb v1.0.2 h1:icuZWO8btuubgjFFFhxWmXALATlQO6bqEer7DPxRPco=
 github.com/thediveo/netdb v1.0.2/go.mod h1:Mz/McdR84D8xUX7rWk0cRgNLrLvqfDPzTAQKUeCR0OY=
 github.com/thediveo/notwork v1.3.0 h1:p2AfSBmr8FwHSqDQw1pry20dooT+ErEagfvh85wAjjU=
+github.com/thediveo/notwork v1.3.0/go.mod h1:OpfrCxmMtaPI7hzzWrg8cwUcW4H3QDijjTfKet9jYfE=
 github.com/thediveo/nufftables v0.7.3 h1:nkA3gT2Timhpf0kGapuT5qE+bni+7V32Q3GsbNq7MtM=
 github.com/thediveo/nufftables v0.7.3/go.mod h1:+3hqXzoGduN4du45Uojx5iZ7hFPdZRpIoIJNnDPd7Ig=
 github.com/thediveo/once v0.9.0 h1:QmWMzqUnOtAxmBTOwIYc6gAN3lgVrmcJaLJrAHDNLPI=

@@ -51,6 +51,7 @@ export interface NetworkInterface {
 
     addresses: IpAddress[] /** IP addresses assigned to this network interface */
 
+    tuntapDetails?: TunTapDetails
     vxlanDetails?: VxlanDetails
     vlanDetails?: VlanDetails
 }
@@ -63,6 +64,15 @@ export interface NetworkInterface {
  */
 export const isNetworkInterface = (nif: object): nif is NetworkInterface => {
     return !!nif && nif['netns'] !== undefined && nif['index'] !== undefined
+}
+
+export enum TapTunMode {
+    TAP = 'tap',
+    TUN = 'tun',
+}
+
+export interface TunTapDetails {
+    mode: TapTunMode 
 }
 
 export interface VxlanDetails {

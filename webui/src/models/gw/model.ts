@@ -190,6 +190,11 @@ export const fromjson = (jsondata) => {
                 addresses: undefined,
                 labels: jnif.labels || {},
             }
+            if (jnif.tuntap) {
+                nif.tuntapDetails = {
+                    mode: jnif.tuntap.mode,
+                }
+            }
             if (jnif.vxlan) {
                 nif.vxlanDetails = {
                     vid: jnif.vxlan.vid,

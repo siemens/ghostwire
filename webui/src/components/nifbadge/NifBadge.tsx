@@ -9,7 +9,7 @@ import { Button, styled } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
 import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
-import { BridgeIcon, BridgeInternalIcon, DummyIcon, HardwareNicIcon, HardwareNicPFIcon, HardwareNicVFIcon, MacvlanIcon, MacvlanMasterIcon, NicIcon, OverlayIcon, VethIcon } from 'icons/nifs'
+import { BridgeIcon, BridgeInternalIcon, DummyIcon, HardwareNicIcon, HardwareNicPFIcon, HardwareNicVFIcon, MacvlanIcon, MacvlanMasterIcon, NicIcon, OverlayIcon, TapIcon, TunIcon, VethIcon } from 'icons/nifs'
 
 import { AddressFamily, AddressFamilySet, GHOSTWIRE_LABEL_ROOT, NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
 import { OperationalState } from 'models/gw'
@@ -177,6 +177,8 @@ const nifTypeIcons = {
     'bridge': BridgeIcon,
     'dummy': DummyIcon,
     'macvlan': MacvlanIcon,
+    'tap': TapIcon,
+    'tun': TunIcon,
     'veth': VethIcon,
     'vxlan': OverlayIcon,
 }
@@ -185,7 +187,8 @@ const nifIcon = (nif: NetworkInterface) => {
     if (GHOSTWIRE_LABEL_ROOT + 'bridge/internal' in nif.labels) {
         return BridgeInternalIcon
     }
-    return (nif.macvlans && MacvlanMasterIcon) ||
+    return (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) || 
+        (nif.macvlans && MacvlanMasterIcon) ||
         nifTypeIcons[nif.kind] || NicIcon
 }
 
@@ -198,14 +201,18 @@ const operStateIcons = {
 }
 
 const nifKindTips = {
+    'hw': '(virtual) hardware',
+    'pf': 'SR-IOV PF hardware',
+    'vf': 'SR-IOV VF hardware',
+    
+    'lo': 'loopback',
+    
     'bridge': 'virtual bridge',
     'dummy': 'all packets swallowing dummy',
-    'lo': 'loopback',
-    'hw': '(virtual) hardware',
     'macvlan': 'MACVLAN',
-    'pf': 'SR-IOV PF hardware',
+    'tap': 'layer 2 TAP',
+    'tun': 'layer 3 TUNnel',
     'veth': 'virtual peer-to-peer Ethernet',
-    'vf': 'SR-IOV VF hardware',
     'vlan': 'virtual LAN',
     'vxlan': 'VXLAN overlay',
 }
@@ -331,7 +338,8 @@ export const NifBadge = ({
     families = families || [AddressFamily.IPv4, AddressFamily.IPv6]
 
     const tooltipBase = (nifKindTips[
-        nif.kind
+        (nif.kind === 'tuntap' && nif.tuntapDetails.mode)
+        || nif.kind
         || (nif.sriovrole === SRIOVRole.PF && 'pf')
         || (nif.sriovrole === SRIOVRole.VF && 'vf')
         || (nif.isPhysical && 'hw')

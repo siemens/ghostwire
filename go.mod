@@ -175,6 +175,7 @@ require (
 	github.com/tchap/go-patricia/v2 v2.3.1 // indirect
 	github.com/thediveo/go-mntinfo v1.0.1 // indirect
 	github.com/thediveo/ioctl v0.9.2 // indirect
+	github.com/thediveo/notwork v1.3.0
 	github.com/thediveo/sealwatcher/v2 v2.0.0 // indirect
 	github.com/thediveo/spaserve v1.0.1
 	github.com/thediveo/wye v0.1.1 // indirect

@@ -30,6 +30,7 @@ type networkInterface struct {
 	Macvlans      []*nifRef         `json:"macvlans,omitempty"`
 	Slaves        []*nifRef         `json:"slaves,omitempty"`
 	Peer          *peerNifRef       `json:"peer,omitempty"`
+	TunTap        *tuntapConfig     `json:"tuntap,omitempty"`
 	Vxlan         *vxlanConfig      `json:"vxlan,omitempty"`
 	Vlan          *vlanConfig       `json:"vlan,omitempty"`
 	SRIOVRole     network.SRIOVRole `json:"sr-iov-role,omitempty"`
@@ -52,6 +53,12 @@ type vxlanConfig struct {
 	SourcePortRange sourcePortRange `json:"source-portrange,omitempty"`
 	Remote          *remoteIP       `json:"remote,omitempty"`
 	RemotePort      uint16          `json:"remote-port"`
+}
+
+// tuntapConfig is optional and carries TUN/TAP-specific network interface
+// information, especially whether it is a TAP or a TUN.
+type tuntapConfig struct {
+	Mode string `json:"mode"`
 }
 
 type sourceIP struct {
@@ -153,6 +160,19 @@ func newNif(nif network.Interface) networkInterface {
 			RemotePort:      vx.DestinationPort,
 		}
 	}
+	// Handle a TUN/TAP.
+	var tuntapcfg *tuntapConfig
+	if tuntap, ok := nif.(network.TunTap); ok {
+		tt := tuntap.TunTap()
+		tuntapcfg = &tuntapConfig{}
+		switch tt.Mode {
+		case network.TunTapModeTap:
+			tuntapcfg.Mode = "tap"
+		case network.TunTapModeTun:
+			tuntapcfg.Mode = "tun"
+		}
+	}
+	// Handle a VLAN.
 	var vlancfg *vlanConfig
 	if vlan, ok := nif.(network.Vlan); ok {
 		vl := vlan.Vlan()
@@ -185,6 +205,7 @@ func newNif(nif network.Interface) networkInterface {
 		Peer:          peer,
 		Slaves:        slaves,
 		Vxlan:         vxlancfg,
+		TunTap:        tuntapcfg,
 		Vlan:          vlancfg,
 		SRIOVRole:     nifa.SRIOVRole,
 		PF:            pf,
