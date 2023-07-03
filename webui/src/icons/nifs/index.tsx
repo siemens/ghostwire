@@ -1,5 +1,6 @@
 export { default as BridgeIcon } from './Bridge'
 export { default as BridgeInternalIcon } from './BridgeInternal'
+export { default as DummyIcon } from './Dummy'
 export { default as HardwareNicIcon } from './HardwareNic'
 export { default as HardwareNicPFIcon } from './HardwareNicPF'
 export { default as HardwareNicVFIcon } from './HardwareNicVF'

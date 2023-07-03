@@ -9,7 +9,7 @@ import { Button, styled } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
 import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
-import { BridgeIcon, BridgeInternalIcon, HardwareNicIcon, HardwareNicPFIcon, HardwareNicVFIcon, MacvlanIcon, MacvlanMasterIcon, NicIcon, OverlayIcon, VethIcon } from 'icons/nifs'
+import { BridgeIcon, BridgeInternalIcon, DummyIcon, HardwareNicIcon, HardwareNicPFIcon, HardwareNicVFIcon, MacvlanIcon, MacvlanMasterIcon, NicIcon, OverlayIcon, VethIcon } from 'icons/nifs'
 
 import { AddressFamily, AddressFamilySet, GHOSTWIRE_LABEL_ROOT, NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
 import { OperationalState } from 'models/gw'
@@ -175,6 +175,7 @@ const nifSRIOVIcons = {
 // interface objects (and directly taken from what Linux' RTNETLINK tells us).
 const nifTypeIcons = {
     'bridge': BridgeIcon,
+    'dummy': DummyIcon,
     'macvlan': MacvlanIcon,
     'veth': VethIcon,
     'vxlan': OverlayIcon,
@@ -198,14 +199,15 @@ const operStateIcons = {
 
 const nifKindTips = {
     'bridge': 'virtual bridge',
-    'veth': 'virtual peer-to-peer Ethernet',
-    'macvlan': 'MACVLAN',
-    'vxlan': 'VXLAN overlay',
-    'vlan': 'virtual LAN',
+    'dummy': 'all packets swallowing dummy',
     'lo': 'loopback',
     'hw': '(virtual) hardware',
-    'vf': 'SR-IOV VF hardware',
+    'macvlan': 'MACVLAN',
     'pf': 'SR-IOV PF hardware',
+    'veth': 'virtual peer-to-peer Ethernet',
+    'vf': 'SR-IOV VF hardware',
+    'vlan': 'virtual LAN',
+    'vxlan': 'VXLAN overlay',
 }
 
 export interface NifBadgeProps {
