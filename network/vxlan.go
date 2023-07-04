@@ -16,7 +16,7 @@ import (
 // configuration details and the relation to it "master" network interface.
 type Vxlan interface {
 	Interface
-	Vxlan() *VxlanAttrs // returns the macvlan attributes.
+	Vxlan() *VxlanAttrs // returns the vxlan attributes.
 }
 
 // VxlanAttrs represents the attributes of a VXLAN network interface.
@@ -101,7 +101,7 @@ func (n *VxlanAttrs) ResolveRelations(allns NetworkNamespaces) {
 	}
 }
 
-// Register our NifMaker for the "veth" kind.
+// Register our NifMaker for the "vxlan" kind.
 func init() {
 	plugger.Group[NifMaker]().Register(
 		func() Interface {

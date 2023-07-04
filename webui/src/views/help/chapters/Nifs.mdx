@@ -3,6 +3,9 @@ import HwNicIcon from 'icons/nifs/HardwareNic'
 import VFNicIcon from 'icons/nifs/HardwareNicVF'
 import NicIcon from 'icons/nifs/Nic'
 import BridgeIcon from 'icons/nifs/Bridge'
+import BridgeInternalIcon from 'icons/nifs/BridgeInternal'
+import TunIcon from 'icons/nifs/Tun'
+import TapIcon from 'icons/nifs/Tap'
 import UpStateIcon from 'icons/operstates/Up'
 import { NifBadge } from 'components/nifbadge'
 import { OperationalState, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
@@ -15,6 +18,8 @@ export const int0 = { ...eth0, name: 'internal0', isPhysical: false, kind: 'brid
 export const mcvlan0 = { ...pont0, name: 'mcvlan0', kind: 'macvlan' }
 export const eth0mcmaster = { ...eth0, macvlans: [eth0] }
 export const vxlan0 = { ...pont0, name: 'vxlan0', kind: 'vxlan' }
+export const tun0 = { ...eth0, name: 'tun0', isPhysical: false, tuntapDetails: { mode: 'tun' } }
+export const tap42 = { ...eth0, name: 'tap42', isPhysical: false, tuntapDetails: { mode: 'tap' } }
 
 # Network Interfaces
 
@@ -92,6 +97,8 @@ on the type of virtual network interface:
 | <NifBadge nif={mcvlan0} style={{whiteSpace: "nowrap"}} /> | **MACVLAN** | an additional "virtual LAN" card to a hardware/physical network interface. The term "VLAN" might be totally misleading, as a MACVLAN network interface is not a separate VLAN in the IEEE 802 sense, but instead adds a separate MAC address on an existing hardware/physical network interface and handles its traffic through this separate network interface. |
 | <NifBadge nif={eth0mcmaster} style={{whiteSpace: "nowrap"}} /> | (**MACVLAN master**) | a hardware/physical network interface to which one or more MACVLAN network interfaces have been added (attached). This is signalled by an Ethernet plug and cable, but with side branches going off to the left and right. |
 | <NifBadge nif={vxlan0} style={{whiteSpace: "nowrap"}} /> | **VXLAN** | an overlay network interface for [virtual extensible LANs](https://en.wikipedia.org/wiki/Virtual_Extensible_LAN): it carries Ethernet traffic via UDP/IP datagrams. |
+| <NifBadge nif={tap42} style={{whiteSpace: "nowrap"}} /> | **TAP** | a layer 2 TAP network interface. |
+| <NifBadge nif={tun0} style={{whiteSpace: "nowrap"}} /> | **TUN** | a layer 3 TUNnel network interface. |
 
 ## <UpStateIcon className="icon" /> Operational State
 

@@ -5,7 +5,7 @@
 import JSBI from 'jsbi'
 
 import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
-import { NetworkInterface, SRIOVRole } from './nif'
+import { NetworkInterface, SRIOVRole, TapTunProcessor } from './nif'
 import { Process } from './process'
 import { AddressFamily, addressFamilyByName, IpAddress } from './address'
 import { IpRoute } from './route'
@@ -190,6 +190,12 @@ export const fromjson = (jsondata) => {
                 addresses: undefined,
                 labels: jnif.labels || {},
             }
+            if (jnif.tuntap) {
+                nif.tuntapDetails = {
+                    mode: jnif.tuntap.mode,
+                    processors: [],
+                }
+            }
             if (jnif.vxlan) {
                 nif.vxlanDetails = {
                     vid: jnif.vxlan.vid,
@@ -270,7 +276,16 @@ export const fromjson = (jsondata) => {
                 }
                 nif.underlay.overlays.push(nif)
             }
-            // TODO: taptun
+            // TAP/TUNs don't reference other network interfaces, but processes
+            // ... but hey. we need to resolve this relation, too!
+            if (jnif.tuntap) {
+                nif.tuntapDetails.processors = jnif.tuntap.processors.map(
+                    proc => ({
+                        cmdline: proc.cmdline.split(' '),
+                        containee: containeemap[proc['container-idref']],
+                        pid: proc.pid,
+                    } as TapTunProcessor))
+            }
         }))
     // Only now read in the transport port related discovery information,
     // because now we can easily resolve the references from port users to
