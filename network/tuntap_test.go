@@ -38,6 +38,10 @@ var _ = Describe("TAPs and TUNs", func() {
 	})
 
 	It("discovers a TAP", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
 		By("creating a TAP")
 		tap := link.NewTransient(&netlink.Tuntap{
 			Mode:   netlink.TUNTAP_MODE_TAP,
