@@ -94,13 +94,6 @@ Go to settings and switch the theme.
 
 ![Dark Mode](images/dark-theme.png)
 
-## TODO
-
-- [ ] complete VxlanDetails.
-- [ ] Kubernetes (KinD) mock data.
-- [ ] TAPTUN support.
-- [ ] decouple specific discovery method from `discovery` component.
-
 ## Serving from Different URLs (Paths)
 
 The Ghostwire UI is...

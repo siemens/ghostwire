@@ -4,9 +4,7 @@
 
 import { IpAddress } from './address'
 import { firstContainee, NetworkNamespace } from './netns'
-
-// TODO: VXLAN, TAPTUN
-// TODO: addresses
+import { PortUser } from './ports'
 
 /**
  * The network interfaces of a network namespace are keyed by their so-called
@@ -37,7 +35,7 @@ export interface NetworkInterface {
     sriovrole: SRIOVRole /** SR-IOV role PF or VF, if applicable. */
 
     /** nif labels, if any. */
-    labels: { [key: string]: string } 
+    labels: { [key: string]: string }
 
     macvlans?: NetworkInterface[] /* attached macvlan interface(s) */
     slaves?: NetworkInterface[]
@@ -51,6 +49,7 @@ export interface NetworkInterface {
 
     addresses: IpAddress[] /** IP addresses assigned to this network interface */
 
+    tuntapDetails?: TunTapDetails
     vxlanDetails?: VxlanDetails
     vlanDetails?: VlanDetails
 }
@@ -63,6 +62,18 @@ export interface NetworkInterface {
  */
 export const isNetworkInterface = (nif: object): nif is NetworkInterface => {
     return !!nif && nif['netns'] !== undefined && nif['index'] !== undefined
+}
+
+export enum TapTunMode {
+    TAP = 'tap',
+    TUN = 'tun',
+}
+
+export type TapTunProcessor = PortUser
+
+export interface TunTapDetails {
+    mode: TapTunMode /** "tap" or "tun" */
+    processors: TapTunProcessor[] /** processes serving this TAP/TUN */
 }
 
 export interface VxlanDetails {
@@ -115,8 +126,8 @@ export enum OperationalState {
  */
 export const isOperational = (nif: NetworkInterface) => (
     ![
-        OperationalState.Down, 
-        OperationalState.NotPresent, 
+        OperationalState.Down,
+        OperationalState.NotPresent,
         OperationalState.Testing
     ].includes(nif.operstate)
 )

@@ -1,0 +1,10 @@
+theme: 
+  openapi:
+    theme: 
+      colors: 
+        primary: 
+          main: '#009999'
+      logo: 
+        maxWidth: '5ex'
+        maxHeight: '5ex'
+   

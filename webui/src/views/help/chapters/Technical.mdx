@@ -43,3 +43,9 @@ There's more to <Brand/>, as it...
 - understands and explicitly supports [Kind ("Kubernetes IN
   Docker")](https://kind.sigs.k8s.io/docs/user/quick-start/) for running one or
   more multi-node Kubernetes clusters inside a *single* Docker host.
+
+- works perfectly with [Docker Desktop on
+  Windows](https://docs.docker.com/desktop/install/windows-install/), where the
+  Docker engine itself runs inside a containerd engine, and everything is in a
+  PID namespace different from the "distribution" with the Docker Desktop
+  integration.

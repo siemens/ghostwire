@@ -7,7 +7,6 @@
 // respective websocket connections, thus keeping them clearly separated.
 // Additionally, we also associate the capturing process (if any) with this
 // connection, so we can sanely manage it.
-
 package wsconn
 
 import (
@@ -36,8 +35,10 @@ var wsupgrader = websocket.Upgrader{
 // error, be closed, request closing (from client) and close its side so that
 // the client also closes.
 //
-// 1. process terminates after start (websocket open): we then need to carry out
-// a graceful websocket close -- but only if the websocket is still open and not
+// # 1. Process Terminates
+//
+// Process terminates after start (websocket open): we then need to carry out a
+// graceful websocket close -- but only if the websocket is still open and not
 // already closing.
 //    - note to self: graceful close in progress.
 //    - send close control message, informing the client about the process
@@ -45,16 +46,20 @@ var wsupgrader = websocket.Upgrader{
 //    - wait for client's close control message (in websocket watcher).
 //    - close websocket.
 //
-// 2. process fails to start (websocket open): we then need to carry out a
-// graceful websocket close -- but only if the websocket is still open and not
-// already closing.
+// # 2. Process Fails to Start
+//
+// Process fails to start (websocket open): we then need to carry out a graceful
+// websocket close -- but only if the websocket is still open and not already
+// closing.
 //    - note to self: graceful close in progress.
 //    - send close control message, informing the client about the process
 //      failure reason (mutex'd with piper writer).
 //    - wait for client's close control message (in websocket watcher).
 //    - close websocket.
 //
-// 3. client closes: we then need to acknowlege the close and terminate the
+// #3. Client Closes
+//
+// Client closes: we then need to acknowledge the close and terminate the
 // process -- please note that there's no graceful close in progress at the time
 // we receive the client's close.
 //    - note to self: graceful ack in progress.
@@ -62,11 +67,15 @@ var wsupgrader = websocket.Upgrader{
 //    - send close control message (generic "ciao").
 //    - close websocket.
 //
-// 4. websocket write error: as this will trigger 5. (see next) anyway and sets
+// # 4. Websocket Write Error
+//
+// Websocket write error: as this will trigger 5. (see next) anyway and sets
 // things in motion, we can just keep tucking on here, dumping any data to be
 // written, but not balking either.
 //
-// 5. websocket read(er) error: we can only close/terminate.
+// # 5. Websocket Read Error
+//
+// Websocket read(er) error: we can only close/terminate.
 //    - note to self: broken/closed.
 //    - terminate process (if not already done so).
 //    - close websocket.

@@ -7,8 +7,7 @@ import React from 'react'
 import { AddressFamilySet, PrimitiveContainee, NetworkInterface, SRIOVRole } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { NamespaceContainees } from 'components/namespacecontainees'
-import { styled } from '@mui/material';
-
+import { styled } from '@mui/material'
 
 const Via = styled(NifBadge)(({ theme }) => ({
     marginLeft: theme.spacing(1),
@@ -68,9 +67,13 @@ export interface RelatedNifProps {
  *   the Linux kernel automatically will attach the macvlan interface to the
  *   master hardware interface instead, so there never will be cascades of
  *   macvlans.
+ * 
+ * - **`vxlan`**: the "underlay" network interface; this is a one-to-many
+ *   relationship, where each vxlan network interface has exactly one underlay
+ *   network interface, but the underlay network interface might have multiple
+ *   "overlays", that is, vxlans.
  *
  * All other kinds of network interfaces don't render any related interfaces.
- * This includes VXLAN network interfaces.
  */
 export const RelatedNif = ({ nif, families, onNavigation, onContaineeNavigation, className }: RelatedNifProps) => {
     var othernif: NetworkInterface

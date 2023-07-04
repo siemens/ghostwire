@@ -539,7 +539,10 @@ func NewNetworkNamespaces(
 	// seen. Unfortunately, RTNETLINK doesn't give any netdev topology
 	// information.
 	resolveSRIOVTopology(netspaces)
-
+	// Discover the processes serving TAP/TUN devices, if any.
+	resolveTapTunProcessors(netspaces, allprocs)
+	// Complete the forwarded port information based on our almost complete view
+	// now. This needs to be late(r) in the game.
 	completeForwardedPortInformation(netspaces)
 
 	return netspaces

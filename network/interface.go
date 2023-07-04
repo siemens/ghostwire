@@ -227,7 +227,7 @@ func (n *NifAttrs) HasAddress(ip net.IP) bool {
 // descriptors over and over again individually for each physical network
 // interface. Instead, NetworkNamespace.discoverNetworkInterfaces allocates an
 // ethtool API file descriptor only once per network namespace, and only when
-// phyiscal network interfaces are present in a network namespace.
+// physical network interfaces are present in a network namespace.
 func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 	driverInfo, err := unix.IoctlGetEthtoolDrvinfo(ethtoolFd, n.Name)
 	if err != nil {
