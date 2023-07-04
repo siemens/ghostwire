@@ -24,7 +24,7 @@ import (
 
 const tapNamePrefix = "tap-"
 
-var _ = FDescribe("TAPs and TUNs", func() {
+var _ = Describe("TAPs and TUNs", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
