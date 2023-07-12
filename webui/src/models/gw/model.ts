@@ -73,106 +73,111 @@ export const fromjson = (jsondata) => {
 
         // Process the list of containers attached to this network namespace
         // and separate out their processes.
-        newnetns.containers = jnetns.containers.map(jcntr => {
-            const primitiveBox: PrimitiveContainee = {
-                name: jcntr.name,
-                turtleNamespace: "",
-                netns: newnetns,
-            }
-            containeemap[jcntr.id] = primitiveBox
-            if (jcntr.type !== ContaineeTypes.BINDMOUNT) {
-                // It's not a bindmount, so at least something with one or
-                // more processes...
-                const bbox = primitiveBox as Busybox
-                const proc: Process = {
-                    pid: jcntr.pid,
-                    pidnsid: jcntr.pidns,
-                    capbnd: JSBI.BigInt(jcntr.capbnd || 0), // safety fallback
+        newnetns.containers = jnetns.containers
+            .filter(jcntr =>
+                // https://github.com/siemens/ghostwire/issues/5
+                !(jcntr.name.startsWith('containerd-shim')
+                    && jcntr.cmdline && jcntr.cmdline.includes(" -namespace moby ")))
+            .map(jcntr => {
+                const primitiveBox: PrimitiveContainee = {
                     name: jcntr.name,
-                    cmdline: jcntr.cmdline.split(' '),
+                    turtleNamespace: "",
+                    netns: newnetns,
                 }
-                bbox.ealdorman = proc
-                bbox.leaders = [proc]
-                // Because it has process(es), we also have its DNS
-                // configuration; as this is an application-layer
-                // configuration, it cannot exist outside a process, but
-                // instead in the mounted filesystem(s) seen by a process.
-                bbox.dns = {
-                    etcHostname: jcntr.dns['etc-hostname'] || "",
-                    etcDomainname: jcntr.dns.domainname || "",
-                    utsHostname: jcntr.dns['uts-hostname'] || "",
-                    etcHosts: jcntr.dns['etc-hosts'].map(host => {
-                        const family = host.address.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
-                        return {
-                            name: host.name,
-                            address: {
-                                address: host.address,
+                containeemap[jcntr.id] = primitiveBox
+                if (jcntr.type !== ContaineeTypes.BINDMOUNT) {
+                    // It's not a bindmount, so at least something with one or
+                    // more processes...
+                    const bbox = primitiveBox as Busybox
+                    const proc: Process = {
+                        pid: jcntr.pid,
+                        pidnsid: jcntr.pidns,
+                        capbnd: JSBI.BigInt(jcntr.capbnd || 0), // safety fallback
+                        name: jcntr.name,
+                        cmdline: jcntr.cmdline.split(' '),
+                    }
+                    bbox.ealdorman = proc
+                    bbox.leaders = [proc]
+                    // Because it has process(es), we also have its DNS
+                    // configuration; as this is an application-layer
+                    // configuration, it cannot exist outside a process, but
+                    // instead in the mounted filesystem(s) seen by a process.
+                    bbox.dns = {
+                        etcHostname: jcntr.dns['etc-hostname'] || "",
+                        etcDomainname: jcntr.dns.domainname || "",
+                        utsHostname: jcntr.dns['uts-hostname'] || "",
+                        etcHosts: jcntr.dns['etc-hosts'].map(host => {
+                            const family = host.address.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
+                            return {
+                                name: host.name,
+                                address: {
+                                    address: host.address,
+                                    family: family,
+                                    prefixlen: family === AddressFamily.IPv6 ? 128 : 32,
+                                } as IpAddress,
+                            } as HostAddressBinding
+                        }),
+                        nameservers: (jcntr.dns.nameservers || []).map(addr => {
+                            const family = addr.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
+                            return {
+                                address: addr,
                                 family: family,
                                 prefixlen: family === AddressFamily.IPv6 ? 128 : 32,
-                            } as IpAddress,
-                        } as HostAddressBinding
-                    }),
-                    nameservers: (jcntr.dns.nameservers || []).map(addr => {
-                        const family = addr.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
-                        return {
-                            address: addr,
-                            family: family,
-                            prefixlen: family === AddressFamily.IPv6 ? 128 : 32,
-                        } as IpAddress
-                    }),
-                    searchlist: jcntr.dns.searchlist ? [jcntr.dns.searchlist].flat() : [],
-                }
-                // Did we stumble upon the initial network namespace? Then
-                // mark it!
-                if (proc.pid === 1) {
-                    newnetns.isInitial = true
-                }
-            }
-            if (jcntr.type !== ContaineeTypes.BINDMOUNT
-                && jcntr.type !== ContaineeTypes.PROCESS) {
-                // it's a container thingy...
-                const cbox = primitiveBox as Container
-                cbox.labels = jcntr.labels || {}
-                cbox.engineType = jcntr.type
-                // For the container flavor, assume it's the same as the
-                // (engine) type for now.
-                cbox.flavor = cbox.engineType
-                // If the discovery engine gave us a container ID (not to be
-                // confused with the document container ID, in "id"), then take
-                // that, otherwise fall back to the container name.
-                cbox.id = jcntr['container-id'] || jcntr.name
-                cbox.state = containerState(jcntr.status)
-                cbox.turtleNamespace = jcntr.prefix || ""
-                // is it pod'ed? Then resolve the reference and birectionally
-                // relate this container with its pod.
-                if (jcntr.group) {
-                    cbox.pod = podmap[jcntr.group]
-                    cbox.pod.containers.push(cbox)
-                }
-                if (jcntr.sandbox !== undefined) {
-                    cbox.sandbox = !!jcntr.sandbox // make sure it's boolean
-                }
-                // is it part of a (Docker) composer project?
-                cbox.project = null
-                if (jcntr.labels && !!jcntr.labels['com.docker.compose.project']) {
-                    const projectname = jcntr.labels['com.docker.compose.project']
-                    var project = projectmap[projectname]
-                    if (project === undefined) {
-                        project = {
-                            name: projectname,
-                            flavor: cbox.flavor,
-                            containers: [],
-                            netnses: {},
-                        } as Project
-                        projectmap[projectname] = project
+                            } as IpAddress
+                        }),
+                        searchlist: jcntr.dns.searchlist ? [jcntr.dns.searchlist].flat() : [],
                     }
-                    cbox.project = project
-                    project.containers.push(cbox)
-                    project.netnses[cbox.netns.netnsid] = cbox.netns
+                    // Did we stumble upon the initial network namespace? Then
+                    // mark it!
+                    if (proc.pid === 1) {
+                        newnetns.isInitial = true
+                    }
                 }
-            }
-            return primitiveBox
-        })
+                if (jcntr.type !== ContaineeTypes.BINDMOUNT
+                    && jcntr.type !== ContaineeTypes.PROCESS) {
+                    // it's a container thingy...
+                    const cbox = primitiveBox as Container
+                    cbox.labels = jcntr.labels || {}
+                    cbox.engineType = jcntr.type
+                    // For the container flavor, assume it's the same as the
+                    // (engine) type for now.
+                    cbox.flavor = cbox.engineType
+                    // If the discovery engine gave us a container ID (not to be
+                    // confused with the document container ID, in "id"), then take
+                    // that, otherwise fall back to the container name.
+                    cbox.id = jcntr['container-id'] || jcntr.name
+                    cbox.state = containerState(jcntr.status)
+                    cbox.turtleNamespace = jcntr.prefix || ""
+                    // is it pod'ed? Then resolve the reference and birectionally
+                    // relate this container with its pod.
+                    if (jcntr.group) {
+                        cbox.pod = podmap[jcntr.group]
+                        cbox.pod.containers.push(cbox)
+                    }
+                    if (jcntr.sandbox !== undefined) {
+                        cbox.sandbox = !!jcntr.sandbox // make sure it's boolean
+                    }
+                    // is it part of a (Docker) composer project?
+                    cbox.project = null
+                    if (jcntr.labels && !!jcntr.labels['com.docker.compose.project']) {
+                        const projectname = jcntr.labels['com.docker.compose.project']
+                        var project = projectmap[projectname]
+                        if (project === undefined) {
+                            project = {
+                                name: projectname,
+                                flavor: cbox.flavor,
+                                containers: [],
+                                netnses: {},
+                            } as Project
+                            projectmap[projectname] = project
+                        }
+                        cbox.project = project
+                        project.containers.push(cbox)
+                        project.netnses[cbox.netns.netnsid] = cbox.netns
+                    }
+                }
+                return primitiveBox
+            })
         // Process the list of network interfaces belonging to this network
         // namespace. Also add the network interfaces to the map, index by
         // their unique JSON document identifiers.
