@@ -270,7 +270,9 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     const nifContainerDomId = domIdBase + 'breadboard-content'
 
     // List of class names of DOM wire elements that are currently highlighted,
-    // if any.
+    // if any. Please note that DOM wire elements each get their own individual
+    // class name that (simply spoken) bases on the network interfaces related
+    // by the wire.
     const [hotWireClasses, setHotWireClasses] = useState<string[]>([])
     const [selected, setSelected] = useState(false)
 
@@ -298,11 +300,25 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
 
     // tag or untag the wires identified by their wire classes as "hot" (to
     // highlight) or "cold" (normal appearance).
-    const tagHotElements = (wireClasses: string[], hot: boolean) => {
-        const els = wireClasses
+    const tagElementsWithClasses = (wireClasses: string[], hot: boolean) => {
+        const alreadyHotEls = hotWireClasses
             .map(className => [...(breadboardref.current as HTMLDivElement).getElementsByClassName(className)])
             .flat()
         if (hot) {
+            const els = wireClasses
+                .map(className => [...(breadboardref.current as HTMLDivElement).getElementsByClassName(className)])
+                .flat()
+            // cool down wires that shouldn't be hot anymore but where Firefox
+            // incorrectly swallows the corresponding mouse out events.
+            alreadyHotEls
+                .filter(el => !els.includes(el))
+                .forEach(el => {
+                    el.classList.remove('hot')
+                    if (el instanceof SVGElement) {
+                        el.parentElement.classList.remove('hot')
+                    }
+                })
+            // Highlight the new hot wire and network interface(s).
             els.forEach(el => {
                 el.classList.add('hot')
                 if (el instanceof SVGElement) {
@@ -311,7 +327,7 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
             })
             setHotWireClasses(wireClasses)
         } else {
-            els.forEach(el => {
+            alreadyHotEls.forEach(el => {
                 el.classList.remove('hot')
                 if (el instanceof SVGElement) {
                     el.parentElement.classList.remove('hot')
@@ -326,14 +342,23 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     // are glanced from specially formed CSS class names attached to network
     // interface and wire DOM elements.
     const hotOrCold = (e: React.MouseEvent, hot?: boolean) => {
+        // Ignore mouse in/out events while a specific wire has been selected by
+        // clicking on it. Or when we don't have a proper current reference.
         if (selected || !breadboardref.current) {
             return
         }
-        const hotWireClasses = locateTargetRelationClasses(e.target as Element, domIdBase)
-        if (!hotWireClasses.length) {
+        const newHotWireClasses = locateTargetRelationClasses(e.target as Element, domIdBase)
+        if (!newHotWireClasses.length) {
+            if (!hotWireClasses.length) {
+                return
+            }
+            // Make sure to explicitly cool the hot wires as they're not
+            // mouse-touched anymore ... this works around firefox swallowing
+            // mouse out events all the time when it really shouldn't.
+            tagElementsWithClasses([], false)
             return
         }
-        tagHotElements(hotWireClasses, hot)
+        tagElementsWithClasses(newHotWireClasses, hot)
     }
 
     const handleMouseOver = (e: React.MouseEvent) => {
@@ -352,19 +377,19 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
                 // "hot" wire then deselect it again. If it's a different wire,
                 // then deselect the current hot wire and select the newly
                 // clicked wire.
-                tagHotElements(hotWireClasses, false) // deselect any old wire
+                tagElementsWithClasses(hotWireClasses, false) // deselect any old wire
                 if (!selected
                     || clickedWireClasses.length !== hotWireClasses.length
                     || clickedWireClasses.find((el, idx) => el !== hotWireClasses[idx])) {
                     // it's a different selection, so select the new wire.
                     setSelected(true)
-                    tagHotElements(clickedWireClasses, true)
+                    tagElementsWithClasses(clickedWireClasses, true)
                     return
                 }
             }
         }
         // Clicked somewhere else, so unselect and enable mouse overs again.
-        tagHotElements(hotWireClasses, false)
+        tagElementsWithClasses(hotWireClasses, false)
         setSelected(false)
     }
 
