@@ -284,13 +284,46 @@ const markerSpace = 'marker-'
 const TwoEndedWire = (slw: SwimlaneWire, laneWidth: number, domIdBase: string, wireClass: string, ghostwireClass: string) => {
     const width = (slw.lane + 0.5) * laneWidth
     const radius = laneWidth / 2
-    const path = `
+    let path = ''
+    switch (slw.kind) {
+        case 'macvlan':
+        case 'vxlan':
+            if (slw.reverse) {
+                // The master interface is located above the MACVLAN slave
+                // interface on the breadboard. So, the "bump in the wire" is at
+                // the top where the master interface is.
+                path = `
+M ${-slw.fromInset + radius} ${slw.from}
+a ${radius} ${radius} 0 0 0 ${radius} ${radius}
+l ${slw.fromInset + width - 3 * radius} 0
+a ${radius} ${radius} 0 0 1 ${radius} ${radius}
+l 0 ${slw.len - laneWidth - radius}
+a ${radius} ${radius} 0 0 1 ${-radius} ${radius}
+l ${-(slw.toInset + width - radius)} 0`
+            } else {
+                // The master interface is located below the MACVLAN slave
+                // interface on the breadboard. So, the "bump in the wire" is at
+                // the bottom where the master interface is.
+                path = `
+M ${-slw.fromInset} ${slw.from}
+l ${slw.fromInset + width - radius} 0
+a ${radius} ${radius} 0 0 1 ${radius} ${radius}
+l 0 ${slw.len - laneWidth - radius}
+a ${radius} ${radius} 0 0 1 ${-radius} ${radius}
+l ${-(slw.toInset + width - 3 * radius)} 0
+a ${radius} ${radius} 0 0 0 ${-radius} ${radius}`
+            }
+            break
+        default:
+            // Default is a wire with rounded corners.
+            path = `
 M ${-slw.fromInset} ${slw.from}
 l ${slw.fromInset + width - radius} 0
 a ${radius} ${radius} 0 0 1 ${radius} ${radius}
 l 0 ${slw.len - laneWidth}
 a ${radius} ${radius} 0 0 1 ${-radius} ${radius}
 l ${-(slw.toInset + width - radius)} 0`
+    }
     const down = slw.operStateDown ? 'down' : ''
 
     const relation = relationClassNameFromIds(domIdBase, slw.nif1Element.id, slw.nif2Element.id)
@@ -452,7 +485,7 @@ const macvlanMarker = <marker
     stroke="none"
     markerWidth="2" markerHeight="2"
     refX="1" refY="1">
-    <path d="M 1 2 a 1 1 0 0 0 0 -2" />
+    <path d="M 1 2 a 1 1 0 0 0 0 -2 a 1 1 0 0 0 0 2" /> {/* correct, that's a circle */}
 </marker>
 
 

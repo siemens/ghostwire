@@ -190,6 +190,14 @@ const extractWiring = (
                     } as Wire)
                 }
             } else switch (nif.kind) {
+                // Please note that while TAP/TUN interfaces have a relationship
+                // with their serving processes, this is not a "wire" topology
+                // in the sense of this breadboard rendering: processes are not
+                // rendered on the breadboard. While it would be possible to
+                // render TAP/TUN-serving processes next to network interface,
+                // this might be confusing to users so we opted to only show
+                // this special relationship in details, but not in the wiring
+                // view.
                 case 'veth':
                     if (nif.peer && !wires.has(nif.peer) && !wires.has(nif)) {
                         wires.set(nif, {
@@ -224,7 +232,6 @@ const extractWiring = (
                         nif2Id: domIdBase + nifId(nif.underlay),
                     } as Wire)
                     break;
-                // TODO: TAPTUN, ...
             }
         }))
     return [...wires.values()]
