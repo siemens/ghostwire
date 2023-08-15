@@ -35,15 +35,16 @@ wget -q --no-cache -O - \
   | docker compose -f - up
 ```
 
-Finally, visit http://localhost:5000 and start looking around Linux kernel
-namespaces, as well as mount points with their hierarchies.
+Finally, visit http://localhost:5000 and start looking around the virtual
+container networking, IP and DNS configuration, open and forwarded ports, and
+much more.
 
 > ⚠ This quick start deployment will **expose TCP port 5000** also to clients
 > external to your host. Make sure to have proper network protection in place.
 
 ## Eye Candy!
 
-### Virtual "Wires"
+### Lots of Virtual "Wires"
 
 A slightly busy Industrial Edge host:
 
@@ -51,12 +52,12 @@ A slightly busy Industrial Edge host:
 
 ### IP & DNS Configuration
 
-...and then the details:
+...lots of gory configuration details:
 
 ![Edgeshark details screenshot](media/edgeshark%20screenshot%20details.png)
 
-Details, details, details ... such as capabilities (with non-standard
-capabilities being highlighted). Open and connected ports, and forwarded ports,
+For instance: container/process capabilities, with Docker non-standard
+capabilities being highlighted. Open and connected ports, and forwarded ports,
 all with the containers and processes serving them. Other Docker containers
 addressable from your container using DNS names for Docker services and
 containers.
