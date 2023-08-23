@@ -212,6 +212,10 @@ const ForwardedPortTableColumns: ColHeader[] = [
         label: 'Service',
         orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.servicename.localeCompare(rowB.port.servicename),
     }, {
+        id: 'user',
+        label: 'Group · Container · Process',
+        orderFn: (rowA: PortRow, rowB: PortRow) => userName(rowA.user).localeCompare(userName(rowB.user))
+    }, {
         id: 'forwardedaddress',
         label: 'Forwarded to',
         orderFn: (rowA: PortRow, rowB: PortRow) => orderAddresses(rowA.port.forwardedAddress, rowB.port.forwardedAddress),
@@ -223,10 +227,6 @@ const ForwardedPortTableColumns: ColHeader[] = [
         id: 'forwardedservice',
         label: 'Service',
         orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.forwardedServicename.localeCompare(rowB.port.forwardedServicename),
-    }, {
-        id: 'user',
-        label: 'Group · Container · Process',
-        orderFn: (rowA: PortRow, rowB: PortRow) => userName(rowA.user).localeCompare(userName(rowB.user))
     },
 ]
 
@@ -421,9 +421,6 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
                             <AddressCell>{row.port.address.address}</AddressCell>
                             <PortCell>:{row.port.port}</PortCell>
                             <TableCell>{row.port.servicename}</TableCell>
-                            <AddressCell>{(row.port.forwardedAddress && row.port.forwardedAddress.address) || ''}</AddressCell>
-                            <PortCell>{(row.port.forwardedAddress && `:${row.port.forwardedPort}`) || ''}</PortCell>
-                            <TableCell>{row.port.forwardedServicename}</TableCell>
                             <TableCell>
                                 {row.user.pid > 0
                                     ? <UserDetails>
@@ -434,6 +431,9 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
                                     </UserDetails>
                                     : targetNetns(row.port.netns, handleContaineeNavigation)}
                             </TableCell>
+                            <AddressCell>{(row.port.forwardedAddress && row.port.forwardedAddress.address) || ''}</AddressCell>
+                            <PortCell>{(row.port.forwardedAddress && `:${row.port.forwardedPort}`) || ''}</PortCell>
+                            <TableCell>{row.port.forwardedServicename}</TableCell>
                         </TableRow>
                     )}
                 </TableBody>

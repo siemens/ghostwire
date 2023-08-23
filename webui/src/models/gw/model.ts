@@ -7,7 +7,7 @@ import JSBI from 'jsbi'
 import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
 import { NetworkInterface, SRIOVRole, TapTunProcessor } from './nif'
 import { Process } from './process'
-import { AddressFamily, addressFamilyByName, IpAddress } from './address'
+import { AddressFamily, addressFamilyByName, IpAddress, isLLAv6, isLoopbackIP, isUnspecifiedIP } from './address'
 import { IpRoute } from './route'
 import { NetworkNamespace, NetworkNamespaces } from './netns'
 import { PortUser, TransportPort } from './ports'
@@ -32,8 +32,21 @@ export interface Discovery {
     hostname?: string
     kubernetesNode?: string
     metadata: { [key: string]: any }
-    tenantAddresses: { [key: string]: PrimitiveContainee[] }
+    tenantEndpoints: { [key: string]: PrimitiveContainee[] }
 }
+
+/**
+ * Returns a key for looking up the serving/consuming tenants for a
+ * (forwarded/open/connected) transport port of the specified protocol, IP
+ * address, and port number.
+ *
+ * @param protocol transport protocol name, such as "tcp" or "udp"
+ * @param address IP address (IPv4, IPv6)
+ * @param port transport port number
+ * @returns key string to map endpoint to serving/consuming tenants
+ */
+export const tenantEndpointKey = (protocol: string, address: IpAddress, port: number) =>
+    `${protocol}-${address.address}-${port}`
 
 export const fromjson = (jsondata) => {
     const disco = {
@@ -454,21 +467,47 @@ export const fromjson = (jsondata) => {
     // Fix composer project flavors; projects can only exist from our point of
     // view when there is at least a single, lone container in a project.
     Object.values(projectmap).forEach(project => { project.flavor = project.containers[0].flavor })
-    // Build the mapping from IP addresses to tenants...
-    disco.tenantAddresses = {}
+    // Build the mapping from endpoints to specific "users" (providers or
+    // consumers). The endpoints are (protocol, IP address, port number) tuples.
+    // Please note that the IP addresses must never be unspecified in order to
+    // be able to correctly map, so we're adding the individual assigned IP
+    // addresses (sans the IP loopback addresses) in the corresponding network
+    // namespace instead.
+    disco.tenantEndpoints = {}
     Object.values(disco.networkNamespaces).forEach(netns => {
-        Object.values(netns.nifs)
-            .map(nif => nif.addresses)
-            .flat()
-            .forEach(ipAddr => {
-                disco.tenantAddresses[ipAddr.address] = netns.containers
-            })
-    })
-    // Resolve destination/forwarded port IP addresses to tenants...
-    Object.values(disco.networkNamespaces).forEach(netns => {
+        const netnsIPs = Object.values(netns.nifs).map(nif => nif.addresses).flat()
+            .filter(addr => addr.family === AddressFamily.IPv4 || addr.family === AddressFamily.IPv6)
+            .filter(addr => !isLoopbackIP(addr) && !isLLAv6(addr))
         netns.transportPorts.forEach(port => {
-            port.remoteTenants = disco.tenantAddresses[port.remoteAddress.address] || []
+            // "explode" unspecified IP addresses, when necessary
+            Object.values(isUnspecifiedIP(port.localAddress)
+                ? netnsIPs
+                : (!isLoopbackIP(port.localAddress) ? port.localAddress : [] as IpAddress[]))
+                .filter(addr => !!addr.address).forEach(localAddress => {
+                    const endpointKey = tenantEndpointKey(port.protocol, localAddress, port.localPort)
+                    disco.tenantEndpoints[endpointKey] = port.users.map(user => user.containee)
+                })
         })
+    })
+    //FIXME:console.log(disco.tenantEndpoints)
+    // Resolve destination/forwarded port IP addresses in transport ports to
+    // their providing or consuming tenants, if possible...
+    Object.values(disco.networkNamespaces).forEach(netns => {
+        netns.transportPorts
+            .filter(port => !!port.remoteAddress)
+            .filter(port => !isUnspecifiedIP(port.remoteAddress) && !isLoopbackIP(port.remoteAddress))
+            .forEach(port => {
+                const endpointKey = tenantEndpointKey(port.protocol, port.remoteAddress, port.remotePort)
+                //FIXME:console.log('***', port.protocol, port.remoteAddress.address, port.remotePort, disco.tenantEndpoints[endpointKey])
+                port.remoteUsers = (disco.tenantEndpoints[endpointKey] || [])
+                    .filter(tenant => isBusybox(tenant))
+                    .map((busybox: Busybox) => ({
+                        cmdline: busybox.ealdorman.cmdline,
+                        containee: busybox,
+                        pid: busybox.ealdorman.pid,
+                    } as PortUser))
+                if (!!port.remoteUsers && !!port.remoteUsers.length) console.log(port)
+            })
     })
 
     return disco

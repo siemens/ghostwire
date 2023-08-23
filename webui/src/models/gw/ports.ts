@@ -22,7 +22,6 @@ export interface TransportPort {
     remoteAddress: IpAddress
     remotePort: number
     remoteServicename?: string
-    remoteTenants?: PrimitiveContainee[]
     
     /**
      * a truely unique feature of the Ghostwire discovery engine: Linux is not
@@ -39,6 +38,7 @@ export interface TransportPort {
      * often child processes of the containee leader process(es). 
      */
     users: PortUser[]
+    remoteUsers: PortUser[]
 }
 
 export interface PortUser {

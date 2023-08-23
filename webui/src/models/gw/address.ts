@@ -41,6 +41,34 @@ export interface IpAddress {
 }
 
 /**
+ * Indicates when an address is an unspecified IP address.
+ * 
+ * @param addr some address, including non-IP
+ * @returns true when address is an unspecified IPv4 or IPv6 address; false
+ *   otherwise.
+ */
+export const isUnspecifiedIP = (addr: IpAddress) =>
+    (addr.prefixlen === 32 && addr.address === '0.0.0.0')
+    || (addr.prefixlen === 128 && addr.address === '::')
+
+/**
+ * Indicates when an address is a loopback IP address.
+ * 
+ * @param addr some address, including non-IP
+ * @returns true when address is a loopback IPv4 address in the range
+ *   127.0.0.0/8 or the ::1 IPv6 address; false otherwise.
+ */
+export const isLoopbackIP = (addr: IpAddress) =>
+    (addr.prefixlen >= 8 && addr.address.startsWith('127.'))
+    || (addr.prefixlen === 128 && addr.address === '::1')
+
+/**
+ * 
+ */
+export const isLLAv6 = (addr: IpAddress) =>
+    (addr.family === AddressFamily.IPv6 && addr.prefixlen >= 16 && addr.address.startsWith('fe80:'))
+
+/**
  * Sort order function for sorting IpAddress objects with the following
  * priority:
  *

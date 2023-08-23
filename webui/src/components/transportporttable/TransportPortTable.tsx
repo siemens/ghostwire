@@ -37,6 +37,7 @@ interface PortRow {
      * corresponds with.
      */
     user: PortUser
+    remoteUser?: PortUser
     /** arbitrary key for differentiating and identifying rows */
     key: string
 }
@@ -198,6 +199,10 @@ const TransportPortTableColumns: ColHeader[] = [
         label: 'Service',
         orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.localServicename.localeCompare(rowB.port.localServicename),
     }, {
+        id: 'user',
+        label: 'Group · Container · Process',
+        orderFn: (rowA: PortRow, rowB: PortRow) => userName(rowA.user).localeCompare(userName(rowB.user))
+    }, {
         id: 'remoteaddress',
         label: 'Remote',
         orderFn: (rowA: PortRow, rowB: PortRow) => orderAddresses(rowA.port.remoteAddress, rowB.port.remoteAddress),
@@ -210,9 +215,9 @@ const TransportPortTableColumns: ColHeader[] = [
         label: 'Service',
         orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.remoteServicename.localeCompare(rowB.port.remoteServicename),
     }, {
-        id: 'user',
+        id: 'remoteuser',
         label: 'Group · Container · Process',
-        orderFn: (rowA: PortRow, rowB: PortRow) => userName(rowA.user).localeCompare(userName(rowB.user))
+        orderFn: (rowA: PortRow, rowB: PortRow) => userName(rowA.remoteUser).localeCompare(userName(rowB.remoteUser))
     },
 ]
 
@@ -233,11 +238,12 @@ const sortTableRows = (rows: PortRow[], ids: string[]): PortRow[] => {
 }
 
 /** Helper to generate transport port row keys. */
-const portrowkey = (port: TransportPort, user: PortUser) => (
+const portrowkey = (port: TransportPort, user: PortUser, remoteUser?: PortUser) => (
     `${port.protocol}${port.macroState === 'listening' ? '1' : '2'}`
-    + `-${port.localPort.toString().padStart(5, '0')}-${port.localAddress.address}`
-    + `-${port.remotePort.toString().padStart(5, '0')}-${port.remoteAddress.address}`
-    + `-${user.pid}`
+        + `-${port.localPort.toString().padStart(5, '0')}-${port.localAddress.address}`
+        + `-${port.remotePort.toString().padStart(5, '0')}-${port.remoteAddress.address}`
+        + `-${user.pid}`
+        + (!!remoteUser ? `-${remoteUser.pid}` : '')
 )
 
 // As the table rows can later be stabely (re)sorted by the user based on
@@ -268,8 +274,19 @@ const getInitialTableRows = (netns: NetworkNamespace, families: AddressFamilySet
                     keys[key] = ++duplicates
                     key += '-' + duplicates.toString()
                 }
-                return { port: port, user: user, key: key } as PortRow
-            })).flat(),
+                return (!port.remoteUsers || !port.remoteUsers.length)
+                    ? [{
+                        port: port,
+                        user: user,
+                        key: key,
+                    } as PortRow]
+                    : port.remoteUsers.map(remUser => ({
+                        port: port,
+                        user: user,
+                        key: key,
+                        remoteUser: remUser
+                    } as PortRow))
+            }).flat()).flat(),
         ['remoteport', 'remoteaddress', 'localaddress', '-state', 'proto', 'localport'])
 }
 
@@ -346,11 +363,16 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
                             <AddressCell>{row.port.localAddress.address}</AddressCell>
                             <PortCell>:{row.port.localPort}</PortCell>
                             <TableCell>{row.port.localServicename}</TableCell>
+                            <TableCell>
+                                <Process cmdline={row.user.cmdline} containee={row.user.containee} pid={row.user.pid} />
+                            </TableCell>
                             <AddressCell>{(row.port.remotePort && row.port.remoteAddress.address) || ''}</AddressCell>
                             <PortCell>{(row.port.remotePort && `:${row.port.remotePort}`) || ''}</PortCell>
                             <TableCell>{row.port.remoteServicename}</TableCell>
                             <TableCell>
-                                <Process cmdline={row.user.cmdline} containee={row.user.containee} pid={row.user.pid} />
+                                {row.remoteUser &&
+                                    <Process cmdline={row.remoteUser.cmdline} containee={row.remoteUser.containee} pid={row.user.pid} />
+                                }
                             </TableCell>
                         </TableRow>
                     )}
