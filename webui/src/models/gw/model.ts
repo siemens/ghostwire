@@ -32,6 +32,7 @@ export interface Discovery {
     hostname?: string
     kubernetesNode?: string
     metadata: { [key: string]: any }
+    tenantAddresses: { [key: string]: PrimitiveContainee[] }
 }
 
 export const fromjson = (jsondata) => {
@@ -453,6 +454,22 @@ export const fromjson = (jsondata) => {
     // Fix composer project flavors; projects can only exist from our point of
     // view when there is at least a single, lone container in a project.
     Object.values(projectmap).forEach(project => { project.flavor = project.containers[0].flavor })
+    // Build the mapping from IP addresses to tenants...
+    disco.tenantAddresses = {}
+    Object.values(disco.networkNamespaces).forEach(netns => {
+        Object.values(netns.nifs)
+            .map(nif => nif.addresses)
+            .flat()
+            .forEach(ipAddr => {
+                disco.tenantAddresses[ipAddr.address] = netns.containers
+            })
+    })
+    // Resolve destination/forwarded port IP addresses to tenants...
+    Object.values(disco.networkNamespaces).forEach(netns => {
+        netns.transportPorts.forEach(port => {
+            port.remoteTenants = disco.tenantAddresses[port.remoteAddress.address] || []
+        })
+    })
 
     return disco
 }

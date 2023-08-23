@@ -22,6 +22,7 @@ export interface TransportPort {
     remoteAddress: IpAddress
     remotePort: number
     remoteServicename?: string
+    remoteTenants?: PrimitiveContainee[]
     
     /**
      * a truely unique feature of the Ghostwire discovery engine: Linux is not
