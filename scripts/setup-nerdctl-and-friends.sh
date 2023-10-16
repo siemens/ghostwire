@@ -8,7 +8,7 @@ set -e
 # distro repositories, but from the Github projects directly.
 
 CNI_PLUGINS_VERSION=v1.3.0
-NERDCTL_VERSION=v1.4.0
+NERDCTL_VERSION=v1.6.2
 
 WGET_PREX="/tmp/nerdctl-and-friends"
 
