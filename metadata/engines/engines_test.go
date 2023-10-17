@@ -9,11 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-
-	gostwire "github.com/siemens/ghostwire/v2"
-
 	"github.com/ory/dockertest"
+	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/engineclient/moby"

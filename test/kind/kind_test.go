@@ -13,8 +13,8 @@ import (
 	"os"
 
 	"github.com/siemens/ghostwire/v2/internal/discover"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
 	"github.com/siemens/ghostwire/v2/util"
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/watcher/moby"
@@ -22,6 +22,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 	. "github.com/thediveo/success"
 )
 
@@ -34,6 +35,18 @@ nodes:
 `
 
 const kindTestClusterName = "gw-kind-test"
+
+func withPrefix(prefix string) types.GomegaMatcher {
+	return WithTransform(func(actual any) (string, error) {
+		switch container := actual.(type) {
+		case *model.Container:
+			return container.Labels[turtlefinder.TurtlefinderContainerPrefixLabelName], nil
+		case model.Container:
+			return container.Labels[turtlefinder.TurtlefinderContainerPrefixLabelName], nil
+		}
+		return "", fmt.Errorf("withPrefix expects a model.Container or *model.Container, but got %T", actual)
+	}, Equal(prefix))
+}
 
 var _ = Describe("kind", func() {
 
@@ -85,10 +98,10 @@ var _ = Describe("kind", func() {
 			}, "10s", "500ms").Should(ContainElements(
 				SatisfyAll(
 					util.HaveContainer(kindTestClusterName+"-control-plane", moby.Type),
-					turtlefinder.WithPrefix("")),
+					withPrefix("")),
 				SatisfyAll(
 					util.HaveContainer(kindTestClusterName+"-worker", moby.Type),
-					turtlefinder.WithPrefix("")),
+					withPrefix("")),
 			))
 		})
 
@@ -101,16 +114,16 @@ var _ = Describe("kind", func() {
 			}, "10s", "500ms").Should(ContainElements(
 				SatisfyAll(
 					util.FromPod(MatchRegexp(`^kube-system/etcd-%s-control-plane$`, kindTestClusterName)),
-					turtlefinder.WithPrefix(kindTestClusterName+"-control-plane")),
+					withPrefix(kindTestClusterName+"-control-plane")),
 				SatisfyAll(
 					util.FromPod(MatchRegexp(`^kube-system/kube-proxy-\w+`)),
-					turtlefinder.WithPrefix(kindTestClusterName+"-control-plane")),
+					withPrefix(kindTestClusterName+"-control-plane")),
 				SatisfyAll(
 					util.FromPod(MatchRegexp(`^kube-system/coredns-\w+-\w+$`)),
-					turtlefinder.WithPrefix(kindTestClusterName+"-control-plane")),
+					withPrefix(kindTestClusterName+"-control-plane")),
 				SatisfyAll(
 					util.FromPod(MatchRegexp(`^kube-system/kube-proxy-\w+`)),
-					turtlefinder.WithPrefix(kindTestClusterName+"-worker")),
+					withPrefix(kindTestClusterName+"-worker")),
 			), func() string {
 				return fmt.Sprintf("current pod list: %v", util.AllPods(containers))
 			})

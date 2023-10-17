@@ -9,10 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	apiv1 "github.com/siemens/ghostwire/v2/api/v1"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-
 	gostwire "github.com/siemens/ghostwire/v2"
+	apiv1 "github.com/siemens/ghostwire/v2/api/v1"
+	"github.com/siemens/turtlefinder"
 )
 
 func main() {

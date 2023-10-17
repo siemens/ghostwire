@@ -16,10 +16,12 @@ import { ForwardedPort } from './forwardedports'
 
 /* Ghostwire's engine v2 own label namespace for passing additional information. */
 export const GHOSTWIRE_LABEL_ROOT = 'gostwire/'
+export const TURTLEFINDER_LABEL_ROOT = "turtlefinder/"
 
 export const hiddenLabel = (key: string) =>
     [
         GHOSTWIRE_LABEL_ROOT,
+        TURTLEFINDER_LABEL_ROOT,
         "github.com/thediveo/whalewatcher/",
         "github.com/thediveo/lxkns/",
     ].find(root => key.startsWith(root)) !== undefined

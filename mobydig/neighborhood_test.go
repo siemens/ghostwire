@@ -10,14 +10,13 @@ import (
 	"os"
 	"time"
 
-	lxknsdiscover "github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
-
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
 	"github.com/siemens/mobydig/messymoby"
+	"github.com/siemens/turtlefinder"
+	lxknsdiscover "github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
