@@ -46,6 +46,7 @@ require (
 require (
 	github.com/containerd/log v0.1.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
+	k8s.io/cri-api v0.28.2 // indirect
 )
 
 require (
@@ -115,6 +116,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/siemens/turtlefinder v1.0.1
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/thediveo/go-mntinfo v1.0.1 // indirect
 	github.com/thediveo/ioctl v0.9.2

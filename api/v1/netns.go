@@ -13,13 +13,12 @@ import (
 	"strings"
 
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var titler = cases.Title(language.Und)
@@ -185,7 +184,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					GroupID:  gid,
 					ID:       cntrID(tenant.Process),
 					Name:     c.Name,
-					Prefix:   c.Labels[turtlefinder.GostwireContainerPrefixLabelName],
+					Prefix:   c.Labels[turtlefinder.TurtlefinderContainerPrefixLabelName],
 					Labels:   c.Labels,
 					API:      c.Engine.API,
 					PID:      c.PID,

@@ -15,7 +15,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/siemens/ghostwire/v2/turtlefinder"
+	"github.com/siemens/turtlefinder"
 
 	gostwire "github.com/siemens/ghostwire/v2"
 

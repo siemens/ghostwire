@@ -7,10 +7,9 @@ package v1
 import (
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-
 	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/network"
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 )
@@ -108,7 +107,7 @@ func newCaptureTargets(dr gostwire.DiscoveryResult) captureTargets {
 				NifNames:  nifNames,
 				PID:       tenant.Process.PID,
 				Starttime: tenant.Process.Starttime,
-				Prefix:    container.Labels[turtlefinder.GostwireContainerPrefixLabelName],
+				Prefix:    container.Labels[turtlefinder.TurtlefinderContainerPrefixLabelName],
 			})
 		}
 	}

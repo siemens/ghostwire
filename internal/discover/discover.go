@@ -9,8 +9,7 @@ import (
 
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"

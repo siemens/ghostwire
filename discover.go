@@ -10,7 +10,7 @@ import (
 	_ "github.com/siemens/ghostwire/v2/decorator/all" // activate all Gostwire-specific decorators.
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"

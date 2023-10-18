@@ -9,10 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-
 	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/network"
+	"github.com/siemens/turtlefinder"
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns/log"
