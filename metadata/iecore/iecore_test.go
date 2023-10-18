@@ -11,13 +11,12 @@ import (
 	"sync"
 	"time"
 
-	gostwire "github.com/siemens/ghostwire/v2"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
-	"github.com/siemens/ieddata"
-
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ieddata"
+	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"

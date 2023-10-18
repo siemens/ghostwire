@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/siemens/ghostwire/v2/turtlefinder"
+	"github.com/siemens/turtlefinder"
 )
 
 func Example_discovery() {

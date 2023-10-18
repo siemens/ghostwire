@@ -11,13 +11,12 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/thediveo/lxkns/decorator/kuhbernetes"
-
 	gostwire "github.com/siemens/ghostwire/v2"
 	"github.com/siemens/ghostwire/v2/decorator/ieappicon"
 	"github.com/siemens/ghostwire/v2/test/nerdctl"
-	"github.com/siemens/ghostwire/v2/turtlefinder"
 	"github.com/siemens/ghostwire/v2/util"
+	"github.com/siemens/turtlefinder"
+	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -106,7 +105,7 @@ var _ = BeforeSuite(func() {
 	)
 	for _, c := range disco.Lxkns.Containers {
 		if c.Name == bareName {
-			c.Labels[turtlefinder.GostwireContainerPrefixLabelName] = barePrefix
+			c.Labels[turtlefinder.TurtlefinderContainerPrefixLabelName] = barePrefix
 			break
 		}
 	}

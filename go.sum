@@ -323,6 +323,8 @@ github.com/siemens/ieddata v1.0.0 h1:jS4w5G/XBZ28s48IQfFmocNYkXrTQvMVzCgaWKSXqmg
 github.com/siemens/ieddata v1.0.0/go.mod h1:klA6Gx4K55NrSp8re+rZb7XuCIL8vI5jWgRYfoghiE4=
 github.com/siemens/mobydig v1.0.0 h1:kOZ0QYwXGxAuhT+A3Dz1QGoaovxyywVvwEvLC9yETkc=
 github.com/siemens/mobydig v1.0.0/go.mod h1:TtROWS4S7mfaAFUGmbhaZ9jnUFsdfLWYnLPTi+44g4Q=
+github.com/siemens/turtlefinder v1.0.1 h1:CMReXXC5dWu1/JJTLyxZ6ja20GleyVuRD9gcxUNpjIo=
+github.com/siemens/turtlefinder v1.0.1/go.mod h1:GCWkpEhDxcOyYN5ZqXpss1uxc70Lbg3TsZdcyQEMlw4=
 github.com/sirupsen/logrus v1.4.1/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMBDgk/93Q=
 github.com/sirupsen/logrus v1.8.1/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
@@ -645,6 +647,8 @@ honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.2.1/go.mod h1:lPVVZ2BS5TfnjLyizF7o7hv7j9/L+8cZY2hLyjP9cGY=
 honnef.co/go/tools v0.2.2 h1:MNh1AVMyVX23VUHE2O27jm6lNj3vjO5DexS4A1xvnzk=
 honnef.co/go/tools v0.2.2/go.mod h1:lPVVZ2BS5TfnjLyizF7o7hv7j9/L+8cZY2hLyjP9cGY=
+k8s.io/cri-api v0.28.2 h1:RzDo9YY9tkWhAx9/UZEcn6ug1WcvDhU3eA1YLevFreI=
+k8s.io/cri-api v0.28.2/go.mod h1:xXygwvSOGcT/2KXg8sMYTHns2xFem3949kCQn5IS1k4=
 sigs.k8s.io/kind v0.20.0 h1:f0sc3v9mQbGnjBUaqSFST1dwIuiikKVGgoTwpoP33a8=
 sigs.k8s.io/kind v0.20.0/go.mod h1:aBlbxg08cauDgZ612shr017/rZwqd7AS563FvpWKPVs=
 sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
