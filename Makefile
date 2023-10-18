@@ -15,7 +15,7 @@ GENAPIDOC = npx @redocly/cli build-docs -o docs/api/index.html api/openapi-spec/
 
 tools := gostwire gostdump lsallnifs
 
-.PHONY: help pkgsite docsify redocsify build rebuild test test-all report clean deploy undeploy coverage lsallnifs install-tools vuln dist
+.PHONY: help pkgsite docsify redocsify build rebuild test test-all report clean deploy undeploy coverage grype lsallnifs install-tools vuln dist
 
 help: ## list available targets
 	@# Derived from Gomega's Makefile (github.com/onsi/gomega) under MIT License
@@ -32,6 +32,9 @@ test: ## run tests as root as well as an ordinary user, without KinD
 test-all: ## run tests as root as well as an ordinary user, including KinD
 	go test -v -p 1 -tags=matchers,kind -exec sudo ./...
 	go test -v -p 1 -tags=matchers,kind ./...
+
+grype: ## run grype vul scan on sources
+	@scripts/grype.sh
 
 docsify: ## run a docsify HTTP server on port 3300 (and 3301)
 	@$(GENAPIDOC)
