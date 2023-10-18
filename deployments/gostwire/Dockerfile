@@ -90,7 +90,6 @@ COPY internal/ ./internal/
 COPY metadata/ ./metadata/
 COPY mobydig/ ./mobydig/
 COPY network/ ./network/
-COPY turtlefinder/ ./turtlefinder/
 COPY *.go ./
 
 RUN --mount=target=. \
