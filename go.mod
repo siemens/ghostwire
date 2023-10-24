@@ -6,7 +6,6 @@ replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.12
 
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1
-	github.com/containerd/containerd v1.7.7
 	github.com/containernetworking/cni v1.1.2
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/dustinkirkland/golang-petname v0.0.0-20231002161417-6a283f1aaaf2
@@ -15,9 +14,9 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/jinzhu/copier v0.4.0
-	github.com/ohler55/ojg v1.19.4
+	github.com/ohler55/ojg v1.20.1
 	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.28.0
+	github.com/onsi/gomega v1.28.1
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/siemens/ieddata v1.0.0
@@ -32,7 +31,7 @@ require (
 	github.com/thediveo/netdb v1.0.2
 	github.com/thediveo/nufftables v0.8.0
 	github.com/thediveo/osrelease v1.0.1
-	github.com/thediveo/procfsroot v1.0.0
+	github.com/thediveo/procfsroot v1.0.1
 	github.com/thediveo/success v1.0.1
 	github.com/thediveo/testbasher v1.0.7
 	github.com/thediveo/whalewatcher v0.10.1
@@ -44,6 +43,7 @@ require (
 )
 
 require (
+	github.com/containerd/containerd v1.7.7 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 	k8s.io/cri-api v0.28.2 // indirect
@@ -81,7 +81,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -94,7 +94,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/josharian/native v0.0.0-20200817173448-b6b71def0850 // indirect
 	github.com/klauspost/compress v1.16.6 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
@@ -116,7 +115,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/siemens/turtlefinder v1.0.1
+	github.com/siemens/turtlefinder v1.0.2
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/thediveo/go-mntinfo v1.0.1 // indirect
 	github.com/thediveo/ioctl v0.9.2
