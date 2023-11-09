@@ -89,8 +89,11 @@ func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
 				}
 			}
 
-			fd, err := strconv.ParseUint(fdInfoEntry.Name(), 10, strconv.IntSize-1)
-			if err != nil {
+			// Work around bug(s) #14733/#9295 in CodeQL scanning which
+			// currently block correct parsing using ParseUint(...,
+			// strconv.IntSize-1) and then casting to int.
+			fd, err := strconv.ParseInt(fdInfoEntry.Name(), 10, strconv.IntSize)
+			if err != nil || fd < 0 {
 				continue
 			}
 			taptunFd, err := unix.PidfdGetfd(pidfd, int(fd), 0)
