@@ -7,46 +7,46 @@ replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.12
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/containernetworking/cni v1.1.2
-	github.com/docker/docker v24.0.6+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/dustinkirkland/golang-petname v0.0.0-20231002161417-6a283f1aaaf2
 	github.com/getkin/kin-openapi v0.120.0
 	github.com/google/nftables v0.1.0
-	github.com/gorilla/mux v1.8.0
-	github.com/gorilla/websocket v1.5.0
+	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.1
 	github.com/jinzhu/copier v0.4.0
-	github.com/ohler55/ojg v1.20.1
+	github.com/ohler55/ojg v1.20.2
 	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.28.1
+	github.com/onsi/gomega v1.30.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/siemens/ieddata v1.0.0
 	github.com/siemens/mobydig v1.0.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/thediveo/deferrer v0.1.0
-	github.com/thediveo/fdooze v0.3.0
-	github.com/thediveo/go-plugger/v3 v3.0.0
+	github.com/thediveo/fdooze v0.3.1
+	github.com/thediveo/go-plugger/v3 v3.0.1
 	github.com/thediveo/lxkns v0.28.0
-	github.com/thediveo/namspill v0.1.5
-	github.com/thediveo/netdb v1.0.2
+	github.com/thediveo/namspill v0.1.6
+	github.com/thediveo/netdb v1.0.3
 	github.com/thediveo/nufftables v0.8.0
-	github.com/thediveo/osrelease v1.0.1
+	github.com/thediveo/osrelease v1.0.2
 	github.com/thediveo/procfsroot v1.0.1
-	github.com/thediveo/success v1.0.1
-	github.com/thediveo/testbasher v1.0.7
-	github.com/thediveo/whalewatcher v0.10.1
+	github.com/thediveo/success v1.0.2
+	github.com/thediveo/testbasher v1.0.8
+	github.com/thediveo/whalewatcher v0.10.2
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/sys v0.13.0
-	golang.org/x/text v0.13.0
+	golang.org/x/exp v0.0.0-20231108232855-2478ac86f678
+	golang.org/x/sys v0.14.0
+	golang.org/x/text v0.14.0
 	sigs.k8s.io/kind v0.20.0
 )
 
 require (
-	github.com/containerd/containerd v1.7.7 // indirect
+	github.com/containerd/containerd v1.7.8 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
-	k8s.io/cri-api v0.28.2 // indirect
+	k8s.io/cri-api v0.28.3 // indirect
 )
 
 require (
@@ -85,7 +85,7 @@ require (
 	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.3.1 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -118,9 +118,9 @@ require (
 	github.com/siemens/turtlefinder v1.0.2
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/thediveo/go-mntinfo v1.0.1 // indirect
-	github.com/thediveo/ioctl v0.9.2
-	github.com/thediveo/notwork v1.3.0
-	github.com/thediveo/spaserve v1.0.1
+	github.com/thediveo/ioctl v0.9.3
+	github.com/thediveo/notwork v1.3.1
+	github.com/thediveo/spaserve v1.0.2
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
@@ -129,13 +129,13 @@ require (
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
-	golang.org/x/mod v0.13.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sync v0.4.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
-	google.golang.org/genproto v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/grpc v1.58.2 // indirect
+	golang.org/x/mod v0.14.0 // indirect
+	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/sync v0.5.0 // indirect
+	golang.org/x/tools v0.15.0 // indirect
+	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/grpc v1.59.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
