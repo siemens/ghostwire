@@ -89,7 +89,7 @@ func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
 				}
 			}
 
-			fd, err := strconv.ParseUint(fdInfoEntry.Name(), 10, strconv.IntSize)
+			fd, err := strconv.ParseUint(fdInfoEntry.Name(), 10, strconv.IntSize-1)
 			if err != nil {
 				continue
 			}
