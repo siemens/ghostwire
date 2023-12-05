@@ -16,7 +16,11 @@ import (
 	"github.com/siemens/ghostwire/v2/test/nerdctl"
 	"github.com/siemens/ghostwire/v2/util"
 	"github.com/siemens/turtlefinder"
+	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/watcher/containerd"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,6 +43,56 @@ func TestGostwireApiV1(t *testing.T) {
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "ghostwire/api/v1 package")
+}
+
+// Register testing pod grouping plugin.
+func init() {
+	plugger.Group[decorator.Decorate]().Register(
+		Decorate, plugger.WithPlugin("kuhtainerd"))
+}
+
+// PodDecorate decorates the discovered containerd containers with pod groups,
+// where applicable. This used to be in general use until the advent of the CRI
+// API-based watcher and its generic decoration; now we use it to avoid having
+// to rewrite the whole test here.
+func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
+	total := 0
+	for _, engine := range engines {
+		// If it "ain't no" containerd, skip it, as we're looking specifically
+		// for containerd engines and their particular Kubernetes pod labelling.
+		if engine.Type != containerd.Type {
+			continue
+		}
+		// Pods cannot span container engines ;)
+		podgroups := map[string]*model.Group{}
+		for _, container := range engine.Containers {
+			podNamespace := container.Labels[kuhbernetes.PodNamespaceLabel]
+			podName := container.Labels[kuhbernetes.PodNameLabel]
+			if podName == "" || podNamespace == "" {
+				continue
+			}
+			// Create a new pod group, if it doesn't exist yet. Add the
+			// container to its pod group.
+			namespacedpodname := podNamespace + "/" + podName
+			podgroup, ok := podgroups[namespacedpodname]
+			if !ok {
+				podgroup = &model.Group{
+					Name:   namespacedpodname,
+					Type:   kuhbernetes.PodGroupType,
+					Flavor: kuhbernetes.PodGroupType,
+				}
+				podgroups[namespacedpodname] = podgroup
+				total++
+			}
+			podgroup.AddContainer(container)
+			// Sandbox? Then tag (label) the container.
+			/*
+				if container.Labels[containerKindLabel] == "sandbox" {
+					container.Labels[kuhbernetes.PodSandboxLabel] = ""
+				}
+			*/
+		}
+	}
 }
 
 func tabulaRasa() {
