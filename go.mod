@@ -9,13 +9,13 @@ require (
 	github.com/containernetworking/cni v1.1.2
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/dustinkirkland/golang-petname v0.0.0-20231002161417-6a283f1aaaf2
-	github.com/getkin/kin-openapi v0.120.0
+	github.com/getkin/kin-openapi v0.122.0
 	github.com/google/nftables v0.1.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.1
 	github.com/jinzhu/copier v0.4.0
-	github.com/ohler55/ojg v1.20.2
-	github.com/onsi/ginkgo/v2 v2.13.0
+	github.com/ohler55/ojg v1.20.3
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/dockertest/v3 v3.10.0
@@ -26,7 +26,7 @@ require (
 	github.com/thediveo/deferrer v0.1.0
 	github.com/thediveo/fdooze v0.3.1
 	github.com/thediveo/go-plugger/v3 v3.0.1
-	github.com/thediveo/lxkns v0.28.0
+	github.com/thediveo/lxkns v0.30.0
 	github.com/thediveo/namspill v0.1.6
 	github.com/thediveo/netdb v1.0.3
 	github.com/thediveo/nufftables v0.8.0
@@ -36,8 +36,8 @@ require (
 	github.com/thediveo/testbasher v1.0.8
 	github.com/thediveo/whalewatcher v0.10.2
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
-	golang.org/x/exp v0.0.0-20231108232855-2478ac86f678
-	golang.org/x/sys v0.14.0
+	golang.org/x/exp v0.0.0-20231127185646-65229373498e
+	golang.org/x/sys v0.15.0
 	golang.org/x/text v0.14.0
 	sigs.k8s.io/kind v0.20.0
 )
@@ -72,7 +72,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/gammazero/deque v0.2.1 // indirect
 	github.com/gammazero/workerpool v1.1.3 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/siemens/turtlefinder v1.0.2
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/thediveo/go-mntinfo v1.0.1 // indirect
+	github.com/thediveo/go-mntinfo v1.0.2 // indirect
 	github.com/thediveo/ioctl v0.9.3
 	github.com/thediveo/notwork v1.3.1
 	github.com/thediveo/spaserve v1.0.2
@@ -130,9 +130,9 @@ require (
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/tools v0.15.0 // indirect
+	golang.org/x/tools v0.16.0 // indirect
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0 // indirect
@@ -140,5 +140,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.2.2 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )
