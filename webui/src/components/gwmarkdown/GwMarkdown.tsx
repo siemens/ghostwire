@@ -7,6 +7,7 @@ import React from 'react'
 import { MuiMarkdown } from 'components/muimarkdown'
 import { styled } from '@mui/material';
 import { SmartA } from 'components/smarta';
+import { MDXComponents } from 'mdx/types';
 
 
 const GwMD = styled(MuiMarkdown)(({ theme }) => ({
@@ -39,7 +40,7 @@ export interface GwMarkdownProps {
      * "components") to be made available to the MDX without the need to
      * explicitly import them in the MDX.
      */
-    shortcodes?: { [key: string]: React.ComponentType<any> }
+    shortcodes?: MDXComponents // { [key: string]: React.ComponentType<any> }
     /** CSS class name(s). */
     className?: string
     /** fallback components to render when lazily loading the mdx. */

@@ -18,7 +18,7 @@ import '@fontsource/roboto-mono/400.css'
 // performance without strict-mode double rendering.
 const container = document.getElementById('root');
 createRoot(container!).render(
-	process.env.REACT_APP_UNSTRICT
+	import.meta.env.REACT_APP_UNSTRICT
 		? <App />
 		: <React.StrictMode><App /></React.StrictMode>
 );

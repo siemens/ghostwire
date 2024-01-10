@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { ReactNode } from 'react'
 import { atomWithStorage } from 'jotai/utils'
 import { Collapse, IconButton, styled } from '@mui/material'
 import { useDiscovery } from 'components/discovery'
@@ -46,7 +46,7 @@ const MetaValue = styled('div')(() => ({
 
 interface MetaRowProps {
     name: string
-    value: any
+    value: ReactNode
 }
 
 const MetaRow = ({ name, value }: MetaRowProps) => {

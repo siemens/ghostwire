@@ -33,10 +33,10 @@ export interface Discovery {
     networkNamespaces: NetworkNamespaces
     hostname?: string
     kubernetesNode?: string
-    metadata: { [key: string]: any }
+    metadata: { [key: string]: unknown }
 }
 
-export const fromjson = (jsondata) => {
+export const fromjson = (jsondata: { [key: string]: unknown }) => {
     const disco = {
         networkNamespaces: {},
         metadata: jsondata.metadata,
@@ -163,7 +163,7 @@ export const fromjson = (jsondata) => {
                     cbox.project = null
                     if (jcntr.labels && !!jcntr.labels['com.docker.compose.project']) {
                         const projectname = jcntr.labels['com.docker.compose.project']
-                        var project = projectmap[projectname]
+                        let project = projectmap[projectname]
                         if (project === undefined) {
                             project = {
                                 name: projectname,
@@ -297,7 +297,7 @@ export const fromjson = (jsondata) => {
     // Only now read in the transport port related discovery information,
     // because now we can easily resolve the references from port users to
     // their containees.
-    Object.values(jsondata['network-namespaces']).forEach((jnetns: any) => {
+    Object.values(jsondata['network-namespaces']).forEach((jnetns: { [key: string]: unknown }) => {
         const netns = disco.networkNamespaces[jnetns.netnsid]
         // Read in the open transport-layer ports in this network namespace...
         netns.transportPorts = ['ipv4', 'ipv6'].map(addrfamily => {
@@ -333,7 +333,7 @@ export const fromjson = (jsondata) => {
     })
     // Then read in the forwarded port related discovery information, so that we
     // can easily resolve the references from port users to their containees.
-    Object.values(jsondata['network-namespaces']).forEach((jnetns: any) => {
+    Object.values(jsondata['network-namespaces']).forEach((jnetns: {[key: string]: unknown}) => {
         const netns = disco.networkNamespaces[jnetns.netnsid]
         netns.forwardedPorts = ['ipv4', 'ipv6'].map(addrfamily => {
             const family = addressFamilyByName(addrfamily)

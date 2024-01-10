@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { ReactNode } from 'react'
 
 import { Provider } from 'jotai'
 
@@ -56,11 +56,17 @@ const chapters: HelpViewerChapter[] = [
 
 const markdowner = (props: MuiMarkdownProps) => (<GwMarkdown {...props} />)
 
+interface ExampleProps {
+    children: ReactNode
+    p: string | number
+    card: object
+}
+
 /**
  * Shortcode component rendering a Mui card with the specified children inside
  * it. The card has a theme-based margin as well as internal padding.
  */
-const Example = ({ children, p, card, ...otherprops }) => {
+const Example = ({ children, p, card, ...otherprops }: ExampleProps) => {
     return (
         <Box m={2} {...otherprops}>
             <Card {...card}>
