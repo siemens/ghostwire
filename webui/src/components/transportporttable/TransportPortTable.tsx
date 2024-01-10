@@ -131,15 +131,15 @@ const TransTable = styled(Table)(({ theme }) => ({
     },
 }))
 
-const TransHeader = styled(TableHead)(({ theme }) => ({
+const TransHeader = styled(TableHead)(() => ({
     whiteSpace: 'nowrap',
 }))
 
-const AddressCell = styled(TableCell)(({ theme }) => ({
+const AddressCell = styled(TableCell)(() => ({
     fontFamily: 'Roboto Mono',
 }))
 
-const PortCell = styled(TableCell)(({ theme }) => ({
+const PortCell = styled(TableCell)(() => ({
     textAlign: 'end',
     fontFamily: 'Roboto Mono',
 }))
@@ -149,7 +149,7 @@ const PortCell = styled(TableCell)(({ theme }) => ({
  * container, et cetera, suitable for sorting.
  */
 const userName = (user: PortUser) => {
-    let components = []
+    const components = []
     const containee = user.containee
     if (containee) {
         if (isContainer(containee) && containee.pod) {
@@ -299,8 +299,6 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
         // we're otherwise resetting the table rows state each time the user
         // clicks on a table header column to change sorting ... and that's
         // ain't a good idea, sir!
-        //
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRows])
 
     // User clicks on a column header in order to sort the table rows by this

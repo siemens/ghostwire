@@ -26,7 +26,7 @@ const initialRefreshInterval = (() => {
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
-    } catch (e) { }
+    } catch (e) { /* empty */ }
     return 5000;
 })()
 

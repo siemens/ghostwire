@@ -9,7 +9,7 @@ import React, { useContext } from 'react'
  * application by the server at load time (as opposed to static REACT_APP_
  * variables which are fixed at build time).
  */
-type DynamicVars = { [key: string]: any }
+type DynamicVars = { [key: string]: unknown }
 
 // Dynamic variables from the server get passed in via dynamically served
 // "index.html" that sets the dynvars element of the window object.

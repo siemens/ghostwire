@@ -117,3 +117,13 @@ lsallnifs: ## list all network interfaces with their configuration in all networ
 
 vuln: ## run go vulnerabilities check
 	@scripts/vuln.sh
+
+yarnsetup: ## set up yarn v4 correctly
+	cd webui && \
+	rm -f .yarnrc.yml && \
+	rm -rf .yarn/ && \
+	rm -rf node_modules && \
+	yarn set version berry && \
+	yarn config set nodeLinker node-modules && \
+	yarn install && \
+	yarn eslint --init

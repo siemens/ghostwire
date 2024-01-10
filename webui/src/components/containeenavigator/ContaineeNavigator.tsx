@@ -141,10 +141,11 @@ const podNamespaceAndName = (pod: Pod, withoutTurtleNamespace: boolean = false):
     const turtleNamespace = withoutTurtleNamespace ? '' : pod.containers[0].turtleNamespace
     const prefix = turtleNamespace ? `[${turtleNamespace}]:` : ''
     switch (pod.flavor) {
-        case PodFlavors.K8SPOD:
+        case PodFlavors.K8SPOD: {
             const parts = pod.name.split('/')
             return parts.length ? [parts[0], prefix + parts.slice(1).join('/')]
                 : ['', prefix + parts[0]]
+        }
         default:
             return ['', prefix + pod.name]
     }

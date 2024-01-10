@@ -77,7 +77,7 @@ interface FullyQualifiedServiceAddresses {
 
 
 const QA = ({ className, qa }: { className?: string, qa: QualifiedServiceAddress }) => {
-    var qual
+    let qual
     switch (qa.quality) {
         case 'unverified':
             qual = <QuestionMark className="quality" fontSize="small" />
@@ -154,7 +154,7 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
     const match2 = useMatch('/:base/:detail')
     const match = (match1 || match2) ? { ...match1, ...match2 } : null
 
-    var url = (window.location.protocol === "https:" ? "wss://" : "ws://")
+    const url = (window.location.protocol === "https:" ? "wss://" : "ws://")
         + window.location.host + basename + "/mobydig"
 
     const [fqdnAddrs, setFqdnAddrs] = useState({} as FullyQualifiedServiceAddresses)
@@ -179,7 +179,7 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
         }
         const fqdn = lastJsonMessage['fqdn'].slice(0, -1)
         const addr = lastJsonMessage['address']
-        if (!!addr) {
+        if (addr) {
             setFqdnAddrs((fqdnAddrs) => {
                 const updatedFqdnAddrs = {
                     ...fqdnAddrs,
@@ -233,7 +233,7 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                     </TableHead>
                     <TableBody>
                         {services.sort((a, b) => sortServices(a, b))
-                            .map((service, idx) => {
+                            .map((service, ) => {
                                 const itsme = shareContainers(service.containers, seenby as Container[])
                                 const tlds = ['', ...service.networks].sort((a, b) => a.localeCompare(b))
                                 return service.containers

@@ -122,7 +122,7 @@ const nifBoundingRect = (domEl: HTMLElement, refRect: DOMRect): Rect => {
  */
 const layoutWires = (wires: Wire[], nifContainerDomId: string): [SwimlaneWire[], number] => {
     // No wires yet in any swim-lanes.
-    let lanes: (SwimlaneWire[])[] = []
+    const lanes: (SwimlaneWire[])[] = []
     const refPosition = document.getElementById(nifContainerDomId).getBoundingClientRect()
     const refWidth = refPosition.right - refPosition.left
     // Determine the layout information for each individual wire.
@@ -264,11 +264,11 @@ const sortHotJSXElements = (els: JSX.Element[], hotWires: string[], domIdBase: s
             .find((cls) => isRelationClassName(domIdBase, cls))),
         el,
     ])
-        .sort(([idxA, hotA, elA]: [number, boolean, JSX.Element], [idxB, hotB, elB]: [number, boolean, JSX.Element]) => {
+        .sort(([idxA, hotA, ]: [number, boolean, JSX.Element], [idxB, hotB, ]: [number, boolean, JSX.Element]) => {
             if (hotA !== hotB) return hotA ? 1 : -1
             return idxA - idxB
         })
-        .map(([idx, hot, el]) => el)
+        .map(([, , el]) => el)
 )
 
 // The "namespace" used for <marker> SVG elements inside the current DOM
@@ -502,7 +502,7 @@ export interface WiringProps {
      * interface badge DOM elements might have changed. Any number here
      * suffices, as long as it changes whenever a re-layout is needed.
      */
-    layoutToken: any
+    layoutToken: unknown
 }
 
 /**
@@ -564,8 +564,6 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
         // ... except that in real life even things don't break all the time.
         // How often do we expect classes and classes.wire to change?!!
         // Seriously!
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layoutToken,
         // These are breaking our necks: p2pWires, externalWires, 
         hotWires,

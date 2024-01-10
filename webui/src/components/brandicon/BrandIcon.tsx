@@ -17,15 +17,15 @@ export const BrandIcon = (props: SvgIconProps) => {
 
     const { brandicon } = useDynVars()
 
-    if (!!brandicon) {
+    if (brandicon) {
         return <SVG
             className="MuiSvgIcon-root"
             uniquifyIDs={true}
-            src={`data:image/svg+xml;utf-8,${encodeURIComponent(brandicon)}`}
             {...{
                 fill: 'currentColor', // ensure in MUIv5 to use color for filling, unless explicitly overridden.
                 ...(props as unknown as SVGProps),
             }}
+            src={`data:image/svg+xml;utf-8,${encodeURIComponent(brandicon)}`}
         />
     }
     return <GhostwireIcon {...props}/>

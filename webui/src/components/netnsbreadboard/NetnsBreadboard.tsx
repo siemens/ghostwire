@@ -79,12 +79,12 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
 
     // To start with, bring the specified network namespace(s) into our
     // canonical form of an array of network namespaces.
-    var netnses: NetworkNamespace[]
+    let netnses: NetworkNamespace[] = []
     if (Array.isArray(netns)) {
         netnses = [...netns] // ...because we might modify the array lateron.
-    } else if ('netnsid' in netns) {
+    } else if (netns && 'netnsid' in netns) {
         netnses = [netns]
-    } else {
+    } else if (netns) {
         netnses = Object.values(netns)
     }
     // Drop all namespaces with only a lonely loopback network interface, to
@@ -103,7 +103,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
 
     const handleNetnsZoom = (netns: NetworkNamespace, fragment?: string) => {
         let base = `/${match.params['base']}/${netns.netnsid}`
-        if (!!fragment) {
+        if (fragment) {
             base += `#${domIdBase}${netnsId(netns)}-${fragment}`
         }
         navigate(base)

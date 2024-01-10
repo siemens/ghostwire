@@ -151,5 +151,6 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
             </div>
         </Ghost>)
 })
+NetnsDetails.displayName = "NetnsDetails"
 
 export default NetnsDetails

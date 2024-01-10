@@ -68,7 +68,7 @@ const TunTapInfo = styled(TunTapDetails)(({ theme }) => ({
     marginLeft: nifPropsIndent,
 }))
 
-const VxlanInfo = styled(VxlanDetails)(({ theme }) => ({
+const VxlanInfo = styled(VxlanDetails)(() => ({
     marginLeft: nifPropsIndent,
 }))
 

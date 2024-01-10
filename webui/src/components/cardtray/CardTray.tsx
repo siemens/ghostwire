@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { Key } from 'react'
 import { TransitionGroup } from 'react-transition-group'
 
 import { Collapse, styled } from '@mui/material'
@@ -41,7 +41,7 @@ export const CardTray = ({ children, animate }: CardTrayProps) => {
     if (animate) {
         return (
             <TransitionGroup component={Surface}>
-                {React.Children.map(children, child => <Collapse key={(child as any).key} in>{child}</Collapse>)}
+                {React.Children.map(children, child => <Collapse key={(child as {key: Key | null | undefined}).key} in>{child}</Collapse>)}
             </TransitionGroup>
         )
     }

@@ -46,7 +46,7 @@ const appearKeyframes = keyframes({
     },
 })
 
-const GhostBox = styled(Box)(({ theme }) => ({
+const GhostBox = styled(Box)(() => ({
     animation: `${appearKeyframes} 1s ease, ${spectreKeyframes} 2s infinite 1s ease`,
     display: 'flex',
     height: '100%',

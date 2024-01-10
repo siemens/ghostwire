@@ -64,7 +64,7 @@ const Promiscuous = styled('span')(({ theme }) => ({
     }
 }))
 
-const Capture = styled(TargetCapture)(({ theme }) => ({
+const Capture = styled(TargetCapture)(() => ({
     marginLeft: '0.2em',
     '&.alignright': {
         marginLeft: 0,
@@ -367,7 +367,7 @@ export const NifBadge = ({
     // use can hover over any part of a wire and connected network interfaces
     // and all connected parts will light up, we tack on one or more CSS
     // classes based on the particular relations our interface is part of.
-    let relationClasses: string[] = []
+    const relationClasses: string[] = []
     if (nif.macvlan) { // ...we're one of the MACVLANs.
         relationClasses.push(relationClassName(domIdBase, nif, nif.macvlan))
     }

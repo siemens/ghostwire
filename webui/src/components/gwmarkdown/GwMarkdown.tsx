@@ -5,9 +5,8 @@
 import React from 'react'
 
 import { MuiMarkdown } from 'components/muimarkdown'
-import { Link } from 'react-router-dom'
-import { ExtLink } from 'components/extlink'
 import { styled } from '@mui/material';
+import { SmartA } from 'components/smarta';
 
 
 const GwMD = styled(MuiMarkdown)(({ theme }) => ({
@@ -32,27 +31,9 @@ const GwMD = styled(MuiMarkdown)(({ theme }) => ({
     },
 }))
 
-
-/**
- * Renders a hyperlink either as an external link (using the ExtLink component),
- * or a react router "internal" Link component, depending on the given href
- * property value. Using the Link component ensures proper app-internal route
- * handling without having to reload the application and thus destroying the any
- * discovery result.
- */
-const SmartA = ({ href, children, ...otherprops }: any) => {
-    try {
-        new URL(href)
-        return <ExtLink href={href} {...otherprops}>{children}</ExtLink>
-    } catch {
-        return <Link to={href} {...otherprops}>{children}</Link>
-    }
-}
-
-
 export interface GwMarkdownProps {
     /** compiled MDX, which can also be lazy loaded. */
-    mdx: (props: any) => JSX.Element
+    mdx: (props: unknown) => JSX.Element
     /** 
      * an object "map" of "shortcodes" (which is a rather fancy name for
      * "components") to be made available to the MDX without the need to

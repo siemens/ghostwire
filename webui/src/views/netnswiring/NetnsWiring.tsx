@@ -55,5 +55,6 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
         </Box>
     )
 })
+NetnsWiring.displayName = "NetnsWiring"
 
 export default NetnsWiring

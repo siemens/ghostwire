@@ -172,7 +172,7 @@ const BridgePort = styled(Nif)(({ theme }) => ({
     },
 }))
 
-const StretchedNif = styled(NifNavigator)(({ theme }) => ({
+const StretchedNif = styled(NifNavigator)(() => ({
     width: '100%',
 }))
 

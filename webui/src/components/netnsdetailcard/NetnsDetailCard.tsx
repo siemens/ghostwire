@@ -64,7 +64,7 @@ const NetnsDescription = styled('span')(({ theme }) => ({
     color: theme.palette.text.secondary,
 }))
 
-const NetnsID = styled('span')(({ theme }) => ({
+const NetnsID = styled('span')(() => ({
 }))
 
 const SingleRoute = styled('div')(({ theme }) => ({

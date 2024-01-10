@@ -35,7 +35,7 @@ const MetaName = styled('div')(({ theme }) => ({
     overflowWrap: 'break-word',
 }))
 
-const MetaValue = styled('div')(({ theme }) => ({
+const MetaValue = styled('div')(() => ({
     gridColumn: '2 / 3',
     minHeight: '24px', // ensures consistent height when no icon in value.
     alignSelf: 'baseline',

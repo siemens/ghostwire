@@ -18,8 +18,13 @@ import { notDockerDefaultCaps } from 'utils/capabilities'
 export type Containee = PrimitiveContainee | Pod
 
 /** Type guard for any containee. */
-export const isContainee = (containee: any): containee is Containee => (
-    !!containee && (isPod(containee) || isSandbox(containee) || isBusybox(containee) || isContainer(containee))
+export const isContainee = (containee: unknown): containee is Containee => (
+    !!containee && (
+        isPod(containee as Containee)
+        || isSandbox(containee as Containee)
+        || isBusybox(containee as Containee)
+        || isContainer(containee as Containee)
+    )
 )
 
 /**
@@ -194,7 +199,7 @@ export enum ContaineeTypes {
 // has some Ghostwire v1 legacy...
 export enum ContainerFlavors {
     DOCKER = 'docker',
-    DOCKERPLUGIN= 'dockerplugin',
+    DOCKERPLUGIN = 'dockerplugin',
     CONTAINERD = 'containerd',
     IERUNTIME = 'ie-runtime',
     IEAPP = 'ie-app',
@@ -317,7 +322,7 @@ export const containeeDescription = (containee: Containee) => {
     // It's a ... container!
     const flavor = containerFlavorDescriptions[containee.flavor]
         || (containee.flavor.charAt(0) + containee.flavor.slice(1))
-    const privileged = isPrivilegedContainer(containee)  ? 'privileged ' : ''
+    const privileged = isPrivilegedContainer(containee) ? 'privileged ' : ''
     const elevated = !privileged && isElevatedContainer(containee) ? ' with additional non-default capabilities' : ''
     return `${containerStateString(containee.state)} ${privileged}${flavor} container${elevated}`
 }
@@ -441,7 +446,7 @@ export const projectDescription = (project: Project) => {
  */
 export const inProject = (containee: Containee) => (
     (containee && isContainer(containee)
-    && containee.labels && containee.labels['com.docker.compose.project'])
+        && containee.labels && containee.labels['com.docker.compose.project'])
     || ""
 )
 

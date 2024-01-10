@@ -76,7 +76,7 @@ export const capname = (capbit: JSBI) => {
 // Returns a list of names for those capabilities set for which we don't know
 // their name(s).
 const unknowncapnames = (capbits: JSBI) => {
-    let capnames: string[] = []
+    const capnames: string[] = []
     let unknowncapbits = JSBI.bitwiseAnd(capbits, JSBI.bitwiseNot(knowncapsmask))
     for (let capno = 0; JSBI.notEqual(unknowncapbits, bigZero); capno++, unknowncapbits = JSBI.signedRightShift(unknowncapbits, bigOne)) {
         if (JSBI.notEqual(JSBI.bitwiseAnd(unknowncapbits, bigOne), bigZero)) {

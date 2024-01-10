@@ -111,14 +111,14 @@ const KitchenTable = styled('div')(({ theme }) => ({
 
 // Allow the content pane to grow as necessary, as to snatch up any free
 // horizontal room.
-const ContentPane = styled('div')(({ theme }) => ({
+const ContentPane = styled('div')(() => ({
     flexGrow: 1,
 }))
 
 // The wiring pane will automatically size itself horizontally to the
 // width needed in order to accommodate the wiring. This can be done only
 // programmatically, as SVG doesn't happen to do "auto" size calculations.
-const WiringPane = styled(Wiring)(({ theme }) => ({
+const WiringPane = styled(Wiring)(() => ({
     overflow: 'visible',
     flexGrow: 0,
     flexShrink: 0,
@@ -152,7 +152,7 @@ const extractWiring = (
 ) => {
     // To start with, bring the specified network namespace(s) into our
     // canonical form of an array of network namespaces.
-    var netnses: NetworkNamespace[]
+    let netnses: NetworkNamespace[]
     if (Array.isArray(netns)) {
         netnses = netns
     } else if ('netnsid' in netns) {
@@ -248,7 +248,7 @@ const extractWiring = (
  * @param domIdBase DOM element ID context (namespace, hehe).
  */
 const locateTargetRelationClasses = (el: Element, domIdBase: string) => {
-    for (var hierarchy = 1; hierarchy <= 5 && el; hierarchy++) {
+    for (let hierarchy = 1; hierarchy <= 5 && el; hierarchy++) {
         const classNames = [...el.classList]
         const relations = classNames
             .filter(className => isRelationClassName(domIdBase, className))

@@ -24,12 +24,12 @@ import { useHydrateAtoms } from 'jotai/utils'
  * @param name name (without .mdx extension and without any path) of a chapter
  * .mdx file; chapter files are located in the chapters/ subdirectory.
  */
-const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`)) as unknown as (props: any) => JSX.Element
+const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`))
 
 // DynamicVars represents an object "map" of dynamic variable passed into an
 // application by the server at load time (as opposed to static REACT_APP_
 // variables which are fixed at build time).
-type DynamicVars = { [key: string]: any }
+type DynamicVars = { [key: string]: unknown }
 
 // Dynamic variables from the server get passed in via dynamically served
 // "index.html" that sets the dynvars element of the window object.
@@ -40,7 +40,7 @@ declare global {
 }
 
 const chapters: HelpViewerChapter[] = [
-    { title: (window.dynvars && window.dynvars.brand) || 'Ghostwire', chapter: ch('Ghostwire'), slug: 'gw' },
+    { title: (window.dynvars && window.dynvars.brand as string) || 'Ghostwire', chapter: ch('Ghostwire'), slug: 'gw' },
     { title: 'Discovery/Refresh', chapter: ch('Refresh'), slug: 'refresh' },
     { title: 'IP Stacks Galore!', chapter: ch('Badge'), slug: 'badge' },
     { title: 'Technical Features', chapter: ch('Technical'), slug: 'tech' },
@@ -75,7 +75,7 @@ const Example = ({ children, p, card, ...otherprops }) => {
 /**
  * Renders a "fake" application bar for use in help examples.
  */
-const FakeAppBar = ({ children }) => {
+const FakeAppBar = ({ children }: { children: ReactNode }) => {
     const theme = useTheme()
     return (
         <Example p={2} card={{

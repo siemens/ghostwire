@@ -76,7 +76,7 @@ export interface RelatedNifProps {
  * All other kinds of network interfaces don't render any related interfaces.
  */
 export const RelatedNif = ({ nif, families, onNavigation, onContaineeNavigation, className }: RelatedNifProps) => {
-    var othernif: NetworkInterface
+    let othernif: NetworkInterface | undefined
     switch (nif.sriovrole) {
         case SRIOVRole.VF:
             othernif = nif.pf
@@ -101,18 +101,21 @@ export const RelatedNif = ({ nif, families, onNavigation, onContaineeNavigation,
     // network interface the user wants to navigate to.
     const handleOtherNifClick = () => {
         if (onNavigation) {
-            onNavigation(othernif)
+            onNavigation(othernif!)
         }
     }
 
     // trigger the navigation callback with information about the master
     // (bridge) network interface when the user wants to navigate to it.
     const handleMasterClick = () => {
-        if (onNavigation && othernif.master) {
-            onNavigation(othernif.master)
+        if (onNavigation && othernif!.master) {
+            onNavigation(othernif!.master)
         }
     }
 
+    if (!othernif) {
+        return <></>
+    }
     return (<span className={className || ''}>
         &nbsp;·····&nbsp;
         <NifBadge

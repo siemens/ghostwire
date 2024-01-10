@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
+import React from 'react'
+
 import { Process } from "components/process"
 import { NetworkInterface } from "models/gw"
 

@@ -50,5 +50,6 @@ export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribut
         </Box>
     )
 })
+OpenHouse.displayName = "OpenHouse"
 
 export default OpenHouse

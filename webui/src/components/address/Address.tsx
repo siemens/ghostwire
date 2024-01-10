@@ -32,11 +32,11 @@ const Lifetimes = styled('span')(({ theme }) => ({
     color: theme.palette.text.secondary,
 }))
 
-const Lifetime = styled('span')(({ theme }) => ({
+const Lifetime = styled('span')(() => ({
     whiteSpace: 'nowrap',
 }))
 
-const Addr = styled('span')(({ theme }) => ({
+const Addr = styled('span')(() => ({
     fontFamily: 'Roboto Mono',
 }))
 
@@ -179,3 +179,4 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
         </AddressContainer>
     )
 })
+Address.displayName = "Address"

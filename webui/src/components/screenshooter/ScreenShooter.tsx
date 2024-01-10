@@ -63,13 +63,13 @@ export interface ScreenShooterProps {
 export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
     const theme = useTheme()
 
-    const [htmlElement, setHtmlElement] = useState(null as HTMLElement)
+    const [htmlElement, setHtmlElement] = useState<HTMLElement>()
     const [density, setDensity] = useAtom(snapshotDensityAtom)
     const safeDensity = [1, 2, 4].find(setting => Math.max(Math.floor(density), 1) <= setting)
 
     const { enqueueSnackbar } = useSnackbar() || {}
 
-    basename = !!basename ? basename : 'screenshot'
+    basename = basename ? basename : 'screenshot'
 
     const handleChange = (event: SelectChangeEvent<number>) => {
         setDensity(event.target.value)

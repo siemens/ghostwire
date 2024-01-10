@@ -134,15 +134,15 @@ const TransTable = styled(Table)(({ theme }) => ({
     },
 }))
 
-const TransHeader = styled(TableHead)(({ theme }) => ({
+const TransHeader = styled(TableHead)(() => ({
     whiteSpace: 'nowrap',
 }))
 
-const AddressCell = styled(TableCell)(({ theme }) => ({
+const AddressCell = styled(TableCell)(() => ({
     fontFamily: 'Roboto Mono',
 }))
 
-const PortCell = styled(TableCell)(({ theme }) => ({
+const PortCell = styled(TableCell)(() => ({
     textAlign: 'end',
     fontFamily: 'Roboto Mono',
 }))
@@ -159,12 +159,12 @@ const UserDetails = styled('span')(({ theme }) => ({
     },
 }))
 
-const ProcessDetails = styled('span')(({ theme }) => ({
+const ProcessDetails = styled('span')(() => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
 }))
 
-const Cmdline = styled('span')(({ theme }) => ({
+const Cmdline = styled('span')(() => ({
     maxWidth: '16em',
     // "overflow: hidden" needs either a block or inline-block, but in our
     // case we need an inline-block.
@@ -180,7 +180,7 @@ const Cmdline = styled('span')(({ theme }) => ({
     textOverflow: 'ellipsis',
 }))
 
-const PID = styled('span')(({ theme }) => ({
+const PID = styled('span')(() => ({
     // Keep the same alignment as for the (potentially clipped) command
     // information, as otherwise the rendered outcome will just suck.
     display: 'inline-block',
@@ -192,7 +192,7 @@ const PID = styled('span')(({ theme }) => ({
  * container, et cetera, suitable for sorting.
  */
 const userName = (user: PortUser) => {
-    let components = []
+    const components = []
     const containee = user.containee
     if (containee) {
         if (isContainer(containee) && containee.pod) {
@@ -210,14 +210,14 @@ const userName = (user: PortUser) => {
  * and process information.
  */
 const userDetails = (user: PortUser) => {
-    let info = []
+    const info = []
 
     // Good gracious! That took a long time to figure out that this seemingly
     // function is a source of non-unique keys, grmpf. Adding keys to each and
     // every array item finally silences the warnings.
 
     const containee = user.containee
-    if (!!containee) {
+    if (containee) {
         if (isContainer(containee) && containee.pod) {
             // This is a "pot'ed" container...
             info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }), containee.pod.name])
@@ -251,7 +251,12 @@ const targetNetns = (netns: NetworkNamespace, onContaineeNavigation?: (containee
     if (!netns) return ''
 
     return netns.containers.map(containee =>
-        <ContaineeBadge button containee={containee} onClick={onContaineeNavigation} />)
+        <ContaineeBadge
+            key={`${containee.turtleNamespace}-${containee.name}`}
+            button
+            containee={containee}
+            onClick={onContaineeNavigation}
+        />)
 }
 
 /** Return last path component of first command line element. */
@@ -399,8 +404,6 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
         // we're otherwise resetting the table rows state each time the user
         // clicks on a table header column to change sorting ... and that's
         // ain't a good idea, sir!
-        //
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRows])
 
     // User clicks on a column header in order to sort the table rows by this
