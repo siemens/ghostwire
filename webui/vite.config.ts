@@ -30,7 +30,9 @@ export default defineConfig(() => {
         base: './',
         server: {
             proxy: {
-                '/api': 'http://localhost:5010',
+                '/json': 'http://localhost:5000',
+                '/mobyshark': 'http://localhost:5000',
+                '/mobydig': 'http://localhost:5000',
             },
         },
         build: {
