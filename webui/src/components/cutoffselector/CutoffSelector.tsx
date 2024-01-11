@@ -30,7 +30,7 @@ export const CutoffSelector = ({ atom, element, elements, em }: CutoffSelectorPr
     // Yeah, very poor I18N.
     elements = elements || `${element}s`
 
-    em = em >= 5 ? em : 5
+    em = (em && em >= 5) ? em : 5
 
     const handleChange = (event: SelectChangeEvent<number>) => {
         setCutoff(event.target.value as number)

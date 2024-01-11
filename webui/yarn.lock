@@ -3854,10 +3854,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@remix-run/router@npm:1.14.1":
-  version: 1.14.1
-  resolution: "@remix-run/router@npm:1.14.1"
-  checksum: aa179e96fa7da5bdb86e6887219613cbe47b67d6595564b4f8fe7e80f8980f9c76e120524f0864aa8af46ac0f1a06bcdb4d20058d770c9199e5af599f772c0a9
+"@remix-run/router@npm:1.14.2":
+  version: 1.14.2
+  resolution: "@remix-run/router@npm:1.14.2"
+  checksum: 163d4a8ea3e25a7a7e3015f274e54b8043eddaaa92da220cad2893eb0fcbb649f617152c6d74680a4b55c0f319944ff1b362e87f814bb73be54f8d687ee730d6
   languageName: node
   linkType: hard
 
@@ -5677,7 +5677,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-transition-group@npm:^4.4.10, @types/react-transition-group@npm:^4.4.6, @types/react-transition-group@npm:^4.4.8":
+"@types/react-transition-group@npm:^4.4.10, @types/react-transition-group@npm:^4.4.8":
   version: 4.4.10
   resolution: "@types/react-transition-group@npm:4.4.10"
   dependencies:
@@ -7109,9 +7109,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"beautiful-react-hooks@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "beautiful-react-hooks@npm:4.3.0"
+"beautiful-react-hooks@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "beautiful-react-hooks@npm:5.0.1"
   dependencies:
     lodash.debounce: "npm:^4.0.8"
     lodash.throttle: "npm:^4.1.1"
@@ -7120,7 +7120,7 @@ __metadata:
     react-dom: 18.2.0
     react-router-dom: ">=5.0.0"
     rxjs: ">=7.0.0"
-  checksum: 23773ab18afdd731be43ebd63cea7fb5236db0e6ea8620bc816674b4b8cd0aa0f0af8eeb1e11431ae22bbc2659557993272cd42b65d239707b8c1e779593aab2
+  checksum: c328062fcd632821d3dd8856a2a25a43792c9d4f72603d6e63275c164fa3adbdb61eaea1508ba4f1638526a8776f6dae7999552bbedb806e4541300fc3a118c7
   languageName: node
   linkType: hard
 
@@ -10632,13 +10632,13 @@ __metadata:
     "@types/react": "npm:^18.2.47"
     "@types/react-dom": "npm:^18.2.18"
     "@types/react-router-dom": "npm:^5.3.3"
-    "@types/react-transition-group": "npm:^4.4.6"
+    "@types/react-transition-group": "npm:^4.4.10"
     "@typescript-eslint/eslint-plugin": "npm:^6.18.1"
     "@typescript-eslint/parser": "npm:^6.18.1"
     "@typescript-eslint/scope-manager": "npm:^6.18.1"
     "@vitejs/plugin-react": "npm:^4.2.1"
-    assert: "npm:^2.0.0"
-    beautiful-react-hooks: "npm:^4.3.0"
+    assert: "npm:^2.1.0"
+    beautiful-react-hooks: "npm:^5.0.1"
     clsx: "npm:^2.1.0"
     color-rgba: "npm:^3.0.0"
     eslint: "npm:^8.56.0"
@@ -10656,18 +10656,18 @@ __metadata:
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
     react-inlinesvg: "npm:^3.0.2"
-    react-router: "npm:^6.21.1"
-    react-router-dom: "npm:^6.21.1"
+    react-router: "npm:^6.21.2"
+    react-router-dom: "npm:^6.21.2"
     react-scripts: "npm:^5.0.1"
     react-transition-group: "npm:^4.4.5"
-    react-use-websocket: "npm:^4.3.1"
+    react-use-websocket: "npm:^4.5.0"
     rehype-slug: "npm:6.0.0"
     remark-gemoji: "npm:^8.0.0"
     remark-gfm: "npm:^4.0.0"
     remark-images: "npm:^4.0.0"
     remark-textr: "npm:^6.0.0"
     rollup: "npm:^4.9.4"
-    scroll-into-view-if-needed: "npm:^3.0.10"
+    scroll-into-view-if-needed: "npm:^3.1.0"
     storybook: "npm:^7.6.7"
     stream: "npm:^0.0.2"
     string-similarity: "npm:^4.0.4"
@@ -16621,27 +16621,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-router-dom@npm:^6.21.1":
-  version: 6.21.1
-  resolution: "react-router-dom@npm:6.21.1"
+"react-router-dom@npm:^6.21.2":
+  version: 6.21.2
+  resolution: "react-router-dom@npm:6.21.2"
   dependencies:
-    "@remix-run/router": "npm:1.14.1"
-    react-router: "npm:6.21.1"
+    "@remix-run/router": "npm:1.14.2"
+    react-router: "npm:6.21.2"
   peerDependencies:
     react: ">=16.8"
     react-dom: ">=16.8"
-  checksum: 2c2b653de8cc90397e5b057c0d32dd780fe894c4bd36397005da169a7422b31988ebc14ef0da3ac3f2b7286b244f97a141974acaa86c731715816e64c8cd2912
+  checksum: 4719098a544da213450b0383cb58de959dc4dd690c90b12efc0771a9915a26b0508c12ee8b52c072fb38b4cb8ea192684f9e5ae49559b2131d085baeab108999
   languageName: node
   linkType: hard
 
-"react-router@npm:6.21.1, react-router@npm:^6.21.1":
-  version: 6.21.1
-  resolution: "react-router@npm:6.21.1"
+"react-router@npm:6.21.2, react-router@npm:^6.21.2":
+  version: 6.21.2
+  resolution: "react-router@npm:6.21.2"
   dependencies:
-    "@remix-run/router": "npm:1.14.1"
+    "@remix-run/router": "npm:1.14.2"
   peerDependencies:
     react: ">=16.8"
-  checksum: 81278cf25a999d7c93a31d540102e3b74b696eb4349779e22bba77b633e4e5f8f91b8c6f7946c9572a1e92f64363724150216f5643a6f9817f8bc1643cb8bdbc
+  checksum: 1c923b75e4a6c5e820fd6f79254b77a34a7dd4f708c7c875535a81b331c9c84e8bd1b4f9615d3a84327f689dfd3239ccece1595ba71e09f63e4ae1964acae4fc
   languageName: node
   linkType: hard
 
@@ -16744,7 +16744,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-use-websocket@npm:^4.3.1":
+"react-use-websocket@npm:^4.5.0":
   version: 4.5.0
   resolution: "react-use-websocket@npm:4.5.0"
   peerDependencies:
@@ -17546,7 +17546,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scroll-into-view-if-needed@npm:^3.0.10":
+"scroll-into-view-if-needed@npm:^3.1.0":
   version: 3.1.0
   resolution: "scroll-into-view-if-needed@npm:3.1.0"
   dependencies:

@@ -62,7 +62,7 @@ export interface GwMarkdownProps {
 export const GwMarkdown = ({ mdx, className, shortcodes, fallback }: GwMarkdownProps) => {
     return <GwMD
         className={className}
-        shortcodes={{ a: SmartA, ...shortcodes }}
+        shortcodes={{ a: SmartA, ...shortcodes } as MDXComponents}
         mdx={mdx}
         fallback={fallback}
     />

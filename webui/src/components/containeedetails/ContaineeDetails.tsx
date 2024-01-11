@@ -171,10 +171,10 @@ export interface ContaineeDetailsProps {
  * Please note that the host name to address mappings are sorted by the host
  * names.
  */
-export const ContaineeDetails = ({ containee, families, className }: ContaineeDetailsProps) => {
+export const ContaineeDetails = ({ containee, families: fams, className }: ContaineeDetailsProps) => {
     const [showNamespaceIds] = useAtom(showNamespaceIdsAtom)
 
-    families = families || [AddressFamily.IPv4, AddressFamily.IPv6]
+    const families = fams || [AddressFamily.IPv4, AddressFamily.IPv6]
 
     // Render a single property with value row in the property grid.
     let row = 0
@@ -259,7 +259,7 @@ export const ContaineeDetails = ({ containee, families, className }: ContaineeDe
             <Details>
                 {isContainer(cntr) && cntr.id !== displayName && prop('container ID', cntr.id)}
                 {prop('type', <>
-                    <CIcon fontSize="inherit" color="disabled"/>
+                    <CIcon fontSize="inherit" color="disabled" />
                     &nbsp;{containeeDescription(containee)}
                 </>)}
                 {!isSandbox(containee) && [

@@ -76,9 +76,9 @@ const Metadata = () => {
         discovery.metadata['osrel-version']
     ].join(" ")
 
-    const iedmeta = discovery.metadata["industrial-edge"] || {}
+    const iedmeta: { [key: string]: unknown } = (discovery.metadata["industrial-edge"] as { [key: string]: unknown }) || {}
 
-    const coresemversion = iedmeta.semversion || undefined
+    const coresemversion = iedmeta['semversion'] as string || undefined
 
     const engines = discovery.metadata["container-engines"]
         ? Object.values(discovery.metadata["container-engines"])
@@ -104,10 +104,10 @@ const Metadata = () => {
             </IconButton>
             <Collapse in={expanded} mountOnEnter={true} timeout="auto">
                 <MetadataTable>
-                    <MetaRow name="IE device name" value={iedmeta['device-name']} />
-                    <MetaRow name="Host name" value={discovery.metadata.hostname} />
+                    <MetaRow name="IE device name" value={iedmeta['device-name'] as string} />
+                    <MetaRow name="Host name" value={discovery.metadata.hostname as string} />
                     <MetaRow name="Host OS" value={hostos} />
-                    <MetaRow name="Kernel version" value={discovery.metadata['kernel-version']} />
+                    <MetaRow name="Kernel version" value={discovery.metadata['kernel-version'] as string} />
                     <MetaRow name="Industrial Edge runtime" value={coresemversion} />
                     <MetaRow name="IE device developer mode" value={iedmeta['developer-mode'] === 'true' ? 'enabled' : undefined} />
                     {engines}

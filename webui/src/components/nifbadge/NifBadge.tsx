@@ -5,7 +5,7 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import { Button, styled } from '@mui/material'
+import { Button, styled, SvgIconProps } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
 import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
@@ -173,7 +173,7 @@ const nifSRIOVIcons = {
 
 // Known network interface type icons, indexed by the kind property of network
 // interface objects (and directly taken from what Linux' RTNETLINK tells us).
-const nifTypeIcons = {
+const nifTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'bridge': BridgeIcon,
     'dummy': DummyIcon,
     'macvlan': MacvlanIcon,
@@ -187,12 +187,12 @@ const nifIcon = (nif: NetworkInterface) => {
     if (GHOSTWIRE_LABEL_ROOT + 'bridge/internal' in nif.labels) {
         return BridgeInternalIcon
     }
-    return (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) || 
+    return (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) ||
         (nif.macvlans && MacvlanMasterIcon) ||
         nifTypeIcons[nif.kind] || NicIcon
 }
 
-const operStateIcons = {
+const operStateIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     [OperationalState.Unknown]: UpIcon,
     [OperationalState.Dormant]: DormantIcon,
     [OperationalState.Down]: DownIcon,
@@ -200,13 +200,13 @@ const operStateIcons = {
     [OperationalState.Up]: UpIcon,
 }
 
-const nifKindTips = {
+const nifKindTips: { [key: string]: string } = {
     'hw': '(virtual) hardware',
     'pf': 'SR-IOV PF hardware',
     'vf': 'SR-IOV VF hardware',
-    
+
     'lo': 'loopback',
-    
+
     'bridge': 'virtual bridge',
     'dummy': 'all packets swallowing dummy',
     'macvlan': 'MACVLAN',
@@ -307,7 +307,7 @@ export const NifBadge = ({
     style,
     notooltip,
     capture,
-    families,
+    families: fam,
     stretch,
     alignRight,
     endIcon,
@@ -335,15 +335,16 @@ export const NifBadge = ({
         {name}{alias}{vid}
     </>
 
-    families = families || [AddressFamily.IPv4, AddressFamily.IPv6]
+    const families = fam || [AddressFamily.IPv4, AddressFamily.IPv6]
 
     const tooltipBase = (nifKindTips[
-        (nif.kind === 'tuntap' && nif.tuntapDetails.mode)
+        (nif.kind === 'tuntap' && nif.tuntapDetails?.mode)
         || nif.kind
         || (nif.sriovrole === SRIOVRole.PF && 'pf')
         || (nif.sriovrole === SRIOVRole.VF && 'vf')
         || (nif.isPhysical && 'hw')
         || (nif.name === 'lo' && 'lo')
+        || ''
     ])
     const tooltipInternalNetwork = (nif.labels[GHOSTWIRE_LABEL_ROOT + 'bridge/internal'] === 'True') ? 'internal ' : ''
     const withMacvlans = (tooltipBase && nif.macvlans && ' with additional MACVLAN interface(s)') || ''

@@ -144,7 +144,7 @@ export interface NetnsDetailCardProps {
  * typical example is a busy transport port section of the initial network
  * namespace.
  */
-export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaximize, canMinimize, className }: NetnsDetailCardProps) => {
+export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families: fam, canMaximize, canMinimize, className }: NetnsDetailCardProps) => {
     const navigate = useNavigate()
     const match1 = useMatch('/:base')
     const match2 = useMatch('/:base/:detail')
@@ -153,7 +153,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
     const domIdBase = useContextualId('')
     const netnsid = domIdBase + netnsId(netns)
 
-    families = families || [AddressFamily.IPv4, AddressFamily.IPv6]
+    const families = fam || [AddressFamily.IPv4, AddressFamily.IPv6]
 
     const [containeesCutoff] = useAtom(containeesCutoffAtom)
     const [neighborhoodCutoff] = useAtom(neighborhoodCutoffAtom)
@@ -222,7 +222,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
         .filter(route =>
             families.includes(route.family) && (showMultiBroadcastRoutes || route.table !== RouteTableLocal))
         .sort(orderRoutes)
-    
+
     // Tiny helper to derive section component keys based on current network
     // namespace. This ensures that DOM update works correctly due to changing
     // section keys and avoids section header collapse/expand state not getting
@@ -237,9 +237,9 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
         if (!match) {
             return
         }
-        if (match.params['detail']) {
+        if ((match.params as { [key: string]: string })['detail']) {
             // change route from existing detail view to new detail view.
-            navigate(`/${match.params['base']}/${nif.netns.netnsid}`)
+            navigate(`/${(match.params as { [key: string]: string })['base']}/${nif.netns.netnsid}`)
         }
         // scroll within the overall view.
         scrollIdIntoView(domIdBase + nifId(nif))
@@ -260,9 +260,9 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
         if (!match) {
             return
         }
-        if (match.params['detail']) {
+        if ((match.params as { [key: string]: string })['detail']) {
             // change route from existing detail view to new detail view.
-            navigate(`/${match.params['base']}/${encodeURIComponent(containee.name)}`)
+            navigate(`/${(match.params as { [key: string]: string })['base']}/${encodeURIComponent(containee.name)}`)
         }
         // scroll within the overall view.
         scrollIdIntoView(domIdBase + netnsId(
@@ -278,7 +278,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
         if (!match) {
             return
         }
-        navigate(`/${match.params['base']}/${encodeURIComponent(containee.name)}`)
+        navigate(`/${(match.params as { [key: string]: string })['base']}/${encodeURIComponent(containee.name)}`)
     }
 
     return (
@@ -287,20 +287,20 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
             <span id={netnsid} />
 
             {/* if needed, show a maximize (zoom in) button or a minimize (zoom out) button */}
-            {canMaximize && match.params['base'] &&
+            {canMaximize && (match?.params as { [key: string]: string })['base'] &&
                 <Tooltip title="show only this network namespace">
                     <MaxMinIconButton
                         component={Link}
-                        to={`/${match.params['base']}/${netns.netnsid}`}
+                        to={`/${(match?.params as { [key: string]: string })['base']}/${netns.netnsid}`}
                         size="large">
                         <FullscreenIcon />
                     </MaxMinIconButton>
                 </Tooltip>}
-            {canMinimize && match.params['base'] &&
+            {canMinimize && (match?.params as { [key: string]: string })['base'] &&
                 <Tooltip title="back to overall view">
                     <MaxMinIconButton
                         component={Link}
-                        to={`/${match.params['base']}`}
+                        to={`/${(match?.params as { [key: string]: string })['base']}`}
                         size="large">
                         <FullscreenExitIcon />
                     </MaxMinIconButton>
@@ -322,7 +322,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                             button={canMaximize}
                             angled={canMaximize}
                             endIcon={canMaximize && <FullscreenIcon />}
-                            onClick={canMaximize && (() => handleMaximize(containee))}
+                            onClick={canMaximize ? ((_: Containee) => handleMaximize(containee)) : undefined}
                         />
                     )}
             </Containees>
@@ -340,7 +340,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                     key={key('containees')}
                     caption="containees"
                     collapsible={containeesCutoffState}
-                    fragment={netnsid+'-containees'}
+                    fragment={netnsid + '-containees'}
                 >
                     <DetailedContainees
                         netns={netns}
@@ -355,7 +355,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                     key={key('neighborhood')}
                     caption="neighborhood services (host-internal)"
                     collapsible={neighborhoodCutoffState}
-                    fragment={netnsid+'-neighborhood'}
+                    fragment={netnsid + '-neighborhood'}
                 >
                     <Neighborhood services={neighborServices} seenby={netns.containers} />
                 </CardSection>
@@ -366,8 +366,8 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                 key={key('forwardedports')}
                 caption="port forwarding"
                 collapsible={forwardedPortsCutoffState}
-                fragment={netnsid+'-fwports'}
-                >
+                fragment={netnsid + '-fwports'}
+            >
                 <ForwardPortTable hideEmpty netns={netns} families={families} />
             </CardSection>
 
@@ -376,8 +376,8 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                 key={key('ports')}
                 caption="transport"
                 collapsible={portsCutoffState}
-                fragment={netnsid+'-ports'}
-                >
+                fragment={netnsid + '-ports'}
+            >
                 <TransportPortTable hideEmpty netns={netns} families={families} />
             </CardSection>
 
@@ -386,8 +386,8 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                 key={key('routes')}
                 caption="routing"
                 collapsible={routes.length > routesCutoff ? 'collapse' : 'expand'}
-                fragment={netnsid+'-routes'}
-                >
+                fragment={netnsid + '-routes'}
+            >
                 {routes.map(rt =>
                     <SingleRoute key={routeKey(rt)}>
                         <Route route={rt} onNavigation={handleRouteNavigation} />
@@ -400,7 +400,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families, canMaxim
                 key={key('nifs')}
                 caption="network interfaces"
                 collapsible={Object.keys(netns.nifs).length > nifsCutoff ? 'collapse' : 'expand'}
-                fragment={netnsid+'-nifs'}
+                fragment={netnsid + '-nifs'}
             >
                 <NifTree
                     netns={netns}

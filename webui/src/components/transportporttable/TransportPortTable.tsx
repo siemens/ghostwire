@@ -169,6 +169,16 @@ const command = (cmdline: string[]) => {
     return name[name.length - 1] + ' ' + cmdline.slice(1).join(' ')
 }
 
+const compareOptStrings = (s1?: string, s2?: string) => {
+    if (s1 && s2) {
+        return s1.localeCompare(s2)
+    }
+    if (!s1 && !s2) {
+        return 0
+    }
+    return !s1 ? -1 : 1
+}
+
 // The column header descriptions for the port table; these includes the sorting
 // order functions needed in order to correctly sort the table by specific
 // column values.
@@ -196,7 +206,7 @@ const TransportPortTableColumns: ColHeader[] = [
     }, {
         id: 'localservice',
         label: 'Service',
-        orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.localServicename.localeCompare(rowB.port.localServicename),
+        orderFn: (rowA: PortRow, rowB: PortRow) => compareOptStrings(rowA.port.localServicename, rowB.port.localServicename),
     }, {
         id: 'remoteaddress',
         label: 'Remote',
@@ -208,7 +218,7 @@ const TransportPortTableColumns: ColHeader[] = [
     }, {
         id: 'remoteservice',
         label: 'Service',
-        orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.remoteServicename.localeCompare(rowB.port.remoteServicename),
+        orderFn: (rowA: PortRow, rowB: PortRow) => compareOptStrings(rowA.port.remoteServicename, rowB.port.remoteServicename),
     }, {
         id: 'user',
         label: 'Group · Container · Process',
@@ -226,7 +236,7 @@ const sortTableRows = (rows: PortRow[], ids: string[]): PortRow[] => {
         id ?
             stableSort(
                 rows,
-                TransportPortTableColumns.find(col => col.id === id.replace('-', '')).orderFn,
+                TransportPortTableColumns.find(col => col.id === id.replace('-', ''))!.orderFn,
                 id.startsWith('-'))
             : rows,
         rows)

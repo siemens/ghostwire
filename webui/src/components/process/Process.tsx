@@ -41,7 +41,7 @@ export interface ProcessProps {
  * information, if any.
  */
 export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
-    const info = []
+    const info: (string | JSX.Element | (string | JSX.Element)[])[] = []
 
     // Good gracious! That took a long time to figure out that this seemingly
     // function is a source of non-unique keys, grmpf. Adding keys to each and
@@ -68,7 +68,7 @@ export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
             }
             list.push(element)
             return list
-        }, []).flat()}
+        }, [] as (string | JSX.Element | (string | JSX.Element)[])[]).flat()}
     </Details>
 
 } 

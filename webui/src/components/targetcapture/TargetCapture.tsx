@@ -7,7 +7,7 @@ import clsx from 'clsx'
 
 import { Button, styled, Theme } from '@mui/material'
 
-import { NetworkInterface, NetworkNamespace, Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType } from 'models/gw'
+import { NetworkInterface, NetworkNamespace, Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType, PrimitiveContainee, Pod, isContainer, Container } from 'models/gw'
 import { CaptureIcon } from 'icons/Capture'
 import { useDynVars } from 'components/dynvars'
 import { rgba } from 'utils/rgba'
@@ -169,10 +169,11 @@ export const TargetCapture = ({ target, size = 'medium', className, demo }: Targ
         return null
     }
 
-    const netns: NetworkNamespace =
+    const netns: NetworkNamespace | undefined =
         (isNetworkNamespace(target) && target)
         || (isNetworkInterface(target) && target.netns)
         || (isContainee(target) && (isPod(target) ? target.containers[0].netns : target.netns))
+        || undefined
     if (!netns && !demo) {
         return null
     }
@@ -192,21 +193,24 @@ export const TargetCapture = ({ target, size = 'medium', className, demo }: Targ
 
     // Try to get a suitable containee that we can use to later add some useful
     // meta information to the packet capture stream.
-    const containee: Containee =
+    const containee: Containee | undefined =
         (isNetworkNamespace(target) && firstContainee(target))
         || (isNetworkInterface(target) && firstContainee(target.netns))
         || (isContainee(target) && target)
+        || undefined
 
     const targetDetails: Target = {
-        netns: netns.netnsid,
+        netns: netns!.netnsid,
         'network-interfaces': nifs,
-        name: containee && containee.name,
-        type: (!isPod(containee) && containeeType(containee))
-            || (isPod(containee) && containee.flavor)
-            || undefined,
-        prefix: (!isPod(containee) && containee.turtleNamespace)
-            || (isPod(containee) && containee.containers[0].turtleNamespace)
-            || undefined,
+        name: containee && containee.name || '',
+        type: (!containee && '')
+            || (!isPod(containee as Containee) && containeeType(containee as PrimitiveContainee))
+            || (isPod(containee as Containee) && (containee as Pod).flavor)
+            || '',
+        prefix: (!containee && '')
+            || (isContainer(containee as Containee) && (containee as Container).turtleNamespace)
+            || (isPod(containee as Containee) && (containee as Pod).containers[0].turtleNamespace)
+            || '',
     }
     const capturl = `packetflix:${baseURI.toString()}capture?container=${encodeURIComponent(JSON.stringify(targetDetails))}`
 

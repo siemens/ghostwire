@@ -102,7 +102,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
     }
 
     const handleNetnsZoom = (netns: NetworkNamespace, fragment?: string) => {
-        let base = `/${match.params['base']}/${netns.netnsid}`
+        let base = `/${match?.params['base']}/${netns.netnsid}`
         if (fragment) {
             base += `#${domIdBase}${netnsId(netns)}-${fragment}`
         }
@@ -113,7 +113,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
     // to a detail view of exactly only the network namespace of this
     // containee, yet within the same URL base.
     const handleContaineeZoom = (containee: PrimitiveContainee) => {
-        navigate(`/${match.params['base']}/${encodeURIComponent(containee.name)}`)
+        navigate(`/${match?.params['base']}/${encodeURIComponent(containee.name)}`)
     }
 
     const netnsesAndProjs = sortedNetnsProjects(netnses)
@@ -136,7 +136,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
                                     <AccentableNetnsCard
                                         key={netns.netnsid}
                                         className={netns.netnsid === netnsid ? 'highlight' : 'normal'}
-                                        netns={loFilteredNetns(netns, filterLo)}
+                                        netns={loFilteredNetns(netns, filterLo || false)}
                                         families={families}
                                         onNavigation={handleNavigation}
                                         onNetnsZoom={handleNetnsZoom}
@@ -148,7 +148,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
                         return <AccentableNetnsCard
                             key={netnsOrProj.netnsid}
                             className={netnsOrProj.netnsid === netnsid ? 'highlight' : 'normal'}
-                            netns={loFilteredNetns(netnsOrProj, filterLo)}
+                            netns={loFilteredNetns(netnsOrProj, filterLo || false)}
                             families={families}
                             onNavigation={handleNavigation}
                             onNetnsZoom={handleNetnsZoom}
@@ -168,9 +168,9 @@ const loFilteredNetns = (netns: NetworkNamespace, filterLo: boolean) => {
         return netns
     }
     const newnetns = { ...netns, nifs: { ...netns.nifs } }
-    const lo = Object.keys(newnetns.nifs).find(nifidx => newnetns.nifs[nifidx].name === 'lo')
+    const lo = Object.keys(newnetns.nifs).find(nifidx => newnetns.nifs[nifidx as unknown as number].name === 'lo')
     if (lo) {
-        delete newnetns.nifs[lo]
+        delete newnetns.nifs[lo as unknown as number]
     }
     return newnetns
 }

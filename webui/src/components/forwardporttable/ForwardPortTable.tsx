@@ -210,7 +210,7 @@ const userName = (user: PortUser) => {
  * and process information.
  */
 const userDetails = (user: PortUser) => {
-    const info = []
+    const info: (string | JSX.Element | (string | JSX.Element)[])[] = []
 
     // Good gracious! That took a long time to figure out that this seemingly
     // function is a source of non-unique keys, grmpf. Adding keys to each and
@@ -241,7 +241,7 @@ const userDetails = (user: PortUser) => {
         }
         list.push(element)
         return list
-    }, []).flat()
+    }, [] as (string | JSX.Element | (string | JSX.Element)[])[]).flat()
 }
 
 /** Renders a network namespace's clickable containees in case we don't have any
@@ -255,7 +255,7 @@ const targetNetns = (netns: NetworkNamespace, onContaineeNavigation?: (containee
             key={`${containee.turtleNamespace}-${containee.name}`}
             button
             containee={containee}
-            onClick={onContaineeNavigation}
+            onClick={onContaineeNavigation as (_: Containee) => void}
         />)
 }
 
@@ -263,6 +263,16 @@ const targetNetns = (netns: NetworkNamespace, onContaineeNavigation?: (containee
 const command = (cmdline: string[]) => {
     const name = cmdline[0].split('/')
     return name[name.length - 1] + ' ' + cmdline.slice(1).join(' ')
+}
+
+const compareOptStrings = (s1?: string, s2?: string) => {
+    if (s1 && s2) {
+        return s1.localeCompare(s2)
+    }
+    if (!s1 && !s2) {
+        return 0
+    }
+    return !s1 ? -1 : 1
 }
 
 // The column header descriptions for the forwarded port table; these includes
@@ -284,7 +294,7 @@ const ForwardedPortTableColumns: ColHeader[] = [
     }, {
         id: 'service',
         label: 'Service',
-        orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.servicename.localeCompare(rowB.port.servicename),
+        orderFn: (rowA: PortRow, rowB: PortRow) => compareOptStrings(rowA.port.servicename, rowB.port.servicename),
     }, {
         id: 'forwardedaddress',
         label: 'Forwarded to',
@@ -296,7 +306,7 @@ const ForwardedPortTableColumns: ColHeader[] = [
     }, {
         id: 'forwardedservice',
         label: 'Service',
-        orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.forwardedServicename.localeCompare(rowB.port.forwardedServicename),
+        orderFn: (rowA: PortRow, rowB: PortRow) => compareOptStrings(rowA.port.forwardedServicename, rowB.port.forwardedServicename),
     }, {
         id: 'user',
         label: 'Group · Container · Process',
@@ -314,7 +324,7 @@ const sortTableRows = (rows: PortRow[], ids: string[]): PortRow[] => {
         id ?
             stableSort(
                 rows,
-                ForwardedPortTableColumns.find(col => col.id === id.replace('-', '')).orderFn,
+                ForwardedPortTableColumns.find(col => col.id === id.replace('-', ''))!.orderFn,
                 id.startsWith('-'))
             : rows,
         rows)
@@ -431,9 +441,9 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
         if (!match) {
             return
         }
-        if (match.params['detail']) {
+        if ((match.params as { [key: string]: string })['detail']) {
             // change route from existing detail view to new detail view.
-            navigate(`/${match.params['base']}/${encodeURIComponent(containee.name)}`)
+            navigate(`/${(match.params as { [key: string]: string })['base']}/${encodeURIComponent(containee.name)}`)
         }
         // scroll within the overall view.
         scrollIdIntoView(domIdBase + netnsId(

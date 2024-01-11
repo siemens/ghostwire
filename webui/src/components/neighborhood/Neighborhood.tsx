@@ -14,7 +14,7 @@ import { Label as LabelIcon, HourglassTop, LocalHospital, QuestionMark, Verified
 import { Service, shareContainers, sortServices } from 'utils/neighborhood'
 import { ContaineeBadge } from 'components/containeebadge'
 import { rgba } from 'utils/rgba'
-import { AddressFamily, Containee, Container, IpAddress, isContainer, orderAddresses } from 'models/gw'
+import { AddressFamily, Containee, Container, IpAddress, isContainer, JSONObject, orderAddresses } from 'models/gw'
 import { basename } from 'utils/basename'
 import { Address } from 'components/address'
 
@@ -177,8 +177,8 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
         if (!lastJsonMessage) {
             return
         }
-        const fqdn = lastJsonMessage['fqdn'].slice(0, -1)
-        const addr = lastJsonMessage['address']
+        const fqdn = ((lastJsonMessage as JSONObject)['fqdn'] as string).slice(0, -1) // -"."
+        const addr = (lastJsonMessage as JSONObject)['address'] as string
         if (addr) {
             setFqdnAddrs((fqdnAddrs) => {
                 const updatedFqdnAddrs = {
@@ -192,7 +192,7 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                         family: fam,
                         prefixlen: fam === AddressFamily.IPv6 ? 128 : 32,
                     },
-                    quality: lastJsonMessage['quality'],
+                    quality: (lastJsonMessage as JSONObject)['quality'] as string,
                 } as QualifiedServiceAddress
                 return updatedFqdnAddrs
             })
@@ -205,11 +205,11 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
     }
 
     const handleContaineeNavigation = (containee: Containee) => {
-        if (!match || !match.params['detail']) {
+        if (!match || !(match.params as { [key: string]: string })['detail']) {
             return
         }
         // change route from existing detail view to new detail view.
-        navigate(`/${match.params['base']}/${encodeURIComponent(containee.name)}`)
+        navigate(`/${(match.params as { [key: string]: string })['base']}/${encodeURIComponent(containee.name)}`)
     }
 
     return (services && services.length) ?
@@ -233,7 +233,7 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                     </TableHead>
                     <TableBody>
                         {services.sort((a, b) => sortServices(a, b))
-                            .map((service, ) => {
+                            .map((service,) => {
                                 const itsme = shareContainers(service.containers, seenby as Container[])
                                 const tlds = ['', ...service.networks].sort((a, b) => a.localeCompare(b))
                                 return service.containers

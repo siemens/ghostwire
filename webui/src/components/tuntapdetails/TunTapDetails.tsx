@@ -21,7 +21,7 @@ export interface TunTapDetailsProps {
 export const TunTapDetails = ({ nif, className }: TunTapDetailsProps) => {
     const tuntap = nif.tuntapDetails
 
-    if (!tuntap || !nif.tuntapDetails.processors.length) {
+    if (!tuntap || !nif.tuntapDetails || nif.tuntapDetails.processors.length) {
         return null
     }
     return (<div className={className || ''}>
