@@ -17,9 +17,11 @@ import { isContainer, isPod, Containee, ContainerFlavors, PodFlavors } from 'mod
 import { IEAppProjectIcon } from './appicon'
 import DockerManagedPluginIcon from 'icons/containees/DockerManagedPlugin'
 import InitialIcon from 'icons/containees/Initial'
+import PodmanIcon from 'icons/containees/Podman'
+import { SvgIconProps } from '@mui/material'
 
 
-const ContaineeTypeIcons = {
+const ContaineeTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'netns': NetworkNamespaceIcon,
     'initialnetns': InitialIcon,
     'unknowntype': ContainerIcon,
@@ -29,9 +31,10 @@ const ContaineeTypeIcons = {
     [ContainerFlavors.IERUNTIME]: IERuntimeIcon,
     [ContainerFlavors.IEAPP]: IEAppIcon,
     [ContainerFlavors.KIND]: KinDIcon,
+    [ContainerFlavors.PODMAN]: PodmanIcon,
 }
 
-const PodTypeIcons = {
+const PodTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     [PodFlavors.K8SPOD]: K8sPodIcon,
 }
 

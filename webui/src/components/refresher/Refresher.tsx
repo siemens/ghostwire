@@ -24,8 +24,8 @@ export interface RefresherInterval {
      * derived from the interval number.
      */
     label?: string
-    /** interval in milliseconds. */
-    interval: number
+    /** interval in milliseconds, or null if off. */
+    interval: number | null
 }
 
 const defaultIntervals = [
@@ -44,9 +44,9 @@ const defaultIntervals = [
  * such as 500ms, 30s, et cetera. An interval value of null is taken as
  * "off".
  *
- * @param interval milliseconds
+ * @param interval milliseconds or null (=off)
  */
-const intervalToLabel = (interval: number) => {
+const intervalToLabel = (interval: number | null) => {
     if (interval === null) {
         return "off"
     }
@@ -186,16 +186,16 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
                 open={Boolean(anchorEl)}
                 onClose={handleIntervalMenuClose}
             >
-                {intervals.map(i => (
-                    <MenuItem
-                        key={i.interval}
-                        value={i.interval}
+                {intervals.map(i => {
+                    return <MenuItem
+                        key={i.interval || -1}
+                        value={i.interval || -1}
                         selected={i.interval === refreshInterval}
                         onClick={() => handleIntervalMenuChange(i)}
                     >
                         {i.label}
                     </MenuItem>
-                ))}
+                })}
             </Menu>
         </Refreshee>
     );

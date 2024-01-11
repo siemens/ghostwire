@@ -17,7 +17,7 @@ export const BrandIcon = (props: SvgIconProps) => {
 
     const { brandicon } = useDynVars()
 
-    if (brandicon) {
+    if (typeof brandicon === 'string') {
         return <SVG
             className="MuiSvgIcon-root"
             uniquifyIDs={true}

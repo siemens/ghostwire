@@ -22,7 +22,7 @@ export const refreshIntervalKey = "gw.refresh.interval"
 
 const initialRefreshInterval = (() => {
     try {
-        const interval = JSON.parse(localStorage.getItem(refreshIntervalKey));
+        const interval = JSON.parse(localStorage.getItem(refreshIntervalKey) || 'null');
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
@@ -36,7 +36,7 @@ const initialRefreshInterval = (() => {
  */
 export const discoveryRefreshIntervalAtom = atom(
     initialRefreshInterval,
-    (_get, set, interval: number) => {
+    (_get, set, interval: number | null) => {
         set(discoveryRefreshIntervalAtom, interval)
         localStorage.setItem(refreshIntervalKey, JSON.stringify(interval))
     }

@@ -5,7 +5,7 @@
 import React, { useContext } from 'react'
 
 /**
- * DynamicVars represents an object "map" of dynamic variable passed into an
+ * DynamicVars represents an object "map" of dynamic variables passed into an
  * application by the server at load time (as opposed to static REACT_APP_
  * variables which are fixed at build time).
  */

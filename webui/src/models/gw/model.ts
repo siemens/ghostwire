@@ -5,7 +5,7 @@
 import JSBI from 'jsbi'
 
 import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
-import { NetworkInterface, SRIOVRole, TapTunProcessor } from './nif'
+import { NetworkInterface, OperationalState, SRIOVRole, TapTunMode, TapTunProcessor } from './nif'
 import { Process } from './process'
 import { AddressFamily, addressFamilyByName, IpAddress } from './address'
 import { IpRoute } from './route'
@@ -26,6 +26,9 @@ export const hiddenLabel = (key: string) =>
         "github.com/thediveo/lxkns/",
     ].find(root => key.startsWith(root)) !== undefined
 
+export type JSONValue = string | number | boolean | JSONObject | JSONValue[]
+export interface JSONObject { [key: string]: JSONValue }
+
 /**
  * Ghostwire "full" discovery API results
  */
@@ -36,10 +39,10 @@ export interface Discovery {
     metadata: { [key: string]: unknown }
 }
 
-export const fromjson = (jsondata: { [key: string]: unknown }) => {
+export const fromjson = (jsondata: JSONObject) => {
     const disco = {
         networkNamespaces: {},
-        metadata: jsondata.metadata,
+        metadata: jsondata['metadata'],
     } as Discovery
 
     // Convert the v1 container representation into the future v2
@@ -55,229 +58,233 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
     const podmap: { [key: string]: Pod } = {}
     const projectmap: { [key: string]: Project } = {}
 
-    jsondata['network-namespaces'].forEach(jnetns => {
-        const newnetns = {
-            netnsid: jnetns.netnsid,
-            isInitial: false,
-        } as NetworkNamespace
-        disco.networkNamespaces[newnetns.netnsid] = newnetns
+        ; (jsondata['network-namespaces'] as JSONObject[]).forEach(jnetns => {
+            const newnetns = {
+                netnsid: jnetns.netnsid,
+                isInitial: false,
+            } as NetworkNamespace
+            disco.networkNamespaces[newnetns.netnsid] = newnetns
 
-        // Process the list of pods (namespace-tightly grouped containers)
-        newnetns.pods = jnetns['container-groups'].map(jpod => {
-            const pod: Pod = {
-                name: jpod.name,
-                flavor: jpod.type,
-                containers: [],
-            }
-            podmap[jpod.id] = pod
-            return pod
-        })
-
-        // Process the list of containers attached to this network namespace
-        // and separate out their processes.
-        newnetns.containers = jnetns.containers
-            .filter(jcntr =>
-                // https://github.com/siemens/ghostwire/issues/5
-                !(jcntr.name.startsWith('containerd-shim')
-                    && jcntr.cmdline && jcntr.cmdline.includes(" -namespace moby ")))
-            .map(jcntr => {
-                const primitiveBox: PrimitiveContainee = {
-                    name: jcntr.name,
-                    turtleNamespace: "",
-                    netns: newnetns,
+            // Process the list of pods (namespace-tightly grouped containers)
+            newnetns.pods = (jnetns['container-groups'] as JSONObject[]).map(jpod => {
+                const pod: Pod = {
+                    name: jpod.name as string,
+                    flavor: jpod.type as string,
+                    containers: [],
                 }
-                containeemap[jcntr.id] = primitiveBox
-                if (jcntr.type !== ContaineeTypes.BINDMOUNT) {
-                    // It's not a bindmount, so at least something with one or
-                    // more processes...
-                    const bbox = primitiveBox as Busybox
-                    const proc: Process = {
-                        pid: jcntr.pid,
-                        pidnsid: jcntr.pidns,
-                        capbnd: JSBI.BigInt(jcntr.capbnd || 0), // safety fallback
-                        name: jcntr.name,
-                        cmdline: jcntr.cmdline.split(' '),
+                podmap[jpod.id as string] = pod
+                return pod
+            })
+
+            // Process the list of containers attached to this network namespace
+            // and separate out their processes.
+            newnetns.containers = (jnetns.containers as JSONObject[])
+                .filter(jcntr =>
+                    // https://github.com/siemens/ghostwire/issues/5
+                    !((jcntr.name as string).startsWith('containerd-shim')
+                        && jcntr.cmdline && (jcntr.cmdline as string).includes(" -namespace moby ")))
+                .map(jcntr => {
+                    const primitiveBox: PrimitiveContainee = {
+                        name: jcntr.name as string,
+                        turtleNamespace: "",
+                        netns: newnetns,
                     }
-                    bbox.ealdorman = proc
-                    bbox.leaders = [proc]
-                    // Because it has process(es), we also have its DNS
-                    // configuration; as this is an application-layer
-                    // configuration, it cannot exist outside a process, but
-                    // instead in the mounted filesystem(s) seen by a process.
-                    bbox.dns = {
-                        etcHostname: jcntr.dns['etc-hostname'] || "",
-                        etcDomainname: jcntr.dns.domainname || "",
-                        utsHostname: jcntr.dns['uts-hostname'] || "",
-                        etcHosts: jcntr.dns['etc-hosts'].map(host => {
-                            const family = host.address.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
-                            return {
-                                name: host.name,
-                                address: {
-                                    address: host.address,
+                    containeemap[jcntr.id as string] = primitiveBox
+                    if (jcntr.type !== ContaineeTypes.BINDMOUNT) {
+                        // It's not a bindmount, so at least something with one or
+                        // more processes...
+                        const bbox = primitiveBox as Busybox
+                        const proc: Process = {
+                            pid: jcntr.pid as number,
+                            pidnsid: jcntr.pidns as number,
+                            capbnd: JSBI.BigInt(jcntr.capbnd || 0), // safety fallback
+                            name: jcntr.name as string,
+                            cmdline: (jcntr.cmdline as string).split(' '),
+                        }
+                        bbox.ealdorman = proc
+                        bbox.leaders = [proc]
+                        // Because it has process(es), we also have its DNS
+                        // configuration; as this is an application-layer
+                        // configuration, it cannot exist outside a process, but
+                        // instead in the mounted filesystem(s) seen by a process.
+                        const dns = jcntr.dns as JSONObject
+                        bbox.dns = {
+                            etcHostname: dns['etc-hostname'] as string || "",
+                            etcDomainname: dns.domainname as string || "",
+                            utsHostname: dns['uts-hostname'] as string || "",
+                            etcHosts: (dns['etc-hosts'] as JSONObject[]).map(host => {
+                                const family = (host.address as string).includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
+                                return {
+                                    name: host.name,
+                                    address: {
+                                        address: host.address,
+                                        family: family,
+                                        prefixlen: family === AddressFamily.IPv6 ? 128 : 32,
+                                    } as IpAddress,
+                                } as HostAddressBinding
+                            }),
+                            nameservers: (dns.nameservers as string[] || []).map(addr => {
+                                const family = addr.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
+                                return {
+                                    address: addr,
                                     family: family,
                                     prefixlen: family === AddressFamily.IPv6 ? 128 : 32,
-                                } as IpAddress,
-                            } as HostAddressBinding
-                        }),
-                        nameservers: (jcntr.dns.nameservers || []).map(addr => {
-                            const family = addr.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
-                            return {
-                                address: addr,
-                                family: family,
-                                prefixlen: family === AddressFamily.IPv6 ? 128 : 32,
-                            } as IpAddress
-                        }),
-                        searchlist: jcntr.dns.searchlist ? [jcntr.dns.searchlist].flat() : [],
-                    }
-                    // Did we stumble upon the initial network namespace? Then
-                    // mark it!
-                    if (proc.pid === 1) {
-                        newnetns.isInitial = true
-                    }
-                }
-                if (jcntr.type !== ContaineeTypes.BINDMOUNT
-                    && jcntr.type !== ContaineeTypes.PROCESS) {
-                    // it's a container thingy...
-                    const cbox = primitiveBox as Container
-                    cbox.labels = jcntr.labels || {}
-                    cbox.engineType = jcntr.type
-                    // For the container flavor, assume it's the same as the
-                    // (engine) type for now.
-                    cbox.flavor = cbox.engineType
-                    // If the discovery engine gave us a container ID (not to be
-                    // confused with the document container ID, in "id"), then take
-                    // that, otherwise fall back to the container name.
-                    cbox.id = jcntr['container-id'] || jcntr.name
-                    cbox.state = containerState(jcntr.status)
-                    cbox.turtleNamespace = jcntr.prefix || ""
-                    // is it pod'ed? Then resolve the reference and birectionally
-                    // relate this container with its pod.
-                    if (jcntr.group) {
-                        cbox.pod = podmap[jcntr.group]
-                        cbox.pod.containers.push(cbox)
-                    }
-                    if (jcntr.sandbox !== undefined) {
-                        cbox.sandbox = !!jcntr.sandbox // make sure it's boolean
-                    }
-                    // is it part of a (Docker) composer project?
-                    cbox.project = null
-                    if (jcntr.labels && !!jcntr.labels['com.docker.compose.project']) {
-                        const projectname = jcntr.labels['com.docker.compose.project']
-                        let project = projectmap[projectname]
-                        if (project === undefined) {
-                            project = {
-                                name: projectname,
-                                flavor: cbox.flavor,
-                                containers: [],
-                                netnses: {},
-                            } as Project
-                            projectmap[projectname] = project
+                                } as IpAddress
+                            }),
+                            searchlist: dns.searchlist as string[] || [],
                         }
-                        cbox.project = project
-                        project.containers.push(cbox)
-                        project.netnses[cbox.netns.netnsid] = cbox.netns
+                        // Did we stumble upon the initial network namespace? Then
+                        // mark it!
+                        if (proc.pid === 1) {
+                            newnetns.isInitial = true
+                        }
+                    }
+                    if (jcntr.type !== ContaineeTypes.BINDMOUNT
+                        && jcntr.type !== ContaineeTypes.PROCESS) {
+                        // it's a container thingy...
+                        const cbox = primitiveBox as Container
+                        cbox.labels = (jcntr.labels as { [key: string]: string }) || {}
+                        cbox.engineType = jcntr.type as string
+                        // For the container flavor, assume it's the same as the
+                        // (engine) type for now.
+                        cbox.flavor = cbox.engineType
+                        // If the discovery engine gave us a container ID (not to be
+                        // confused with the document container ID, in "id"), then take
+                        // that, otherwise fall back to the container name.
+                        cbox.id = (jcntr['container-id'] || jcntr.name) as string
+                        cbox.state = containerState(jcntr.status as string)
+                        cbox.turtleNamespace = (jcntr.prefix as string) || ''
+                        // is it pod'ed? Then resolve the reference and birectionally
+                        // relate this container with its pod.
+                        if (jcntr.group) {
+                            cbox.pod = podmap[jcntr.group as string]
+                            cbox.pod.containers.push(cbox)
+                        }
+                        if (jcntr.sandbox !== undefined) {
+                            cbox.sandbox = !!jcntr.sandbox // make sure it's boolean
+                        }
+                        // is it part of a (Docker) composer project?
+                        cbox.project = undefined
+                        if (jcntr.labels && !!(jcntr.labels as JSONObject)['com.docker.compose.project']) {
+                            const projectname = (jcntr.labels as JSONObject)['com.docker.compose.project'] as string
+                            let project = projectmap[projectname]
+                            if (project === undefined) {
+                                project = {
+                                    name: projectname,
+                                    flavor: cbox.flavor,
+                                    containers: [],
+                                    netnses: {},
+                                } as Project
+                                projectmap[projectname] = project
+                            }
+                            cbox.project = project
+                            project.containers.push(cbox)
+                            project.netnses[cbox.netns.netnsid] = cbox.netns
+                        }
+                    }
+                    return primitiveBox
+                })
+            // Process the list of network interfaces belonging to this network
+            // namespace. Also add the network interfaces to the map, index by
+            // their unique JSON document identifiers.
+            newnetns.nifs = (jnetns['network-interfaces'] as JSONObject[]).map(jnif => {
+                const nif: NetworkInterface = {
+                    netns: newnetns,
+                    name: jnif.name as string,
+                    alias: jnif.alias as string || '',
+                    index: jnif.index as number,
+                    kind: jnif.kind as string,
+                    operstate: jnif.operstate as OperationalState,
+                    isPhysical: jnif.physical as boolean,
+                    isPromiscuous: jnif.promisc as boolean,
+                    sriovrole: jnif['sr-iov-role'] as SRIOVRole || SRIOVRole.None,
+                    addresses: [],
+                    labels: jnif.labels as { [key: string]: string } || {},
+                }
+                if (jnif.tuntap) {
+                    nif.tuntapDetails = {
+                        mode: (jnif.tuntap as JSONObject).mode as TapTunMode,
+                        processors: [],
                     }
                 }
-                return primitiveBox
+                if (jnif.vxlan) {
+                    const vxlan = jnif.vxlan as JSONObject
+                    const portrange = vxlan['source-portrange'] as JSONObject
+                    nif.vxlanDetails = {
+                        vid: vxlan.vid as number,
+                        arpProxy: vxlan['arp-proxy'] as boolean,
+                        remotePort: vxlan['remote-port'] as number,
+                        sourcePortLow: portrange.low as number,
+                        sourcePortHigh: portrange.high as number,
+                    }
+                }
+                if (jnif.vlan) {
+                    const vlan = jnif.vlan as JSONObject
+                    nif.vlanDetails = {
+                        vid: vlan.vid as number,
+                        vlanProtocol: vlan['vlan-protocol'] as number
+                    }
+                }
+                nifmap[jnif.id as string] = nif
+
+                // Read in all network addresses assigned to this interface...
+                nif.addresses = ['ipv4', 'ipv6'].map(addrfamily =>
+                    ((jnif.addresses as JSONObject)[addrfamily] as JSONObject[]).map(addr => ({
+                        address: addr.address,
+                        prefixlen: addr.prefixlen,
+                        family: addr.family,
+                        preferredLifetime: addr['preferred-lifetime'],
+                        validLifetime: addr['valid-lifetime'],
+                        scope: addr.scope,
+                    } as IpAddress))
+                ).flat()
+                nif.addresses.push({
+                    address: (jnif.addresses as JSONObject).mac,
+                    prefixlen: 0,
+                    family: AddressFamily.MAC,
+                } as IpAddress)
+
+                return nif
             })
-        // Process the list of network interfaces belonging to this network
-        // namespace. Also add the network interfaces to the map, index by
-        // their unique JSON document identifiers.
-        newnetns.nifs = jnetns['network-interfaces'].map(jnif => {
-            const nif: NetworkInterface = {
-                netns: newnetns,
-                name: jnif.name,
-                alias: jnif.alias || "",
-                index: jnif.index,
-                kind: jnif.kind,
-                operstate: jnif.operstate,
-                isPhysical: jnif.physical,
-                isPromiscuous: jnif.promisc,
-                sriovrole: jnif['sr-iov-role'] || SRIOVRole.None,
-                addresses: undefined,
-                labels: jnif.labels || {},
-            }
-            if (jnif.tuntap) {
-                nif.tuntapDetails = {
-                    mode: jnif.tuntap.mode,
-                    processors: [],
-                }
-            }
-            if (jnif.vxlan) {
-                nif.vxlanDetails = {
-                    vid: jnif.vxlan.vid,
-                    arpProxy: jnif.vxlan['arp-proxy'],
-                    remotePort: jnif.vxlan['remote-port'],
-                    sourcePortLow: jnif.vxlan['source-portrange'].low,
-                    sourcePortHigh: jnif.vxlan['source-portrange'].high,
-                }
-            }
-            if (jnif.vlan) {
-                nif.vlanDetails = {
-                    vid: jnif.vlan.vid,
-                    vlanProtocol: jnif.vlan['vlan-protocol']
-                }
-            }
-            nifmap[jnif.id] = nif
-
-            // Read in all network addresses assigned to this interface...
-            nif.addresses = ['ipv4', 'ipv6'].map(addrfamily =>
-                jnif.addresses[addrfamily].map(addr => ({
-                    address: addr.address,
-                    prefixlen: addr.prefixlen,
-                    family: addr.family,
-                    preferredLifetime: addr['preferred-lifetime'],
-                    validLifetime: addr['valid-lifetime'],
-                    scope: addr.scope,
-                } as IpAddress))
+            // Read in the routes in this network namespace...
+            newnetns.routes = ['ipv4', 'ipv6'].map(addrfamily =>
+                ((jnetns.routes as JSONObject)[addrfamily] as JSONObject[]).map(route => ({
+                    destination: route.destination,
+                    prefixlen: route['destination-prefixlen'],
+                    family: route.family,
+                    index: route.index,
+                    nif: nifmap[route['network-interface-idref'] as string],
+                    nexthop: route['next-hop'],
+                    preference: route.preference,
+                    priority: route.priority,
+                    table: route.table,
+                    type: route.type,
+                } as IpRoute))
             ).flat()
-            nif.addresses.push({
-                address: jnif.addresses.mac,
-                prefixlen: 0,
-                family: AddressFamily.MAC,
-            } as IpAddress)
-
-            return nif
         })
-        // Read in the routes in this network namespace...
-        newnetns.routes = ['ipv4', 'ipv6'].map(addrfamily =>
-            jnetns.routes[addrfamily].map(route => ({
-                destination: route.destination,
-                prefixlen: route['destination-prefixlen'],
-                family: route.family,
-                index: route.index,
-                nif: nifmap[route['network-interface-idref']],
-                nexthop: route['next-hop'],
-                preference: route.preference,
-                priority: route.priority,
-                table: route.table,
-                type: route.type,
-            } as IpRoute))
-        ).flat()
-    })
     // Resolve the references between network interfaces ... now these
     // references are one of the truely unique features of Ghostwire!
     Object.values(jsondata['network-namespaces']).forEach(jnetns =>
-        jnetns['network-interfaces'].forEach(jnif => {
-            const nif = nifmap[jnif.id]
+        (jnetns['network-interfaces'] as JSONObject[]).forEach(jnif => {
+            const nif = nifmap[jnif.id as string]
             if (jnif.macvlans) {
-                nif.macvlans = jnif.macvlans.map(nif => nifmap[nif.idref])
+                nif.macvlans = (jnif.macvlans as JSONObject[]).map(nif => nifmap[nif.idref as string])
             }
             if (jnif.slaves) {
                 // Nota bene: while the discovery service classifies VXLAN
                 // overlays as slaves, we now sort it out; instead, we are
                 // maintaining a dedicated overlay list.
-                nif.slaves = jnif.slaves.map(nif => nifmap[nif.idref])
+                nif.slaves = (jnif.slaves as JSONObject[]).map(nif => nifmap[nif.idref as string])
                     .filter(slave => !slave.vxlanDetails)
             }
-            jnif.pf && (nif.pf = nifmap[jnif.pf.idref])
-            jnif.master && (nif.master = nifmap[jnif.master.idref])
-            jnif.macvlan && (nif.macvlan = nifmap[jnif.macvlan.idref])
-            jnif.peer && (nif.peer = nifmap[jnif.peer['peer-idref']])
+            jnif.pf && (nif.pf = nifmap[(jnif.pf as JSONObject).idref as string])
+            jnif.master && (nif.master = nifmap[(jnif.master as JSONObject).idref as string])
+            jnif.macvlan && (nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string])
+            jnif.peer && (nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string])
             if (jnif.vxlan) {
                 // this VXLAN is the overlay, resolve our underlay reference,
                 // and then backlink the underlay to us (the overlay).
-                nif.underlay = nifmap[jnif.vxlan.idref]
+                nif.underlay = nifmap[(jnif.vxlan as JSONObject).idref as string]
                 if (!nif.underlay.overlays) {
                     nif.underlay.overlays = []
                 }
@@ -286,10 +293,10 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
             // TAP/TUNs don't reference other network interfaces, but processes
             // ... but hey. we need to resolve this relation, too!
             if (jnif.tuntap) {
-                nif.tuntapDetails.processors = jnif.tuntap.processors.map(
+                nif.tuntapDetails!.processors = ((jnif.tuntap as JSONObject).processors as JSONObject[]).map(
                     proc => ({
-                        cmdline: proc.cmdline.split(' '),
-                        containee: containeemap[proc['container-idref']],
+                        cmdline: (proc.cmdline as string).split(' '),
+                        containee: containeemap[proc['container-idref'] as string],
                         pid: proc.pid,
                     } as TapTunProcessor))
             }
@@ -298,12 +305,12 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
     // because now we can easily resolve the references from port users to
     // their containees.
     Object.values(jsondata['network-namespaces']).forEach((jnetns: { [key: string]: unknown }) => {
-        const netns = disco.networkNamespaces[jnetns.netnsid]
+        const netns = disco.networkNamespaces[jnetns.netnsid as number]
         // Read in the open transport-layer ports in this network namespace...
         netns.transportPorts = ['ipv4', 'ipv6'].map(addrfamily => {
             const family = addressFamilyByName(addrfamily)
             const prefixlen = family === AddressFamily.IPv6 ? 128 : 32
-            return jnetns['transport-ports'][addrfamily].map(port => ({
+            return ((jnetns['transport-ports'] as JSONObject)[addrfamily] as JSONObject[]).map(port => ({
                 state: port.state,
                 macroState: port.macrostate,
                 protocol: port.protocol,
@@ -322,9 +329,9 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
                 remotePort: port['remote-port'],
                 remoteServicename: port['remote-servicename'],
                 v4mapped: port.v4mapped,
-                users: port.owners.map(owner => ({
-                    cmdline: owner.cmdline.split(' '),
-                    containee: containeemap[owner['container-idref']],
+                users: (port.owners as JSONObject[]).map(owner => ({
+                    cmdline: (owner.cmdline as string).split(' '),
+                    containee: containeemap[owner['container-idref'] as string],
                     pid: owner.pid,
                 } as PortUser)),
             } as TransportPort))
@@ -333,14 +340,14 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
     })
     // Then read in the forwarded port related discovery information, so that we
     // can easily resolve the references from port users to their containees.
-    Object.values(jsondata['network-namespaces']).forEach((jnetns: {[key: string]: unknown}) => {
-        const netns = disco.networkNamespaces[jnetns.netnsid]
+    Object.values(jsondata['network-namespaces']).forEach((jnetns: { [key: string]: unknown }) => {
+        const netns = disco.networkNamespaces[jnetns.netnsid as number]
         netns.forwardedPorts = ['ipv4', 'ipv6'].map(addrfamily => {
             const family = addressFamilyByName(addrfamily)
             const prefixlen = family === AddressFamily.IPv6 ? 128 : 32
-            return jnetns['forwarded-ports'][addrfamily].map(port => {
+            return ((jnetns['forwarded-ports'] as JSONObject)[addrfamily] as JSONObject[]).map(port => {
                 const fwaddr = port['forward-ip']
-                const fwfam = fwaddr.includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
+                const fwfam = (fwaddr as string).includes(':') ? AddressFamily.IPv6 : AddressFamily.IPv4
                 const fwprefixlen = fwfam === AddressFamily.IPv6 ? 128 : 32
                 return {
                     protocol: port.protocol,
@@ -358,10 +365,10 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
                     } as IpAddress,
                     forwardedPort: port['forward-port'],
                     forwardedServicename: port['forward-servicename'],
-                    netns: disco.networkNamespaces[port['netnsid']],
-                    users: port.owners.map(owner => ({
-                        cmdline: owner.cmdline.split(' '),
-                        containee: containeemap[owner['container-idref']],
+                    netns: disco.networkNamespaces[port['netnsid'] as number],
+                    users: (port.owners as JSONObject[]).map(owner => ({
+                        cmdline: (owner.cmdline as string).split(' '),
+                        containee: containeemap[owner['container-idref'] as string],
                         pid: owner.pid,
                     } as PortUser)),
                 } as ForwardedPort
@@ -448,9 +455,8 @@ export const fromjson = (jsondata: { [key: string]: unknown }) => {
                     return project
                 }
                 return null
-            },
-                undefined as Project) || null
-        netns.project = project
+            }, undefined as (Project | null | undefined))
+        netns.project = project || undefined
     })
     // Fix composer project flavors; projects can only exist from our point of
     // view when there is at least a single, lone container in a project.

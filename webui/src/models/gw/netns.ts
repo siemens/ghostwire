@@ -47,8 +47,10 @@ export interface NetworkNamespace {
  *
  * @param netns the network namespace object to be type-guarded.
  */
-export const isNetworkNamespace = (netns: object): netns is NetworkNamespace => {
-    return !!netns && netns['netnsid'] !== undefined && netns['nifs'] !== undefined
+export const isNetworkNamespace = (netns: unknown): netns is NetworkNamespace => {
+    return !!netns 
+        && (netns as NetworkNamespace).netnsid !== undefined 
+        && (netns as NetworkNamespace).nifs !== undefined
 }
 
 /**

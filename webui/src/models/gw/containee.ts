@@ -204,6 +204,9 @@ export enum ContainerFlavors {
     IERUNTIME = 'ie-runtime',
     IEAPP = 'ie-app',
     KIND = 'kind',
+    PODMAN = 'podman',
+    CRI = 'k8s.io/cri-api',
+    CRIO = 'cri-o.io',
 }
 
 /**
@@ -256,7 +259,8 @@ export enum ContainerState {
     Restarted
 }
 
-// TODO: cover all states?
+// containerState converts a textual container state, such as "running" or
+// "paused" into its corresponding enumeration value.
 export const containerState = (cs: string) => {
     switch (cs) {
         case "exited":
@@ -269,6 +273,7 @@ export const containerState = (cs: string) => {
         case "restarted":
             return ContainerState.Restarted
     }
+    return ContainerState.Running
 }
 
 const containerStateStrings = {
@@ -283,7 +288,7 @@ export const containerStateString = (cs: ContainerState) => containerStateString
 
 // The container type description map only needs entries for container flavors
 // which cannot be covered generically.
-const containerFlavorDescriptions = {
+const containerFlavorDescriptions: { [key: string]: string } = {
     [ContainerFlavors.DOCKERPLUGIN]: 'Managed Docker Plugin',
     [ContainerFlavors.IERUNTIME]: 'Industrial Edge Runtime',
     [ContainerFlavors.IEAPP]: 'Industrial Edge App',
@@ -294,7 +299,7 @@ export enum PodFlavors {
     K8SPOD = 'pod',
 }
 
-const podFlavorDescriptions = {
+const podFlavorDescriptions: { [key: string]: string } = {
     [PodFlavors.K8SPOD]: 'Kuhbernetes pod',
 }
 
@@ -412,7 +417,7 @@ export type NetworkNamespaceOrProject = NetworkNamespace | Project
 /**
  * Returns true if project is a project (and not a network namespace).
  * 
- * @param project project object
+ * @param project project object.
  * @returns true if project is a project.
  */
 export const isProject = (project: NetworkNamespaceOrProject): project is Project => (
@@ -425,11 +430,18 @@ export enum ProjectFlavors {
     IEAPP = ContainerFlavors.IEAPP,
 }
 
-const projectFlavorDescriptions = {
+const projectFlavorDescriptions: { [key: string]: string } = {
     [ProjectFlavors.COMPOSER]: 'Docker composer project',
     [ProjectFlavors.IEAPP]: 'Industrial Edge app project',
 }
 
+/**
+ * Returns a description of the type of project specified, or an empty
+ * description if not known.
+ * 
+ * @param project project object.
+ * @returns descriptive text.
+ */
 export const projectDescription = (project: Project) => {
     if (!project) {
         return '???'

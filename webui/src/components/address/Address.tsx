@@ -147,7 +147,7 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
     const addressOnly =
         <Addr>
             {(plain && <>
-                {familyicon && <AddressIcon />}{address.address}
+                {familyicon && AddressIcon && <AddressIcon />}{address.address}
             </>) || (!isMAC && <>
                 {AddressIcon && <AddressIcon />}
                 <Prefix>{prefix}</Prefix>
@@ -155,7 +155,7 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
                 <PrefixLen>/{address.prefixlen}</PrefixLen>
             </>) || (address.address !== '00:00:00:00:00:00' &&
                 <>
-                    <AddressIcon />
+                    {AddressIcon && <AddressIcon />}
                     <MAC>{address.address}</MAC>
                 </>
                 )}
