@@ -22,6 +22,7 @@
     "@types/react": "^18.2.47",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-transition-group": "^4.4.10",
+    "@types/string-similarity": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
     "@typescript-eslint/scope-manager": "^6.18.1",

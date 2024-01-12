@@ -23,7 +23,7 @@ const shadowAmbientShadowOpacity = 0.12
  * @param px an array of 12 shadow parameters (3 shadows à 4 parameters).
  */
 export const createMuiShadow = (color: string, ...px: number[]) => {
-    const [r, g, b, ] = rgba(color)
+    const [r, g, b, ] = rgba(color) || [0, 0, 0, 0]
     return [
         `${px[0]}px ${px[1]}px ${px[2]}px ${px[3]}px rgba(${r}, ${g}, ${b}, ${shadowKeyUmbraOpacity})`,
         `${px[4]}px ${px[5]}px ${px[6]}px ${px[7]}px rgba(${r}, ${g}, ${b}, ${shadowKeyPenumbraOpacity})`,

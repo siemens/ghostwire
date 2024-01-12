@@ -5780,6 +5780,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/string-similarity@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@types/string-similarity@npm:4.0.2"
+  checksum: 2286b221b0f4bb732b94df4295083e1be75f303c4604132a067da2f18485dba6d0fe6a252595ce893327c22c0bb8a046cd63050bd0adceeadd486646d1e05d9c
+  languageName: node
+  linkType: hard
+
 "@types/trusted-types@npm:^2.0.2":
   version: 2.0.7
   resolution: "@types/trusted-types@npm:2.0.7"
@@ -10633,6 +10640,7 @@ __metadata:
     "@types/react-dom": "npm:^18.2.18"
     "@types/react-router-dom": "npm:^5.3.3"
     "@types/react-transition-group": "npm:^4.4.10"
+    "@types/string-similarity": "npm:^4.0.2"
     "@typescript-eslint/eslint-plugin": "npm:^6.18.1"
     "@typescript-eslint/parser": "npm:^6.18.1"
     "@typescript-eslint/scope-manager": "npm:^6.18.1"

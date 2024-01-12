@@ -123,13 +123,13 @@ const nifBoundingRect = (domEl: HTMLElement, refRect: DOMRect): Rect => {
 const layoutWires = (wires: Wire[], nifContainerDomId: string): [SwimlaneWire[], number] => {
     // No wires yet in any swim-lanes.
     const lanes: (SwimlaneWire[])[] = []
-    const refPosition = document.getElementById(nifContainerDomId).getBoundingClientRect()
+    const refPosition = document.getElementById(nifContainerDomId)!.getBoundingClientRect()
     const refWidth = refPosition.right - refPosition.left
     // Determine the layout information for each individual wire.
     const wiresInLanes = wires.map(w => {
         const swr = {
             nif1Element: document.getElementById(w.nif1Id),
-            nif2Element: document.getElementById(w.nif2Id),
+            nif2Element: document.getElementById(w.nif2Id!),
             kind: w.kind,
             operStateDown: w.operStateDown,
         } as SwimlaneWire
@@ -168,19 +168,19 @@ const layoutWires = (wires: Wire[], nifContainerDomId: string): [SwimlaneWire[],
         return swr
     })
         // Remove any wires that we couldn't layout.
-        .filter(w => w)
+        .filter(w => !!w)
         // Sort the wire according to their length and then wires of the same
         // length according to their position.
-        .sort((w1, w2) => (w1.len - w2.len) || (w1.from - w2.from))
+        .sort((w1, w2) => (w1!.len - w2!.len) || (w1!.from - w2!.from))
     // Now let's play ... FROGGER! Well, kind of.
     wiresInLanes.forEach(wire => {
         for (let lane = 0; ; lane++) {
             const wiresInThisLane = lanes[lane]
             if (wiresInThisLane) {
-                if (!wiresInThisLane.find(placedWire => (wire.to > placedWire.from) || (wire.from < placedWire.to))) {
+                if (!wiresInThisLane.find(placedWire => (wire!.to > placedWire.from) || (wire!.from < placedWire.to))) {
                     // no overlap, we can use this lane.
-                    wire.lane = lane
-                    lanes[lane].push(wire)
+                    wire!.lane = lane
+                    lanes[lane].push(wire!)
                     return // proceed with placing the next wire...
                 }
                 // continue searching in the next lane for some room to place
@@ -188,15 +188,15 @@ const layoutWires = (wires: Wire[], nifContainerDomId: string): [SwimlaneWire[],
             } else {
                 // we've found no suitable place in the existing lanes, so add a
                 // new lane and place just our wire into it for the moment.
-                wire.lane = lane
-                lanes[lane] = [wire]
+                wire!.lane = lane
+                lanes[lane] = [wire!]
                 return // proceed with placing new wire...
             }
         }
     })
     // Done, all wires have been placed in some lane. Someone else might now
     // create SVG elements representing the wires using our layout information.
-    return [wiresInLanes, lanes.length]
+    return [wiresInLanes as SwimlaneWire[], lanes.length]
 }
 
 /**
@@ -231,7 +231,7 @@ interface ExternalWire {
  * @returns layouted external facing wires.
  */
 const layoutExternals = (wires: Wire[], nifContainerDomId: string): ExternalWire[] => {
-    const refPosition = document.getElementById(nifContainerDomId).getBoundingClientRect()
+    const refPosition = document.getElementById(nifContainerDomId)!.getBoundingClientRect()
     const refWidth = refPosition.right - refPosition.left
     return wires.map(w => {
         const wr = {
@@ -249,22 +249,22 @@ const layoutExternals = (wires: Wire[], nifContainerDomId: string): ExternalWire
         wr.fromInset = refWidth - nifRect.right
         wr.tooltip = '' // TODO:
         return wr
-    }).filter(w => w)
+    }).filter(w => w) as ExternalWire[]
 }
 
 // Ensures that the "hot" wire SVG elements gets sorted to the end in order to
 // be drawn on top of earlier SVG elements.
 const sortHotJSXElements = (els: JSX.Element[], hotWires: string[], domIdBase: string) => (
-    // We need a stable sort and we want to sort hot element near the end, but
-    // keep the order stable inbetween hot elements. So we first need to gather
-    // the needed additional properties and only then sort.
+    // We need a stable sort and we want to sort "hot" elements near the end,
+    // but keep the order stable inbetween hot elements. So we first need to
+    // gather the needed additional properties and only then sort.
     els.map((el, idx) => [
         idx,
         hotWires.includes((el.props.className as string).split(" ")
-            .find((cls) => isRelationClassName(domIdBase, cls))),
+            .find((cls) => isRelationClassName(domIdBase, cls))!),
         el,
-    ])
-        .sort(([idxA, hotA, ]: [number, boolean, JSX.Element], [idxB, hotB, ]: [number, boolean, JSX.Element]) => {
+    ] as [number, boolean, JSX.Element])
+        .sort(([idxA, hotA,]: [number, boolean, JSX.Element], [idxB, hotB,]: [number, boolean, JSX.Element]) => {
             if (hotA !== hotB) return hotA ? 1 : -1
             return idxA - idxB
         })
@@ -346,22 +346,22 @@ l ${-(slw.toInset + width - radius)} 0`
 }
 
 /**
- * Returns the SVG elements for rendering an externally-facing wire.
+ * Returns the (array with) SVG elements for rendering an externally-facing
+ * wire.
  *
  * @param ew data object describing an externally-facing wire.
  * @param lanes the number of lanes having been allocated; this tells us how
  * wide the wiring gutter is, in order to make the externally-facing wires
- * properly horizontally stretch beyond the gutter. 
- * @param laneWidth width of a single "lane".
- * @param domIdBase DOM element ID base string (=prefix), required to correctly
- * reference the correct marker ID.
- * @param wireClass one or more CSS class names to assign to the wire SVG
- * element.
+ * properly horizontally stretch beyond the gutter. @param laneWidth width of a
+ * single "lane". @param domIdBase DOM element ID base string (=prefix),
+ * required to correctly reference the correct marker ID. @param wireClass one
+ * or more CSS class names to assign to the wire SVG element.
  */
 const ExternallyFacingWire = (
     ew: ExternalWire, lanes: number, laneWidth: number,
     domIdBase: string,
-    wireClass: string, ghostwireClass: string) => {
+    wireClass: string, ghostwireClass: string,
+) => {
 
     const width = (lanes + 0.5) * laneWidth
     const path = `M ${-ew.fromInset} ${ew.from} l ${width + ew.fromInset} 0`
@@ -532,7 +532,7 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
     const laneWidth = parseInt(useTheme().spacing(2))
 
     const [lanesCount, setLanesCount] = useState(1)
-    const [svgWires, setSvgWires] = useState([])
+    const [svgWires, setSvgWires] = useState([] as JSX.Element[])
 
     // Separate outgoing wires from point-to-point wires: the latter need
     // swim-lane layouting, while the former are just going off the grid...
@@ -545,14 +545,15 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
     useLayoutEffect(() => {
         const [p2pw, lc] = layoutWires(p2pWires, nifContainerDomId)
         const extw = layoutExternals(externalWires, nifContainerDomId)
+
         setSvgWires(
             sortHotJSXElements(
-                extw.map(ew =>
-                    ExternallyFacingWire(ew, lc, laneWidth, domIdBase, 'wire', 'ghostwire')).flat()
-                    .concat(p2pw.map(w =>
-                        TwoEndedWire(w, laneWidth, domIdBase, 'wire', 'ghostwire'))
-                        .flat()),
-                hotWires, domIdBase)
+                extw.map(ew => ExternallyFacingWire(ew, lc, laneWidth, domIdBase, 'wire', 'ghostwire'))
+                    .flat()
+                    .concat(
+                        p2pw.map(w => TwoEndedWire(w, laneWidth, domIdBase, 'wire', 'ghostwire'))
+                            .flat()
+                    ), hotWires, domIdBase)
         )
         // Add room for one extra lane room for external facing wires.
         setLanesCount(lc + 2)

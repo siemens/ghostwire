@@ -98,7 +98,7 @@ const FakeAppBar = ({ children }: { children: ReactNode }) => {
     )
 }
 
-const HydrateAtoms = ({ initialValues, children }) => {
+const HydrateAtoms = ({ initialValues, children }: { initialValues: any, children: any }) => {
     useHydrateAtoms(initialValues)
     return children
 }
@@ -134,7 +134,7 @@ export const Help = () => {
                 chapters={chapters}
                 baseroute="/help"
                 markdowner={markdowner}
-                shortcodes={shortcodes}
+                shortcodes={shortcodes as { [key: string]: React.ComponentType<unknown> }}
                 style={{ overflow: 'visible' }}
             />
         </HydrateAtoms>

@@ -34,7 +34,7 @@ const GwMD = styled(MuiMarkdown)(({ theme }) => ({
 
 export interface GwMarkdownProps {
     /** compiled MDX, which can also be lazy loaded. */
-    mdx: (props: unknown) => JSX.Element
+    mdx: (props: Record<string, unknown>) => JSX.Element
     /** 
      * an object "map" of "shortcodes" (which is a rather fancy name for
      * "components") to be made available to the MDX without the need to
