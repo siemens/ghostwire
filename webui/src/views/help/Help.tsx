@@ -4,7 +4,7 @@
 
 import React, { ReactNode } from 'react'
 
-import { Provider } from 'jotai'
+import { Provider, WritableAtom } from 'jotai'
 
 import { Box, Card, useTheme } from '@mui/material'
 
@@ -98,7 +98,12 @@ const FakeAppBar = ({ children }: { children: ReactNode }) => {
     )
 }
 
-const HydrateAtoms = ({ initialValues, children }: { initialValues: any, children: any }) => {
+interface HydrateAtomsProps {
+    initialValues: [WritableAtom<unknown, any[], any>, unknown][] // eslint-disable-line @typescript-eslint/no-explicit-any
+    children: ReactNode
+}
+
+const HydrateAtoms = ({ initialValues, children }: HydrateAtomsProps) => {
     useHydrateAtoms(initialValues)
     return children
 }

@@ -322,7 +322,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families: fam, can
                             button={canMaximize}
                             angled={canMaximize}
                             endIcon={canMaximize && <FullscreenIcon />}
-                            onClick={canMaximize ? ((_: Containee) => handleMaximize(containee)) : undefined}
+                            onClick={canMaximize ? ((c: Containee) => handleMaximize(c)) : undefined}
                         />
                     )}
             </Containees>
