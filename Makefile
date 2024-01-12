@@ -11,7 +11,7 @@ GOGEN = go generate .
 
 GETGITVERSION = export GIT_VERSION=$$(awk -n 'match($$0, /^const SemVersion = "(.*)"$$/, v) { print v[1]; }' defs_version.go)
 
-GENAPIDOC = npx @redocly/cli build-docs -o docs/api/index.html api/openapi-spec/ghostwire-v1.yaml
+GENAPIDOC = npm_config_yes=true npx @redocly/cli build-docs -o docs/api/index.html api/openapi-spec/ghostwire-v1.yaml
 
 tools := gostwire gostdump lsallnifs
 
@@ -80,7 +80,7 @@ deploy: ## deploy Gostwire service exposed on host port 5999
 		&& echo "deploying version" $$GIT_VERSION \
 		&& scripts/docker-build.sh deployments/gostwire/Dockerfile \
 			-t gostwire \
-			--build-arg REACT_APP_GIT_VERSION=$$GIT_VERSION \
+			--build-arg GIT_VERSION=$$GIT_VERSION \
 			--build-context webappsrc=./webui \
 	)
 	docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml up
@@ -95,7 +95,7 @@ pprofdeploy: ## deploy Gostwire service with pprof support on host port 5000
 		$(GETGITVERSION) \
 		&& echo "deploying version" $$GIT_VERSION \
 		&& docker buildx build -t gostwire -f deployments/gostwire/Dockerfile \
-			--build-arg REACT_APP_GIT_VERSION=$$GIT_VERSION \
+			--build-arg GIT_VERSION=$$GIT_VERSION \
 			--build-arg TAGS="pprof,osusergo,netgo" \
 			--build-arg LDFLAGS="" \
 			--build-arg GITTOKEN="${GITTOKEN}" \

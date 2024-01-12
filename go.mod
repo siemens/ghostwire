@@ -2,8 +2,6 @@ module github.com/siemens/ghostwire/v2
 
 go 1.20
 
-toolchain go1.21.5
-
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.12
 
 require (

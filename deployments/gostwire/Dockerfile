@@ -8,10 +8,10 @@
 # Nota bene: not all existing value combinations with respect to Alpine and Node
 # versions might work, so you'll need to check Docker hub for the available base
 # image versions.
-ARG ALPINE_VERSION=3.18
-ARG ALPINE_PATCH=5
-ARG GO_VERSION=1.21.4
-ARG NODE_VERSION=16
+ARG ALPINE_VERSION=3.19
+ARG ALPINE_PATCH=0
+ARG GO_VERSION=1.21.6
+ARG NODE_VERSION=21
 
 # Go build settings
 ARG LDFLAGS="-s -w -extldflags=-static"
@@ -55,6 +55,8 @@ COPY --from=cc-helpers / /
 RUN xx-apk add --no-cache gcc musl-dev
 # https://github.com/tonistiigi/xx/blob/master/README.md#go--cgo
 ENV CGO_ENABLED=1
+# https://github.com/mattn/go-sqlite3/issues/1164
+ENV CGO_CFLAGS=-D_LARGEFILE64_SOURCE
 # As of Go 1.20 the Go distribution won't contain a pre-build std library
 # anymore, so do this now and cache it.
 RUN xx-go build std
@@ -104,29 +106,34 @@ RUN --mount=target=. \
 # -- 2nd stage ---------------------------------------------------------------
 #
 # Build Ghostwire's frontend UI browser application.
-FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS webui
-ARG ALPINE_VERSION
-ARG REACT_APP_GIT_VERSION
-
+FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webui
 WORKDIR /webui
 ENV PATH /webui/node_modules/.bin:$PATH
-
+RUN yarn set version berry
+RUN yarn config set nodeLinker node-modules
 # stage 2.1 :) install a full-blown node_modules dependency hell; we need to
 # tell yarn to be more patient. This gives us a nice cached layer.
 COPY --from=webappsrc \
     package.json \
-    craco.config.js \
-    mdxplugins.js \
     yarn.lock \
+    .eslintrc.cjs \
     tsconfig.json \
+    tsconfig.node.json \
+    vite.config.ts \
+    index.html \
+    ghostwire.svg \
         ./
-RUN --mount=type=cache,target=/root/.yarn,sharing=locked YARN_CACHE_FOLDER=/root/.yarn \
-    yarn --network-timeout 500000 install --production
+
+RUN yarn workspaces focus --production
+RUN yarn eslint --init
+
 # stage 2.2 only now copy in the web ui completely and build the optimized
 # static artefacts.
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
-RUN echo "building: ${REACT_APP_GIT_VERSION}" && yarn imgbuild
+COPY --from=webappsrc .env ./
+ARG GIT_VERSION
+RUN yarn build
 
 # -- 3. stage ---------------------------------------------------------------
 #
