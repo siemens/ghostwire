@@ -13,13 +13,15 @@ import KinDIcon from 'icons/containees/Kind'
 import PodIcon from 'icons/containees/Pod'
 import K8sPodIcon from 'icons/containees/K8sPod'
 
-import { isContainer, isPod, Containee, ContainerFlavors, PodFlavors } from 'models/gw'
+import { isContainer, isPod, Containee, ContainerFlavors, PodFlavors, isBusybox } from 'models/gw'
 import { IEAppProjectIcon } from './appicon'
 import DockerManagedPluginIcon from 'icons/containees/DockerManagedPlugin'
 import InitialIcon from 'icons/containees/Initial'
 import PodmanIcon from 'icons/containees/Podman'
-import { SvgIconProps } from '@mui/material'
+import { SvgIcon, SvgIconProps } from '@mui/material'
 import CRIIcon from 'icons/containees/CRI'
+import TerminalIcon from '@mui/icons-material/Terminal'
+import CaptureIcon from 'icons/Capture'
 
 
 const ContaineeTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
@@ -54,7 +56,9 @@ export const ContaineeIcon = (containee: Containee, forceStdIcon?: boolean) => {
         return PodTypeIcons[containee.flavor] || PodIcon
     }
     if (!isContainer(containee)) {
-        return (containee.netns && containee.netns.isInitial) ? ContaineeTypeIcons.initialnetns : ContaineeTypeIcons.netns
+        return (containee.netns && containee.netns.isInitial)
+            ? ContaineeTypeIcons.initialnetns
+            : netnsIcon(containee)
     }
     // Now try to find a suitable container-flavor icon, or fall back to our
     // generic one. Please note that the type checker has correctly noticed us
@@ -67,5 +71,28 @@ export const ContaineeIcon = (containee: Containee, forceStdIcon?: boolean) => {
             return icon
         }
     }
-    return ContaineeTypeIcons[containee.flavor] || ContaineeTypeIcons.netns
+    return ContaineeTypeIcons[containee.flavor] || netnsIcon(containee)
+}
+
+const BusyboxIcons: { [key: string]: typeof SvgIcon | ((props: SvgIconProps) => JSX.Element) } = {
+    ['ash']: TerminalIcon,
+    ['bash']: TerminalIcon,
+    ['csh']: TerminalIcon,
+    ['dash']: TerminalIcon,
+    ['fish']: TerminalIcon,
+    ['ksh']: TerminalIcon,
+    ['sh']: TerminalIcon,
+    ['tsh']: TerminalIcon,
+    ['zsh']: TerminalIcon,
+
+    ['dumpcap']: CaptureIcon,
+}
+
+const netnsIcon = (containee: Containee) => {
+    if (!isBusybox(containee)) {
+        return ContaineeTypeIcons.netns
+    }
+    const pidsuffix = `(${containee.ealdorman.pid})`
+    const name = containee.ealdorman.name.substring(0, containee.ealdorman.name.indexOf(pidsuffix))
+    return BusyboxIcons[name] || ContaineeTypeIcons.netns
 }
