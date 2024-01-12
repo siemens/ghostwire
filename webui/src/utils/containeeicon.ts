@@ -19,6 +19,7 @@ import DockerManagedPluginIcon from 'icons/containees/DockerManagedPlugin'
 import InitialIcon from 'icons/containees/Initial'
 import PodmanIcon from 'icons/containees/Podman'
 import { SvgIconProps } from '@mui/material'
+import CRIIcon from 'icons/containees/CRI'
 
 
 const ContaineeTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
@@ -32,6 +33,7 @@ const ContaineeTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element 
     [ContainerFlavors.IEAPP]: IEAppIcon,
     [ContainerFlavors.KIND]: KinDIcon,
     [ContainerFlavors.PODMAN]: PodmanIcon,
+    [ContainerFlavors.CRI]: CRIIcon,
 }
 
 const PodTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {

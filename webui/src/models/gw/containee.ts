@@ -205,8 +205,7 @@ export enum ContainerFlavors {
     IEAPP = 'ie-app',
     KIND = 'kind',
     PODMAN = 'podman',
-    CRI = 'k8s.io/cri-api',
-    CRIO = 'cri-o.io',
+    CRI = 'CRI',
 }
 
 /**
@@ -293,6 +292,8 @@ const containerFlavorDescriptions: { [key: string]: string } = {
     [ContainerFlavors.IERUNTIME]: 'Industrial Edge Runtime',
     [ContainerFlavors.IEAPP]: 'Industrial Edge App',
     [ContainerFlavors.KIND]: 'KinD Kuhbernetes node',
+    [ContainerFlavors.CRI]: 'k8s CRI-API',
+    [ContainerFlavors.PODMAN]: 'Podman',
 }
 
 export enum PodFlavors {
