@@ -132,15 +132,15 @@ const TransTable = styled(Table)(({ theme }) => ({
     },
 }))
 
-const TransHeader = styled(TableHead)(({ theme }) => ({
+const TransHeader = styled(TableHead)(() => ({
     whiteSpace: 'nowrap',
 }))
 
-const AddressCell = styled(TableCell)(({ theme }) => ({
+const AddressCell = styled(TableCell)(() => ({
     fontFamily: 'Roboto Mono',
 }))
 
-const PortCell = styled(TableCell)(({ theme }) => ({
+const PortCell = styled(TableCell)(() => ({
     textAlign: 'end',
     fontFamily: 'Roboto Mono',
 }))
@@ -162,7 +162,7 @@ const UserDetails = styled('span')(({ theme }) => ({
  * container, et cetera, suitable for sorting.
  */
 const userName = (user: PortUser) => {
-    let components = []
+    const components = []
     const containee = user.containee
     if (containee) {
         if (isContainer(containee) && containee.pod) {
@@ -182,13 +182,28 @@ const targetNetns = (netns: NetworkNamespace, onContaineeNavigation?: (containee
     if (!netns) return ''
 
     return netns.containers.map(containee =>
-        <ContaineeBadge button containee={containee} onClick={onContaineeNavigation} />)
+        <ContaineeBadge
+            key={`${containee.turtleNamespace}-${containee.name}`}
+            button
+            containee={containee}
+            onClick={onContaineeNavigation as (_: Containee) => void}
+        />)
 }
 
 /** Return last path component of first command line element. */
 const command = (cmdline: string[]) => {
     const name = cmdline[0].split('/')
     return name[name.length - 1] + ' ' + cmdline.slice(1).join(' ')
+}
+
+const compareOptStrings = (s1?: string, s2?: string) => {
+    if (s1 && s2) {
+        return s1.localeCompare(s2)
+    }
+    if (!s1 && !s2) {
+        return 0
+    }
+    return !s1 ? -1 : 1
 }
 
 // The column header descriptions for the forwarded port table; these includes
@@ -210,7 +225,7 @@ const ForwardedPortTableColumns: ColHeader[] = [
     }, {
         id: 'service',
         label: 'Service',
-        orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.servicename.localeCompare(rowB.port.servicename),
+        orderFn: (rowA: PortRow, rowB: PortRow) => compareOptStrings(rowA.port.servicename, rowB.port.servicename),
     }, {
         id: 'forwardedaddress',
         label: 'Forwarded to',
@@ -222,7 +237,7 @@ const ForwardedPortTableColumns: ColHeader[] = [
     }, {
         id: 'forwardedservice',
         label: 'Service',
-        orderFn: (rowA: PortRow, rowB: PortRow) => rowA.port.forwardedServicename.localeCompare(rowB.port.forwardedServicename),
+        orderFn: (rowA: PortRow, rowB: PortRow) => compareOptStrings(rowA.port.forwardedServicename, rowB.port.forwardedServicename),
     }, {
         id: 'user',
         label: 'Group · Container · Process',
@@ -240,7 +255,7 @@ const sortTableRows = (rows: PortRow[], ids: string[]): PortRow[] => {
         id ?
             stableSort(
                 rows,
-                ForwardedPortTableColumns.find(col => col.id === id.replace('-', '')).orderFn,
+                ForwardedPortTableColumns.find(col => col.id === id.replace('-', ''))!.orderFn,
                 id.startsWith('-'))
             : rows,
         rows)
@@ -311,13 +326,13 @@ const getInitialTableRows = (netns: NetworkNamespace, families: AddressFamilySet
                     const key = portrowkey(fwport, user)
                     if (keys[key] === undefined) {
                         if (fw[`${fwport.protocol}-${fwport.address.address}-${fwport.port}`]) {
-                            return null
+                            return {} as PortRow
                         }
                         keys[key] = 0
                         return { port: fwport, user: user, key: key } as PortRow
                     }
-                    return null
-                })).flat().filter(portrow => !!portrow)
+                    return {} as PortRow
+                })).flat().filter(portrow => !!portrow.key)
             ),
         ['proto', 'address', 'port'])
 }
@@ -356,8 +371,6 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
         // we're otherwise resetting the table rows state each time the user
         // clicks on a table header column to change sorting ... and that's
         // ain't a good idea, sir!
-        //
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRows])
 
     // User clicks on a column header in order to sort the table rows by this
@@ -385,9 +398,9 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
         if (!match) {
             return
         }
-        if (match.params['detail']) {
+        if ((match.params as { [key: string]: string })['detail']) {
             // change route from existing detail view to new detail view.
-            navigate(`/${match.params['base']}/${encodeURIComponent(containee.name)}`)
+            navigate(`/${(match.params as { [key: string]: string })['base']}/${encodeURIComponent(containee.name)}`)
         }
         // scroll within the overall view.
         scrollIdIntoView(domIdBase + netnsId(

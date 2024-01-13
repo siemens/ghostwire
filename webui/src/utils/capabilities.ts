@@ -52,7 +52,7 @@ const bigZero = JSBI.BigInt(0)
 const bigOne = JSBI.BigInt(1)
 
 // maps (BigInt) capabilities masks to their corresponding capability names.
-const capsmasks: { [capmask: number]: string } = {}
+const capsmasks: { [capmask: string]: string } = {}
 
 Object.entries(caps).forEach(([capbitno, capname]) => {
     capsmasks[JSBI.leftShift(bigOne, JSBI.BigInt(capbitno)).toString()] = capname
@@ -76,7 +76,7 @@ export const capname = (capbit: JSBI) => {
 // Returns a list of names for those capabilities set for which we don't know
 // their name(s).
 const unknowncapnames = (capbits: JSBI) => {
-    let capnames: string[] = []
+    const capnames: string[] = []
     let unknowncapbits = JSBI.bitwiseAnd(capbits, JSBI.bitwiseNot(knowncapsmask))
     for (let capno = 0; JSBI.notEqual(unknowncapbits, bigZero); capno++, unknowncapbits = JSBI.signedRightShift(unknowncapbits, bigOne)) {
         if (JSBI.notEqual(JSBI.bitwiseAnd(unknowncapbits, bigOne), bigZero)) {
@@ -109,7 +109,7 @@ export const capsnames = (capbits: JSBI) => {
  * We use an object map here in order to quickly find out if a capability name
  * belongs to the default set, or not.
  */
-export const dockerdefaultcaps = {
+export const dockerdefaultcaps: { [key: string]: boolean } = {
     'CAP_AUDIT_WRITE': true,
     'CAP_CHOWN': true,
     'CAP_DAC_OVERRIDE': true,
@@ -130,7 +130,8 @@ export const dockerdefaultcaps = {
 const dockerdefaultcapsmask = Object.keys(dockerdefaultcaps)
     .reduce((mask, defaultcapname) =>
         JSBI.bitwiseOr(mask,
-            JSBI.leftShift(bigOne, JSBI.BigInt(Object.entries(caps).find(([, capname]) => capname === defaultcapname)[0])))
+            JSBI.leftShift(bigOne, 
+                JSBI.BigInt((Object.entries(caps).find(([, capname]) => capname === defaultcapname)||['', '0'])[0])))
         , bigZero)
 
 export const notDockerDefaultCaps = (caps: JSBI) => {

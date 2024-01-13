@@ -124,13 +124,13 @@ const namespacify = (containees: Containee[]) => {
 const kindClusterMap = (containees: Containee[]) => {
     // Build a map that is keyed by kind cluster containers' names and maps them
     // onto their kind cluster names.
-    const kindTurtleNamespaceMap = {}
+    const kindTurtleNamespaceMap: { [key: string]: string } = {}
     containees
         .filter(containee =>
             isContainer(containee)
-            && containee.labels['io.x-k8s.kind.cluster'])
-        .forEach((container: Container) => {
-            kindTurtleNamespaceMap[container.name] = container.labels['io.x-k8s.kind.cluster']
+            && !!containee.labels['io.x-k8s.kind.cluster'])
+        .forEach((container) => {
+            kindTurtleNamespaceMap[container.name] = (container as Container).labels['io.x-k8s.kind.cluster']
         })
     return kindTurtleNamespaceMap
 }
@@ -141,10 +141,11 @@ const podNamespaceAndName = (pod: Pod, withoutTurtleNamespace: boolean = false):
     const turtleNamespace = withoutTurtleNamespace ? '' : pod.containers[0].turtleNamespace
     const prefix = turtleNamespace ? `[${turtleNamespace}]:` : ''
     switch (pod.flavor) {
-        case PodFlavors.K8SPOD:
+        case PodFlavors.K8SPOD: {
             const parts = pod.name.split('/')
             return parts.length ? [parts[0], prefix + parts.slice(1).join('/')]
                 : ['', prefix + parts[0]]
+        }
         default:
             return ['', prefix + pod.name]
     }
@@ -181,7 +182,7 @@ export const ContaineeNavigator = ({ allnetns, filterEmpty, nolink }: ContaineeN
     const match2 = useMatch('/:view/:details')
     const match = (match1 || match2) ? { ...match1, ...match2 } : null
 
-    const inDetails = match && !!match.params['details']
+    const inDetails = !!match && !!(match.params as { [key: string]: string })['details']
 
     // Get all pods and those pesky primitive containees that aren't pot'ed. In
     // case a containee should appear multiple times, it is attached to multiple
@@ -203,9 +204,10 @@ export const ContaineeNavigator = ({ allnetns, filterEmpty, nolink }: ContaineeN
     const containeeItem = (containee: Containee, dropTurtleNamespace: boolean = false) => {
         const CeeIcon = ContaineeIcon(containee)
         const netns = isPod(containee) ? containee.containers[0].netns : containee.netns
+        const view = match && (match.params as { [key: string]: string })['view'] || ''
         const path = match && !nolink ? (inDetails ?
-            `/${match.params['view']}/${encodeURIComponent(containee.name)}` :
-            `/${match.params['view']}#${domIdBase + netnsId(netns)}`)
+            `/${view}/${encodeURIComponent(containee.name)}` :
+            `/${view}#${domIdBase + netnsId(netns)}`)
             : (nolink ? undefined : '.')
         const name = isPod(containee)
             ? podNamespaceAndName(containee, dropTurtleNamespace)[1]
@@ -217,7 +219,7 @@ export const ContaineeNavigator = ({ allnetns, filterEmpty, nolink }: ContaineeN
         return <ContaineeItem
             key={`${netns.netnsid}${containee.name}`}
             dense
-            to={path}
+            to={path || ''}
             component={RouterLink}
             className={clsx(
                 (isPrivilegedContainer(containee) && 'privileged') ||

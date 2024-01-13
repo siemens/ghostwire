@@ -115,7 +115,7 @@ const GhostwireApp = () => {
     const enableSnapshot = listContainees || alsoSnapshotable
 
     // What to capture, if any.
-    const snapshotRef = useRef<HTMLDivElement>()
+    const snapshotRef = useRef<HTMLDivElement|null>(null)
 
     const setModal = useScreenShooterModal()
 
@@ -137,7 +137,7 @@ const GhostwireApp = () => {
                     {enableSnapshot && allnetns.length > 0 && <Tooltip title="download PNG screenshot">
                         <IconButton
                             color="inherit"
-                            onClick={() => setModal(snapshotRef.current)}
+                            onClick={() => setModal && setModal(snapshotRef.current)}
                             size="large">
                             <ScreenshotIcon color="inherit" />
                         </IconButton>

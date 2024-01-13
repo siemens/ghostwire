@@ -60,8 +60,9 @@ export interface NetworkInterface {
  *
  * @param nif network interface object to be type-guarded.
  */
-export const isNetworkInterface = (nif: object): nif is NetworkInterface => {
-    return !!nif && nif['netns'] !== undefined && nif['index'] !== undefined
+export const isNetworkInterface = (nif: unknown): nif is NetworkInterface => {
+    return (nif as NetworkInterface)?.netns !== undefined
+        && (nif as NetworkInterface)?.index !== undefined
 }
 
 export enum TapTunMode {

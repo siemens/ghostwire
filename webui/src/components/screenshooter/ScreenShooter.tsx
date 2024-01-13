@@ -17,7 +17,7 @@ import { useSnackbar } from 'notistack'
 // the modal screenshooter dialog. It will automatically be reset to null after
 // the modal dialog has been closed.
 const ScreenShooterModalContext = React.createContext<
-    null | React.Dispatch<React.SetStateAction<HTMLElement>>>(null)
+    null | React.Dispatch<React.SetStateAction<HTMLElement|null>>>(null)
 
 
 const Density = styled(DensityIcon)(({ theme }) => ({
@@ -63,19 +63,22 @@ export interface ScreenShooterProps {
 export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
     const theme = useTheme()
 
-    const [htmlElement, setHtmlElement] = useState(null as HTMLElement)
+    const [htmlElement, setHtmlElement] = useState<HTMLElement|null>(null)
     const [density, setDensity] = useAtom(snapshotDensityAtom)
     const safeDensity = [1, 2, 4].find(setting => Math.max(Math.floor(density), 1) <= setting)
 
     const { enqueueSnackbar } = useSnackbar() || {}
 
-    basename = !!basename ? basename : 'screenshot'
+    basename = basename || 'screenshot'
 
     const handleChange = (event: SelectChangeEvent<number>) => {
-        setDensity(event.target.value)
+        setDensity(event.target.value as number)
     }
 
     const handleDownload = () => {
+        if (!htmlElement) {
+            return
+        }
         toPng(
             htmlElement,
             {
@@ -84,7 +87,7 @@ export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
             }
         ).then(dataurl => {
             const link = document.createElement('a')
-            link.download = generateFilename(basename)
+            link.download = generateFilename(basename!)
             link.href = dataurl
             link.click()
             enqueueSnackbar && enqueueSnackbar(

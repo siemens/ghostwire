@@ -39,7 +39,9 @@ export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribut
                         <OpenHouseIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
                         Open & Forwarding Host Ports
                     </Typography>
-                    <OpenPortTable netns={netns} families={showIpFamilies} />
+                    {netns &&
+                        <OpenPortTable netns={netns} families={showIpFamilies} />
+                    }
                 </div>)
                 || (<Ghost m={1}>
                     <Typography variant="body1" color="textSecondary" ref={ref}>
@@ -50,5 +52,6 @@ export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribut
         </Box>
     )
 })
+OpenHouse.displayName = "OpenHouse"
 
 export default OpenHouse

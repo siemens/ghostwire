@@ -29,20 +29,20 @@ const RouteInfo = styled('div')(({ theme }) => ({
     },
 }))
 
-const DestAddress = styled(Address)(({ theme }) => ({
+const DestAddress = styled(Address)(() => ({
     marginLeft: '0.5em',
     marginRight: '0.5em',
 }))
 
-const NextHop = styled(Address)(({ theme }) => ({
+const NextHop = styled(Address)(() => ({
     marginLeft: '0.5em',
 }))
 
-const EgressNif = styled(NifBadge)(({ theme }) => ({
+const EgressNif = styled(NifBadge)(() => ({
     marginLeft: '0.5em',
 }))
 
-const Metric = styled('span')(({ theme }) => ({
+const Metric = styled('span')(() => ({
     marginLeft: '0.5em',
 }))
 
@@ -74,8 +74,8 @@ export const Route = ({ route, onNavigation, className }: RouteProps) => {
     // the route, that is, how many destination(s) are covered. Also determine
     // the tooltip title which reflects the type of route in text instead of a
     // graphical depiction, effectively complementing it.
-    var tooltip = ''
-    var RouteIcon
+    let tooltip = ''
+    let RouteIcon
     if (route.type === 'multicast' || route.type === 'broadcast') {
         tooltip = route.type + ' route'
         RouteIcon = MultiBroadcastRoute

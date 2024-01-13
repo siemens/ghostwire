@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { ReactNode } from 'react'
 
 import ClearIcon from '@mui/icons-material/Clear'
 
@@ -53,7 +53,7 @@ const Property = styled('div')(({ theme }) => ({
     overflowWrap: 'break-word',
 }))
 
-const Value = styled('div')(({ theme }) => ({
+const Value = styled('div')(() => ({
     gridColumn: '2 / 3',
     minHeight: '24px', // ensures consistent height when no icon in value.
     alignSelf: 'baseline',
@@ -100,27 +100,27 @@ const KeyValList = styled('div')(({ theme }) => ({
     minHeight: '24px', // ensures consistent height when no icon in value.
 }))
 
-const KvKey = styled('div')(({ theme }) => ({
+const KvKey = styled('div')(() => ({
     gridColumn: '1 / 2',
     alignSelf: 'baseline',
     minHeight: '24px', // ensures consistent height when no icon in value.
     overflowWrap: 'anywhere',
 }))
 
-const KvValue = styled('div')(({ theme }) => ({
+const KvValue = styled('div')(() => ({
     gridColumn: '2 / 3',
     alignSelf: 'baseline',
     minHeight: '24px', // ensures consistent height when no icon in value.
     overflowWrap: 'break-word',
 }))
 
-const DNSServers = styled('div')(({ theme }) => ({
+const DNSServers = styled('div')(() => ({
     display: 'grid',
     gridTemplateColumns: 'auto',
     minHeight: '24px', // ensures consistent height.
 }))
 
-const DNSServerAddress = styled('div')(({ theme }) => ({
+const DNSServerAddress = styled('div')(() => ({
     gridColumn: '1 / 2',
     minHeight: '24px', // ensures consistent height.
 }))
@@ -171,14 +171,14 @@ export interface ContaineeDetailsProps {
  * Please note that the host name to address mappings are sorted by the host
  * names.
  */
-export const ContaineeDetails = ({ containee, families, className }: ContaineeDetailsProps) => {
+export const ContaineeDetails = ({ containee, families: fams, className }: ContaineeDetailsProps) => {
     const [showNamespaceIds] = useAtom(showNamespaceIdsAtom)
 
-    families = families || [AddressFamily.IPv4, AddressFamily.IPv6]
+    const families = fams || [AddressFamily.IPv4, AddressFamily.IPv6]
 
     // Render a single property with value row in the property grid.
     let row = 0
-    const prop = (name: string, value: any) => {
+    const prop = (name: string, value: ReactNode) => {
         if (!value) {
             value = <ClearIcon fontSize="inherit" color="disabled" />
         }
@@ -259,7 +259,7 @@ export const ContaineeDetails = ({ containee, families, className }: ContaineeDe
             <Details>
                 {isContainer(cntr) && cntr.id !== displayName && prop('container ID', cntr.id)}
                 {prop('type', <>
-                    <CIcon fontSize="inherit" color="disabled"/>
+                    <CIcon fontSize="inherit" color="disabled" />
                     &nbsp;{containeeDescription(containee)}
                 </>)}
                 {!isSandbox(containee) && [

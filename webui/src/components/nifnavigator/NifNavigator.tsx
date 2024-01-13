@@ -11,7 +11,7 @@ import { NifBadge } from 'components/nifbadge'
 import { ContaineeBadge } from 'components/containeebadge'
 
 
-const AliasName = styled('span')(({ theme }) => ({
+const AliasName = styled('span')(() => ({
     fontStyle: 'italic',
 }))
 
@@ -26,15 +26,15 @@ const AliasName = styled('span')(({ theme }) => ({
  */
 const relatedItem = (nif: NetworkInterface) => {
     const containee = firstContainee(nif.netns)
-    var nifname = nif.name
-    var alias = ""
+    let nifname = nif.name
+    let alias = ''
     // Do we want to show an alias or a container engine network name instead of
     // some incomprehensible interface name?
     if (nif.master && nif.master.kind === 'bridge') {
-        nifname = ""
+        nifname = ''
         alias = nif.master.alias ? nif.master.alias : nif.master.name
     } else {
-        alias = nif.alias
+        alias = nif.alias || ''
     }
 
     return <>
@@ -110,7 +110,7 @@ export const NifNavigator = ({
 
     // Gather the related network interfaces, as we want to later populate the
     // pop-up menu with their names and containees.
-    let relatedNifs = []
+    const relatedNifs = []
     if (nif.pf) {
         relatedNifs.push(nif.pf)
     }

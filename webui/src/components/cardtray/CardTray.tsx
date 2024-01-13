@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { Key } from 'react'
 import { TransitionGroup } from 'react-transition-group'
 
 import { Collapse, styled } from '@mui/material'
@@ -21,8 +21,6 @@ const Surface = styled('div')(({ theme }) => ({
 
 
 export interface CardTrayProps {
-    /** children to render into a vertical list. */
-    children?: React.ReactNode
     /** animate new children expanding? */
     animate?: boolean
 }
@@ -37,13 +35,16 @@ export interface CardTrayProps {
  *
  * @param children cards to render inside the card panel. 
  */
-export const CardTray = ({ children, animate }: CardTrayProps) => {
+export const CardTray = ({ animate, ...otherprops }: React.PropsWithChildren<CardTrayProps>) => {
     if (animate) {
+        const c = React.Children.map(
+            otherprops?.children, 
+            child => <Collapse key={(child as {key: Key}).key} in>{child}</Collapse>)
         return (
             <TransitionGroup component={Surface}>
-                {React.Children.map(children, child => <Collapse key={(child as any).key} in>{child}</Collapse>)}
+                {c || undefined}
             </TransitionGroup>
         )
     }
-    return <Surface>{children}</Surface>
+    return <Surface>{otherprops?.children}</Surface>
 }

@@ -13,5 +13,5 @@ export const Brand = () => {
 
     const { brand } = useDynVars()
 
-    return brand || 'Ghostwire'
+    return brand ? String(brand) : 'Ghostwire'
 }

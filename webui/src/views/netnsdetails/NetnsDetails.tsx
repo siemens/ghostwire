@@ -66,8 +66,8 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     // identifier first.
     const navigate = useNavigate()
     const match = useMatch('/:view/:slug')
-    let netns: NetworkNamespace
-    const netnsid = parseInt(match.params['slug'])
+    let netns: NetworkNamespace | undefined
+    const netnsid = parseInt((match?.params as { [key: string]: string })['slug'])
     if (!isNaN(netnsid)) {
         netns = Object.values(discovery.networkNamespaces)
             .find(netns => netns.netnsid === netnsid)
@@ -76,7 +76,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     // didn't get a match, so let's try to match with a tenant name instead...
     let didyoumean: Containee[] = []
     if (!netns) {
-        const tenantname = decodeURIComponent(match.params['slug'])
+        const tenantname = decodeURIComponent((match?.params as { [key: string]: string })['slug'])
         if (tenantname) {
             const containees = Object.values(discovery.networkNamespaces)
                 // here, we really want to see ALL containees, including pod'ed
@@ -96,7 +96,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
                         .filter((rat: { rating: number }) => rat.rating >= 0.2)
                         .map((rat: { target: string }) =>
                             containees.find(containee => containee.name === rat.target)
-                        )
+                        ) as Containee[]
                 }
             }
         }
@@ -105,7 +105,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     // Navigate to a specific containee on badge clicking ... "badge", not
     // "binge".
     const onContaineeClick = (containee: Containee) => {
-        navigate(`/${match.params['view']}/${encodeURIComponent(containee.name)}`)
+        navigate(`/${(match?.params as { [key: string]: string })['view']}/${encodeURIComponent(containee.name)}`)
     }
 
     return (netns &&
@@ -151,5 +151,6 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
             </div>
         </Ghost>)
 })
+NetnsDetails.displayName = "NetnsDetails"
 
 export default NetnsDetails

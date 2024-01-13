@@ -5,9 +5,9 @@
 import React from 'react'
 
 import { MuiMarkdown } from 'components/muimarkdown'
-import { Link } from 'react-router-dom'
-import { ExtLink } from 'components/extlink'
 import { styled } from '@mui/material';
+import { SmartA } from 'components/smarta';
+import { MDXComponents } from 'mdx/types';
 
 
 const GwMD = styled(MuiMarkdown)(({ theme }) => ({
@@ -32,33 +32,15 @@ const GwMD = styled(MuiMarkdown)(({ theme }) => ({
     },
 }))
 
-
-/**
- * Renders a hyperlink either as an external link (using the ExtLink component),
- * or a react router "internal" Link component, depending on the given href
- * property value. Using the Link component ensures proper app-internal route
- * handling without having to reload the application and thus destroying the any
- * discovery result.
- */
-const SmartA = ({ href, children, ...otherprops }: any) => {
-    try {
-        new URL(href)
-        return <ExtLink href={href} {...otherprops}>{children}</ExtLink>
-    } catch {
-        return <Link to={href} {...otherprops}>{children}</Link>
-    }
-}
-
-
 export interface GwMarkdownProps {
     /** compiled MDX, which can also be lazy loaded. */
-    mdx: (props: any) => JSX.Element
+    mdx: (props: Record<string, unknown>) => JSX.Element
     /** 
      * an object "map" of "shortcodes" (which is a rather fancy name for
      * "components") to be made available to the MDX without the need to
      * explicitly import them in the MDX.
      */
-    shortcodes?: { [key: string]: React.ComponentType<any> }
+    shortcodes?: MDXComponents // { [key: string]: React.ComponentType<any> }
     /** CSS class name(s). */
     className?: string
     /** fallback components to render when lazily loading the mdx. */
@@ -80,7 +62,7 @@ export interface GwMarkdownProps {
 export const GwMarkdown = ({ mdx, className, shortcodes, fallback }: GwMarkdownProps) => {
     return <GwMD
         className={className}
-        shortcodes={{ a: SmartA, ...shortcodes }}
+        shortcodes={{ a: SmartA, ...shortcodes } as MDXComponents}
         mdx={mdx}
         fallback={fallback}
     />

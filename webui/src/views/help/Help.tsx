@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { ReactNode } from 'react'
 
-import { Provider } from 'jotai'
+import { Provider, WritableAtom } from 'jotai'
 
 import { Box, Card, useTheme } from '@mui/material'
 
@@ -24,12 +24,12 @@ import { useHydrateAtoms } from 'jotai/utils'
  * @param name name (without .mdx extension and without any path) of a chapter
  * .mdx file; chapter files are located in the chapters/ subdirectory.
  */
-const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`)) as unknown as (props: any) => JSX.Element
+const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`))
 
 // DynamicVars represents an object "map" of dynamic variable passed into an
 // application by the server at load time (as opposed to static REACT_APP_
 // variables which are fixed at build time).
-type DynamicVars = { [key: string]: any }
+type DynamicVars = { [key: string]: unknown }
 
 // Dynamic variables from the server get passed in via dynamically served
 // "index.html" that sets the dynvars element of the window object.
@@ -40,7 +40,7 @@ declare global {
 }
 
 const chapters: HelpViewerChapter[] = [
-    { title: (window.dynvars && window.dynvars.brand) || 'Ghostwire', chapter: ch('Ghostwire'), slug: 'gw' },
+    { title: (window.dynvars && window.dynvars.brand as string) || 'Ghostwire', chapter: ch('Ghostwire'), slug: 'gw' },
     { title: 'Discovery/Refresh', chapter: ch('Refresh'), slug: 'refresh' },
     { title: 'IP Stacks Galore!', chapter: ch('Badge'), slug: 'badge' },
     { title: 'Technical Features', chapter: ch('Technical'), slug: 'tech' },
@@ -56,11 +56,17 @@ const chapters: HelpViewerChapter[] = [
 
 const markdowner = (props: MuiMarkdownProps) => (<GwMarkdown {...props} />)
 
+interface ExampleProps {
+    children: ReactNode
+    p: string | number
+    card: object
+}
+
 /**
  * Shortcode component rendering a Mui card with the specified children inside
  * it. The card has a theme-based margin as well as internal padding.
  */
-const Example = ({ children, p, card, ...otherprops }) => {
+const Example = ({ children, p, card, ...otherprops }: ExampleProps) => {
     return (
         <Box m={2} {...otherprops}>
             <Card {...card}>
@@ -75,7 +81,7 @@ const Example = ({ children, p, card, ...otherprops }) => {
 /**
  * Renders a "fake" application bar for use in help examples.
  */
-const FakeAppBar = ({ children }) => {
+const FakeAppBar = ({ children }: { children: ReactNode }) => {
     const theme = useTheme()
     return (
         <Example p={2} card={{
@@ -92,7 +98,12 @@ const FakeAppBar = ({ children }) => {
     )
 }
 
-const HydrateAtoms = ({ initialValues, children }) => {
+interface HydrateAtomsProps {
+    initialValues: [WritableAtom<unknown, any[], any>, unknown][] // eslint-disable-line @typescript-eslint/no-explicit-any
+    children: ReactNode
+}
+
+const HydrateAtoms = ({ initialValues, children }: HydrateAtomsProps) => {
     useHydrateAtoms(initialValues)
     return children
 }
@@ -128,7 +139,7 @@ export const Help = () => {
                 chapters={chapters}
                 baseroute="/help"
                 markdowner={markdowner}
-                shortcodes={shortcodes}
+                shortcodes={shortcodes as { [key: string]: React.ComponentType<unknown> }}
                 style={{ overflow: 'visible' }}
             />
         </HydrateAtoms>
