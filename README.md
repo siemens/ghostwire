@@ -18,8 +18,16 @@
 _Linux_ hosts – and can be deployed as a REST service or consumed as a Go
 module. It comes with its unique container engine discovery that auto-discovers
 multiple container engines in hosts, including engines _inside containers_.
-Currently supported container engines are containerd, Docker, and optionally
-podman. Ghostwire is Kubernetes-aware and even understands that KinD simulates
+
+Currently supported container engines are:
+- [containerd](https://containerd.io), 
+- [Docker](https://docker.com),
+- [CRI-O](https://cri-o.io),
+- [podman](https://podman.io) – when set up to be socket-activated by `systemd`.
+  Please note that we only support the Docker-compatible API, but not the
+  podman-proprietary features, such as podman pods.
+
+Ghostwire is also Kubernetes-aware and even understands that KinD simulates
 Kubernetes nodes in Docker containers.
 
 ## Quick Start
@@ -62,7 +70,7 @@ all with the containers and processes serving them. Other Docker containers
 addressable from your container using DNS names for Docker services and
 containers.
 
-## Real System State, Not Good Intention Configuration Data
+## See the Current System State
 
 Information is gathered as much as possible from Linux APIs in order to show the
 current _effective_ state, instead of potentially invalid or stale engineering
@@ -86,6 +94,7 @@ repositories:
 - [Containershark Extcap plugin for
   Wireshark](https://github.com/siemens/cshargextcap)
 - support modules:
+  - [turtlefinder](https://github.com/siemens/turtlefinder)
   - [csharg (CLI)](https://github.com/siemens/csharg)
   - [mobydig](https://github.com/siemens/mobydig)
   - [ieddata](https://github.com/siemens/ieddata)
@@ -143,11 +152,8 @@ For more information, please refer to the (docsified) documentation in `docs/`.
   install --global yarn`) are installed.
 
 ```bash
-# build gostwire service binary.
-make build
-# build static webui assets that the service will serve.
-(cd webui && yarn install && yarn build)
-# start the gostwire service, exposed at port 5000.
+make yarnsetup # if not done already so
+make build-embedded
 ./gostwire --debug
 ```
 

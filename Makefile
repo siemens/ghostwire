@@ -125,5 +125,5 @@ yarnsetup: ## set up yarn v4 correctly
 	rm -rf node_modules && \
 	yarn set version berry && \
 	yarn config set nodeLinker node-modules && \
-	yarn install && \
-	yarn eslint --init
+	yarn install
+	#yarn eslint --init
