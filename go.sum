@@ -301,8 +301,8 @@ github.com/siemens/ieddata v1.0.0 h1:jS4w5G/XBZ28s48IQfFmocNYkXrTQvMVzCgaWKSXqmg
 github.com/siemens/ieddata v1.0.0/go.mod h1:klA6Gx4K55NrSp8re+rZb7XuCIL8vI5jWgRYfoghiE4=
 github.com/siemens/mobydig v1.0.0 h1:kOZ0QYwXGxAuhT+A3Dz1QGoaovxyywVvwEvLC9yETkc=
 github.com/siemens/mobydig v1.0.0/go.mod h1:TtROWS4S7mfaAFUGmbhaZ9jnUFsdfLWYnLPTi+44g4Q=
-github.com/siemens/turtlefinder v1.1.1 h1:sE0a+vuFqZ1Aic8tGFqdvTaILhQKwGBbqvh02U6uF6c=
-github.com/siemens/turtlefinder v1.1.1/go.mod h1:86CvMPmIMKtFe26MuABSad+iIUsEPOXEbv35wYXZock=
+github.com/siemens/turtlefinder v1.1.2 h1:cSzhUzNMb389+CC4+8TGpvq4yx1MsYYLI2GsWpa3EO8=
+github.com/siemens/turtlefinder v1.1.2/go.mod h1:86CvMPmIMKtFe26MuABSad+iIUsEPOXEbv35wYXZock=
 github.com/sirupsen/logrus v1.8.1/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
