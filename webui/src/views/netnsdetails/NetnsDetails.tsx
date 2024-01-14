@@ -21,6 +21,7 @@ import { Ghost } from 'components/ghost'
 import { ContaineeBadge } from 'components/containeebadge'
 import RefreshButton from 'components/refreshbutton'
 import Metadata from 'components/metadata';
+import { NifInfoModalProvider } from 'components/nifinfomodal';
 
 
 const SeeAlsoList = styled('ul')(({ theme }) => ({
@@ -110,18 +111,20 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
 
     return (netns &&
         <Box m={0} flex={1} overflow="auto">
-            <div ref={ref} /* so we can take a snapshot */>
-                <Metadata />
-                <Box m={1}>
-                    <NetnsDetailCard
-                        netns={netns}
-                        filterLo={!showLoopbacks}
-                        filterMAC={!showMAC}
-                        families={families}
-                        canMinimize
-                    />
-                </Box>
-            </div>
+            <NifInfoModalProvider>
+                <div ref={ref} /* so we can take a snapshot */>
+                    <Metadata />
+                    <Box m={1}>
+                        <NetnsDetailCard
+                            netns={netns}
+                            filterLo={!showLoopbacks}
+                            filterMAC={!showMAC}
+                            families={families}
+                            canMinimize
+                        />
+                    </Box>
+                </div>
+            </NifInfoModalProvider>
         </Box >)
         || (<Ghost m={1}>
             <div ref={ref}>

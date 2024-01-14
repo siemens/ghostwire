@@ -16,7 +16,7 @@ import { useAtom } from 'jotai'
 import { showNamespaceIdsAtom } from 'views/settings'
 import { capsnames } from 'utils/capabilities'
 import Capability from 'components/capability/Capability'
-import { styled } from '@mui/material';
+import { styled } from '@mui/material'
 
 
 // Set the things applying to all child elements within a single containee

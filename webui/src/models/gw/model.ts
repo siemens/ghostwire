@@ -5,7 +5,7 @@
 import JSBI from 'jsbi'
 
 import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
-import { NetworkInterface, OperationalState, SRIOVRole, TapTunMode, TapTunProcessor } from './nif'
+import { NetworkInterface, NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, TapTunProcessor } from './nif'
 import { Process } from './process'
 import { AddressFamily, addressFamilyByName, IpAddress } from './address'
 import { IpRoute } from './route'
@@ -196,6 +196,7 @@ export const fromjson = (jsondata: JSONObject) => {
                     kind: jnif.kind as string,
                     operstate: jnif.operstate as OperationalState,
                     isPhysical: jnif.physical as boolean,
+                    driverinfo: jnif.driverinfo as unknown as NifDriverInfo,
                     isPromiscuous: jnif.promisc as boolean,
                     sriovrole: jnif['sr-iov-role'] as SRIOVRole || SRIOVRole.None,
                     addresses: [],
