@@ -21,15 +21,16 @@ export interface TunTapDetailsProps {
 export const TunTapDetails = ({ nif, className }: TunTapDetailsProps) => {
     const tuntap = nif.tuntapDetails
 
-    if (!tuntap || !nif.tuntapDetails || nif.tuntapDetails.processors.length) {
+    if (!tuntap || !tuntap.processors.length) {
         return null
     }
     return (<div className={className || ''}>
-        {nif.tuntapDetails.processors
+        {tuntap.processors
             .sort((proc1, proc2) => proc1.pid - proc2.pid)
             .map((proc) =>
                 <div key={proc.pid}>
                     <Process
+                        key={proc.pid} 
                         cmdline={proc.cmdline}
                         containee={proc.containee}
                         pid={proc.pid} />
