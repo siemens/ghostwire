@@ -47,6 +47,7 @@ type NifAttrs struct {
 	Index       int               // interface index.
 	State       OperState         // operational state.
 	Physical    bool              // or more metaphorical: it has an associated driver.
+	DriverInfo  NifDriverInfo     // ethtool-derived nif driver information.
 	Promiscuous bool              // does snoop all traffic?
 	Labels      model.Labels      // optional labels attached by Gostwire decorators.
 	L2Addr      net.HardwareAddr  // data-link layer (aka "hardware") address.
@@ -60,8 +61,25 @@ type NifAttrs struct {
 	PF     Interface  // when interface is an SR-IOV VF.
 
 	// Low-level, not available after unmarshalling.
-	Link    netlink.Link // low-level netlink information about this interface.
-	BusAddr string
+	Link netlink.Link // low-level netlink information about this interface.
+}
+
+// NifDriverInfo contains some of the general driver and device information
+// returned by the ethtool API.
+//
+// The Driver name is empty in case of severl kinds of virtual devices. However,
+// we've seen “taptun” kinds in the wild that are actually (pseudo) “HW” virtual
+// devices that otherwise act like the Linux kernel's “taptun”'s, such as in
+// WSL2 configurations, where they wire up the Linux VM with its Windows host.
+//
+// The fields mirror some, but not all, of the ethtoo_drvinfo fields, see also:
+// https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/ethtool.h#L185
+type NifDriverInfo struct {
+	Driver      string `json:"driver"`                // Driver short name, cannot be empty, except that it can.
+	Version     string `json:"version,omitempty"`     // Driver version string, but can be empty.
+	FwVersion   string `json:"fwversion,omitempty"`   // Driver-specific firmware version string, can be empty, except that it might show "N/A" instead.
+	BusInfo     string `json:"businfo,omitempty"`     // Device bus address, but may be empty.
+	EromVersion string `json:"eromversion,omitempty"` // Driver-specific expansion ROM version string, can be empty.
 }
 
 // SRIOVRole identifies network interfaces that are SR-IOV PFs or VFs.
@@ -234,10 +252,15 @@ func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 		log.Errorf("cannot query ethtool API driver information for nif %q, reason: %s", n.Name, err.Error())
 		return
 	}
+	n.DriverInfo.Driver = strings.TrimRight(string(driverInfo.Driver[:]), "\x00")
+	n.DriverInfo.Version = strings.TrimRight(string(driverInfo.Version[:]), "\x00")
+	n.DriverInfo.FwVersion = strings.TrimRight(string(driverInfo.Fw_version[:]), "\x00")
+	n.DriverInfo.EromVersion = strings.TrimRight(string(driverInfo.Erom_version[:]), "\x00")
 	// Fun fact: the ethtool API returns "N/A" for the bus address when trying
-	// to use it on a virtual network interface :)
-	n.BusAddr = strings.TrimRight(string(driverInfo.Bus_info[:]), "\x00")
-	log.Debugf("physical network interface %s has device bus address: %s", n.Name, n.BusAddr)
+	// to use it on some kinds of virtual network interfaces, but on others it
+	// does return driver information :)
+	n.DriverInfo.BusInfo = strings.TrimRight(string(driverInfo.Bus_info[:]), "\x00")
+	log.Debugf("physical network interface %s has device bus address: %s", n.Name, n.DriverInfo.BusInfo)
 }
 
 // SysfsBusPath returns a device directory path for the physical device of this
@@ -246,7 +269,7 @@ func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 // Note: this is currently needed only for PCI(e) devices and thus does not work
 // correctly for other busses, such as USB.
 func (n *NifAttrs) SysfsBusPath() string {
-	return "/sys/bus/pci/devices/" + n.BusAddr
+	return "/sys/bus/pci/devices/" + n.DriverInfo.BusInfo
 }
 
 // ResolveRelations resolves relations to other network interfaces. Please note

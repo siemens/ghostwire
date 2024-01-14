@@ -16,26 +16,27 @@ import (
 // networkInterface is the API v1 JSON representation of an individual network
 // interface.
 type networkInterface struct {
-	ID            string            `json:"id"`
-	Kind          string            `json:"kind"`
-	Name          string            `json:"name"`
-	Alias         string            `json:"alias,omitempty"`
-	Index         int               `json:"index"`
-	Addresses     addresses         `json:"addresses"`
-	Operstate     string            `json:"operstate"`
-	Physical      bool              `json:"physical"`
-	Promiscuous   bool              `json:"promisc"`
-	Labels        model.Labels      `json:"labels,omitempty"`
-	Master        *nifRef           `json:"master,omitempty"`
-	MacvlanMaster *nifRef           `json:"macvlan,omitempty"` // admittedly stupid naming.
-	Macvlans      []*nifRef         `json:"macvlans,omitempty"`
-	Slaves        []*nifRef         `json:"slaves,omitempty"`
-	Peer          *peerNifRef       `json:"peer,omitempty"`
-	TunTap        *tuntapConfig     `json:"tuntap,omitempty"`
-	Vxlan         *vxlanConfig      `json:"vxlan,omitempty"`
-	Vlan          *vlanConfig       `json:"vlan,omitempty"`
-	SRIOVRole     network.SRIOVRole `json:"sr-iov-role,omitempty"`
-	PF            *nifRef           `json:"pf,omitempty"`
+	ID            string                `json:"id"`
+	Kind          string                `json:"kind"`
+	Name          string                `json:"name"`
+	Alias         string                `json:"alias,omitempty"`
+	Index         int                   `json:"index"`
+	Addresses     addresses             `json:"addresses"`
+	Operstate     string                `json:"operstate"`
+	Physical      bool                  `json:"physical"`
+	DriverInfo    network.NifDriverInfo `json:"driverinfo"`
+	Promiscuous   bool                  `json:"promisc"`
+	Labels        model.Labels          `json:"labels,omitempty"`
+	Master        *nifRef               `json:"master,omitempty"`
+	MacvlanMaster *nifRef               `json:"macvlan,omitempty"` // admittedly stupid naming.
+	Macvlans      []*nifRef             `json:"macvlans,omitempty"`
+	Slaves        []*nifRef             `json:"slaves,omitempty"`
+	Peer          *peerNifRef           `json:"peer,omitempty"`
+	TunTap        *tuntapConfig         `json:"tuntap,omitempty"`
+	Vxlan         *vxlanConfig          `json:"vxlan,omitempty"`
+	Vlan          *vlanConfig           `json:"vlan,omitempty"`
+	SRIOVRole     network.SRIOVRole     `json:"sr-iov-role,omitempty"`
+	PF            *nifRef               `json:"pf,omitempty"`
 }
 
 type addresses struct {
@@ -196,22 +197,23 @@ func newNif(nif network.Interface) networkInterface {
 		master = newNifRef(vl.Master)
 	}
 
-	nifa := nif.Nif()
+	nifattrs := nif.Nif()
 	return networkInterface{
 		ID:    nifID(nif),
-		Name:  nifa.Name,
-		Alias: nifa.Alias,
-		Index: nifa.Index,
-		Kind:  nifa.Kind,
+		Name:  nifattrs.Name,
+		Alias: nifattrs.Alias,
+		Index: nifattrs.Index,
+		Kind:  nifattrs.Kind,
 		Addresses: addresses{
-			MAC:  nifa.L2Addr.String(),
-			IPv4: nifa.Addrsv4,
-			IPv6: nifa.Addrsv6,
+			MAC:  nifattrs.L2Addr.String(),
+			IPv4: nifattrs.Addrsv4,
+			IPv6: nifattrs.Addrsv6,
 		},
-		Physical:      nifa.Physical,
-		Promiscuous:   nifa.Promiscuous,
-		Operstate:     nifa.State.Name(),
-		Labels:        nifa.Labels,
+		Physical:      nifattrs.Physical,
+		DriverInfo:    nifattrs.DriverInfo,
+		Promiscuous:   nifattrs.Promiscuous,
+		Operstate:     nifattrs.State.Name(),
+		Labels:        nifattrs.Labels,
 		Master:        master,
 		MacvlanMaster: macvlanmaster,
 		Macvlans:      macvlans,
@@ -220,7 +222,7 @@ func newNif(nif network.Interface) networkInterface {
 		Vxlan:         vxlancfg,
 		TunTap:        tuntapcfg,
 		Vlan:          vlancfg,
-		SRIOVRole:     nifa.SRIOVRole,
+		SRIOVRole:     nifattrs.SRIOVRole,
 		PF:            pf,
 	}
 }

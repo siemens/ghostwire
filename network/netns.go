@@ -584,7 +584,7 @@ func resolveSRIOVTopology(netspaces NetworkNamespaces) {
 	sriovNifs := map[string]Interface{}
 	for _, netns := range netspaces {
 		for _, nif := range netns.Nifs {
-			busAddr := nif.Nif().BusAddr
+			busAddr := nif.Nif().DriverInfo.BusInfo
 			if busAddr == "" {
 				continue
 			}
