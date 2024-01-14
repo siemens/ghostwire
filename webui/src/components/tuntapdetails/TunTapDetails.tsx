@@ -28,9 +28,8 @@ export const TunTapDetails = ({ nif, className }: TunTapDetailsProps) => {
         {tuntap.processors
             .sort((proc1, proc2) => proc1.pid - proc2.pid)
             .map((proc) =>
-                <div key={proc.pid}>
+                <div key={`${nif.name}-${proc.pid}`} >
                     <Process
-                        key={proc.pid} 
                         cmdline={proc.cmdline}
                         containee={proc.containee}
                         pid={proc.pid} />
