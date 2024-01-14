@@ -50,10 +50,10 @@ export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
     if (containee) {
         if (isContainer(containee) && containee.pod) {
             // This is a "pot'ed" container...
-            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }), containee.pod.name])
+            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }) as JSX.Element, containee.pod.name])
         }
         // Add the container details...
-        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' }), containeeDisplayName(containee)])
+        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' })  as JSX.Element, containeeDisplayName(containee)])
     }
     // And finally: the process details ... cmdline and PID.
     info.push(
