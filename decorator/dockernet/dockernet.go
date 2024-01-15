@@ -61,35 +61,37 @@ type dockerNetworks struct {
 	engineNetns *network.NetworkNamespace // ...of the managing Docker engine.
 }
 
-// makeDockerNetworks returns a dockerNetworks with the networks managed by the
-// specified Docker engine. If discovery failed, a zero dockerNetworks will be
-// returned instead, to be used in the engine map to signal that the asked the
-// engine, but it failed, so no more attempts to talk to it, please.
+// makeDockerNetworks returns a dockerNetworks object with the networks managed
+// by the specified Docker engine. If discovery failed, a zero-value
+// dockerNetworks object will be returned instead, to be used in the engine map
+// to signal that we asked the engine, but it failed, so no more attempts to
+// talk to it, please.
 func makeDockerNetworks(ctx context.Context, engine *model.ContainerEngine, allnetns network.NetworkNamespaces) (
 	docknets dockerNetworks,
 ) {
 	dockerclient, err := client.NewClientWithOpts(
 		client.WithHost(engine.API),
 		client.WithAPIVersionNegotiation())
-	if err == nil {
-		networks, _ := dockerclient.NetworkList(ctx, types.NetworkListOptions{})
-		_ = dockerclient.Close()
-		netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
-		docknets.networks = networks
-		docknets.engine = engine
-		docknets.engineNetns = allnetns[netnsid]
-		log.Infof("found %d Docker networks related to net:[%d] %s",
-			len(networks), docknets.engineNetns.ID().Ino, docknets.engineNetns.DisplayName())
-	} else {
-		log.Warnf("cannot discover Docker-managed networks, API %s", engine.API)
+	if err != nil {
+		log.Warnf("cannot discover Docker-managed networks from API %s, reason: %w",
+			engine.API, err)
+		return
 	}
+	networks, _ := dockerclient.NetworkList(ctx, types.NetworkListOptions{})
+	_ = dockerclient.Close()
+	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
+	docknets.networks = networks
+	docknets.engine = engine
+	docknets.engineNetns = allnetns[netnsid]
+	log.Infof("found %d Docker networks related to net:[%d] %s",
+		len(networks), docknets.engineNetns.ID().Ino, docknets.engineNetns.DisplayName())
 	return
 }
 
-// Decorate decorates bridge network interfaces with alias names that are the
-// names of their corresponding Docker "bridge" networks, where applicable (a
-// copy is stored also in the labels in Gostwire's key namespace). Additionally,
-// it copies over any user-defined network labels.
+// Decorate decorates bridge and macvlan master network interfaces with alias
+// names that are the names of their corresponding Docker “bridge” or “macvlan”
+// networks, where applicable (a copy is stored also in the labels in Gostwire's
+// key namespace). Additionally, it copies over any user-defined network labels.
 func Decorate(
 	ctx context.Context,
 	allnetns network.NetworkNamespaces,
