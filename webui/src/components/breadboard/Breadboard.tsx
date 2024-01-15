@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo, LegacyRef } from 'react'
+import React, { useState, useRef, useMemo, LegacyRef, useEffect } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
@@ -285,7 +285,8 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
 
     const breadboardref = useRef<HTMLDivElement>(null)
 
-    const wires = extractWiring(netns, domIdBase)
+    const prevnetnsref = useRef<NetworkNamespaces | NetworkNamespace[] | NetworkNamespace | null>(null)
+    const [generation, setGeneration] = useState(0)
 
     // beautiful react hooks to the (layouting) rescue, as they offer us a slick
     // resize observer with integrated debouncing/throttling. We need to
@@ -297,13 +298,22 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     // shuffle the wired network interfaces around) and we need to follow.
     const contentref = useRef<HTMLElement>(null)
     const contentRect = useResizeObserver(contentref, 100/*ms*/)
-    const layoutToken = contentRect ? `${contentRect.width}x${contentRect.height}` : 0
+    const layoutToken = contentRect 
+        ? `${contentRect.width}x${contentRect.height}-${generation}` 
+        : generation.toString()
 
     const contentMemo = useMemo(() => (
         <ContentPane id={nifContainerDomId} ref={contentref as LegacyRef<HTMLDivElement>}>
             {children}
         </ContentPane>
     ), [nifContainerDomId, children])
+
+    useEffect(() => {
+        prevnetnsref.current = netns
+        setGeneration(generation+1)
+    }, [netns])
+
+    const wires = extractWiring(netns, domIdBase)
 
     // tag or untag the wires identified by their wire classes as "hot" (to
     // highlight) or "cold" (normal appearance).
