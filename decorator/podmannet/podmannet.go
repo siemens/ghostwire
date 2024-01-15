@@ -81,7 +81,7 @@ func Decorate(
 	allprocs model.ProcessTable,
 	engines []*model.ContainerEngine,
 ) {
-	log.Debugf("discovering Docker-managed networks")
+	log.Debugf("discovering podman-managed networks")
 	// As some container engines currently might not manage any container
 	// workload, we will prime the container engine networks cache with the
 	// networks discovered from then engines we're told are under supervision.
