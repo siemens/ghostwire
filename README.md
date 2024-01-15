@@ -18,14 +18,18 @@
 _Linux_ hosts – and can be deployed as a REST service or consumed as a Go
 module. It comes with its unique container engine discovery that auto-discovers
 multiple container engines in hosts, including engines _inside containers_.
+Ghostwire not only understands containers, but also Composer projects and
+Kubernetes pods.
 
 Currently supported container engines are:
 - [containerd](https://containerd.io), 
 - [Docker](https://docker.com),
 - [CRI-O](https://cri-o.io),
-- [podman](https://podman.io) – when set up to be socket-activated by `systemd`.
+- [podman](https://podman.io) – when set up to be socket-activated by `systemd`
+  (see also [podman Quick Start: Starting the service with
+  systemd](https://github.com/containers/podman/blob/main/pkg/bindings/README.md#quick-start)).
   Please note that we only support the Docker-compatible API, but not the
-  podman-proprietary features, such as podman pods.
+  podman-proprietary workload features, such as podman pods.
 
 Ghostwire is also Kubernetes-aware and even understands that KinD simulates
 Kubernetes nodes in Docker containers.
