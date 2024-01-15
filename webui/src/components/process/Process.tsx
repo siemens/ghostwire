@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
+import React from 'react'
+
 import { styled } from '@mui/material'
 import { ProcessDetails } from "components/procdetails"
 import { PrimitiveContainee, containeeDisplayName, isContainer } from "models/gw"
@@ -19,7 +21,7 @@ const Details = styled('span')(({ theme }) => ({
     },
 }))
 
-const DetailsOfProcess = styled('span')(({ theme }) => ({
+const DetailsOfProcess = styled('span')(() => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
 }))
@@ -39,19 +41,19 @@ export interface ProcessProps {
  * information, if any.
  */
 export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
-    let info = []
+    const info: (string | JSX.Element | (string | JSX.Element)[])[] = []
 
     // Good gracious! That took a long time to figure out that this seemingly
     // function is a source of non-unique keys, grmpf. Adding keys to each and
     // every array item finally silences the warnings.
 
-    if (!!containee) {
+    if (containee) {
         if (isContainer(containee) && containee.pod) {
             // This is a "pot'ed" container...
-            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }), containee.pod.name])
+            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }) as JSX.Element, containee.pod.name])
         }
         // Add the container details...
-        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' }), containeeDisplayName(containee)])
+        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' })  as JSX.Element, containeeDisplayName(containee)])
     }
     // And finally: the process details ... cmdline and PID.
     info.push(
@@ -66,7 +68,7 @@ export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
             }
             list.push(element)
             return list
-        }, []).flat()}
+        }, [] as (string | JSX.Element | (string | JSX.Element)[])[]).flat()}
     </Details>
 
 } 

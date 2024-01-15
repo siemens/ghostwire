@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { Container, GHOSTWIRE_LABEL_ROOT, isContainer } from "models/gw"
+import { Container, GHOSTWIRE_LABEL_ROOT, NetworkInterface, isContainer } from "models/gw"
 
 // Service represents a ("neighborhood") service reachable on a set of networks,
 // and with the individual containers powering the service.
@@ -22,9 +22,9 @@ const attachedNetworks = (cntr: Container) => {
         .filter(nif => nif.kind === 'veth'
             && nif.peer && nif.peer.master
             && !!nif.peer.master.labels[GHOSTWIRE_LABEL_ROOT + 'network/name'])
-        .map(nif => nif.peer.master)
-        .filter((bridge, pos, arr) => arr.indexOf(bridge) === pos)
-    const networks = bridges.filter(br => !!br.labels[GHOSTWIRE_LABEL_ROOT + 'network/name'])
+        .map(nif => nif.peer?.master)
+        .filter((bridge, pos, arr) => arr.indexOf(bridge) === pos) as NetworkInterface[]
+    const networks = bridges.filter(br => br && !!br.labels[GHOSTWIRE_LABEL_ROOT + 'network/name'])
     return networks
 }
 
@@ -78,13 +78,13 @@ export const neighborhoodServices = (start: Container) => {
         return []
     }
     const services = attachedNetworks(start)
-        .filter(net => net.labels[GHOSTWIRE_LABEL_ROOT + 'network/default-bridge'] !== 'true') // skip Docker's default network/bridge
+        .filter(net => net?.labels[GHOSTWIRE_LABEL_ROOT + 'network/default-bridge'] !== 'true') // skip Docker's default network/bridge
         .map(net => {
             const networkname = net.labels[GHOSTWIRE_LABEL_ROOT + 'network/name']
             const services: { [key: string]: Service } = {}
             net.slaves
-                .filter(nif => nif.kind === 'veth' && nif.peer)
-                .map(nif => nif.peer.netns.containers.filter(cntr => isContainer(cntr)) as Container[])
+                ?.filter(nif => nif.kind === 'veth' && nif.peer)
+                .map(nif => nif.peer?.netns.containers.filter(cntr => isContainer(cntr)) as Container[])
                 .reduce((cntrs, morecntrs) => mergeContainers(cntrs, morecntrs), [])
                 .forEach(cntr => {
                     // Nota bene: consider service-less containers to be

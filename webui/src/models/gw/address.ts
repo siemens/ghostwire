@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import * as ip6addr from 'ip6addr'
+import { parse } from 'ipaddr.js'
 
 
 export enum AddressFamily {
@@ -72,10 +72,14 @@ export const orderAddresses = (addr1: IpAddress, addr2: IpAddress) => {
     if (addr1.family === AddressFamily.MAC) {
         return addr1.address.localeCompare(addr2.address)
     }
-    // We could have used ip6addr.compareCIDR, but then we would need to
-    // interpolate the "addr/prefix" strings, so we can more easily do the
-    // comparism for the prefix lengths separately and only when we really need
-    // it.
-    const order = ip6addr.compare(addr1.address, addr2.address)
+    const ip6addr1 = parse(addr1.address).toByteArray()
+    const ip6addr2 = parse(addr2.address).toByteArray()
+    let order: number = 0
+    for (let idx = 0; idx < 15; idx++) {
+        order = ip6addr1[idx] - ip6addr2[idx]
+        if (order) {
+            break
+        }
+    }
     return order || (addr1.prefixlen - addr2.prefixlen)
 }

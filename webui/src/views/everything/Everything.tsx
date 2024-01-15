@@ -104,5 +104,6 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
             </Typography>
         </Ghost>)
 })
+Everything.displayName = "Everything"
 
 export default Everything

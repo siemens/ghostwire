@@ -8,7 +8,7 @@ import { dockerdefaultcaps } from 'utils/capabilities'
 import { styled } from '@mui/material';
 
 
-const DefaultCap = styled('span')(({ theme }) => ({
+const DefaultCap = styled('span')(() => ({
 }))
 
 const NonDefaultCap = styled(DefaultCap)(({ theme }) => ({

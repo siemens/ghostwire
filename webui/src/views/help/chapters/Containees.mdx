@@ -9,6 +9,17 @@ export const debugme = {...containerBox, name: 'Bug_Me_1', flavor: ContainerFlav
   [GHOSTWIRE_LABEL_ROOT+'ieapp/debuggable']: '1',
 }}
 
+import Container from 'icons/containees/Container.tsx';
+import CRI from 'icons/containees/CRI.tsx';
+import Docker from 'icons/containees/Docker.tsx';
+import DockerPlugin from 'icons/containees/DockerManagedPlugin.tsx';
+import IERuntime from 'icons/containees/IERuntime.tsx';
+import Podman from 'icons/containees/Podman.tsx';
+
+import ComposerProject from 'icons/containees/ComposerProject.tsx';
+import IEApp from 'icons/containees/IEApp.tsx';
+import K8sPod from 'icons/containees/K8sPod.tsx';
+
 # Containees
 
 In short, "containees" is our general term for lumping together *pods*,
@@ -36,3 +47,33 @@ able to detect any trace of them anymore.
 
 > **Note:** multiple containees can share the same virtual IP stack (network
   namespace).
+
+## Container Types
+
+And now more specifically to the different types of containers that <Brand/>
+differentiates:
+
+| Symbol | Type of Container |
+| --- | --- |
+| <Docker/> | [Docker](https://docker.com)/[Moby](https://https://mobyproject.org/) |
+| <DockerPlugin/> | Docker managed plugin |
+| <CRI/> | CRI (Kubernetes Container Runtime Interface) |
+| <Podman/> | [podman](https://podman.io) |
+| <IERuntime/> | Siemens Industrial Edge runtime |
+| <Container/> | unknown container type |
+
+## Container Groups
+
+Some containers may be "grouped"; <Brand/> then shows different symbols
+depending on the type of container group, together with the group name.
+
+| Symbol | Type of Container Group |
+| --- | --- |
+| <ComposerProject/> | (Docker) [compose](https://compose-spec.io/) project |
+| <IEApp/> | Siemens Industrial Edge App |
+| <K8sPod/> | Kubernetes Pod |
+
+> **Note:** <Brand/> supports only the Docker-compatible functionality of
+> podman. Podman pods are neither discovered nor shown as such – instead, their
+> individual containers (including the infrastructure/sandbox container) are
+> shown only.

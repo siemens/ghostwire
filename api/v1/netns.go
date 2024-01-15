@@ -14,9 +14,12 @@ import (
 
 	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/turtlefinder"
+	"github.com/siemens/turtlefinder/activator/podman"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/watcher/containerd"
+	"github.com/thediveo/whalewatcher/watcher/cri"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -320,6 +323,8 @@ func v1ContainerType(typ string) string {
 // identifiers usually use a domain name, such as "docker.com", instead of plain
 // and unscoped identifiers, such as "docker".
 var containerTypesToV1 = map[string]string{
-	"docker.com":    "docker",
-	"containerd.io": "containerd",
+	moby.Type:       "docker",
+	containerd.Type: "containerd",
+	podman.Type:     "podman",
+	cri.Type:        "CRI",
 }

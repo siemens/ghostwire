@@ -9,7 +9,7 @@ import { styled } from '@mui/material'
 import LaunchIcon from '@mui/icons-material/Launch'
 
 
-const NixWieWegHier = styled('span')(({ theme }) => ({
+const NixWieWegHier = styled('span')(() => ({
     // In order to avoid line wraps immediately after the external link
     // icon, wrap (sic!) into a non-wrapping span...
     whiteSpace: 'nowrap',
@@ -22,7 +22,6 @@ const NixWieWegHier = styled('span')(({ theme }) => ({
     '& .MuiSvgIcon-root': {
         fontSize: 'inherit',
         verticalAlign: 'middle',
-        opacity: '60%',
     },
     '& .MuiSvgIcon-root.before': {
         marginRight: '0.1em',

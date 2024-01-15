@@ -32,11 +32,11 @@ const Lifetimes = styled('span')(({ theme }) => ({
     color: theme.palette.text.secondary,
 }))
 
-const Lifetime = styled('span')(({ theme }) => ({
+const Lifetime = styled('span')(() => ({
     whiteSpace: 'nowrap',
 }))
 
-const Addr = styled('span')(({ theme }) => ({
+const Addr = styled('span')(() => ({
     fontFamily: 'Roboto Mono',
 }))
 
@@ -147,7 +147,7 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
     const addressOnly =
         <Addr>
             {(plain && <>
-                {familyicon && <AddressIcon />}{address.address}
+                {familyicon && AddressIcon && <AddressIcon />}{address.address}
             </>) || (!isMAC && <>
                 {AddressIcon && <AddressIcon />}
                 <Prefix>{prefix}</Prefix>
@@ -155,7 +155,7 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
                 <PrefixLen>/{address.prefixlen}</PrefixLen>
             </>) || (address.address !== '00:00:00:00:00:00' &&
                 <>
-                    <AddressIcon />
+                    {AddressIcon && <AddressIcon />}
                     <MAC>{address.address}</MAC>
                 </>
                 )}
@@ -179,3 +179,4 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
         </AddressContainer>
     )
 })
+Address.displayName = "Address"

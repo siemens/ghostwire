@@ -17,7 +17,7 @@ import CapableIcon from 'icons/containeestates/Capable'
 
 // Obviously, there is quite some styling going on here in order to render
 // badges for box entities, such containers, stand-alone processes, et cetera.
-const Badge = styled('div')(({ theme }) => ({
+const Badge = styled('div')(() => ({
     display: 'inline-block',
 }))
 

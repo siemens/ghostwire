@@ -31,6 +31,7 @@ export interface NetworkInterface {
     operstate: OperationalState /** operational state of network interface. */
     /** true if not a virtual interface, but has (maybe virtual) hardware attached. */
     isPhysical: boolean
+    driverinfo: NifDriverInfo
     isPromiscuous: boolean /** true if in promiscuous mode. */
     sriovrole: SRIOVRole /** SR-IOV role PF or VF, if applicable. */
 
@@ -54,14 +55,23 @@ export interface NetworkInterface {
     vlanDetails?: VlanDetails
 }
 
+export interface NifDriverInfo {
+    driver: string
+    version?: string
+    fwversion?: string
+    businfo?: string
+    eromversion?: string
+}
+
 /**
  * Type guard for `NetworkInterface` objects. Returns true only if the given
  * object is a network interface object, otherwise false.
  *
  * @param nif network interface object to be type-guarded.
  */
-export const isNetworkInterface = (nif: object): nif is NetworkInterface => {
-    return !!nif && nif['netns'] !== undefined && nif['index'] !== undefined
+export const isNetworkInterface = (nif: unknown): nif is NetworkInterface => {
+    return (nif as NetworkInterface)?.netns !== undefined
+        && (nif as NetworkInterface)?.index !== undefined
 }
 
 export enum TapTunMode {

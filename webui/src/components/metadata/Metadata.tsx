@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { ReactNode } from 'react'
 import { atomWithStorage } from 'jotai/utils'
 import { Collapse, IconButton, styled } from '@mui/material'
 import { useDiscovery } from 'components/discovery'
@@ -35,7 +35,7 @@ const MetaName = styled('div')(({ theme }) => ({
     overflowWrap: 'break-word',
 }))
 
-const MetaValue = styled('div')(({ theme }) => ({
+const MetaValue = styled('div')(() => ({
     gridColumn: '2 / 3',
     minHeight: '24px', // ensures consistent height when no icon in value.
     alignSelf: 'baseline',
@@ -46,7 +46,7 @@ const MetaValue = styled('div')(({ theme }) => ({
 
 interface MetaRowProps {
     name: string
-    value: any
+    value: ReactNode
 }
 
 const MetaRow = ({ name, value }: MetaRowProps) => {
@@ -76,9 +76,9 @@ const Metadata = () => {
         discovery.metadata['osrel-version']
     ].join(" ")
 
-    const iedmeta = discovery.metadata["industrial-edge"] || {}
+    const iedmeta: { [key: string]: unknown } = (discovery.metadata["industrial-edge"] as { [key: string]: unknown }) || {}
 
-    const coresemversion = iedmeta.semversion || undefined
+    const coresemversion = iedmeta['semversion'] as string || undefined
 
     const engines = discovery.metadata["container-engines"]
         ? Object.values(discovery.metadata["container-engines"])
@@ -104,10 +104,10 @@ const Metadata = () => {
             </IconButton>
             <Collapse in={expanded} mountOnEnter={true} timeout="auto">
                 <MetadataTable>
-                    <MetaRow name="IE device name" value={iedmeta['device-name']} />
-                    <MetaRow name="Host name" value={discovery.metadata.hostname} />
+                    <MetaRow name="IE device name" value={iedmeta['device-name'] as string} />
+                    <MetaRow name="Host name" value={discovery.metadata.hostname as string} />
                     <MetaRow name="Host OS" value={hostos} />
-                    <MetaRow name="Kernel version" value={discovery.metadata['kernel-version']} />
+                    <MetaRow name="Kernel version" value={discovery.metadata['kernel-version'] as string} />
                     <MetaRow name="Industrial Edge runtime" value={coresemversion} />
                     <MetaRow name="IE device developer mode" value={iedmeta['developer-mode'] === 'true' ? 'enabled' : undefined} />
                     {engines}

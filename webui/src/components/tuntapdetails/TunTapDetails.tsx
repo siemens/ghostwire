@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
+import React from 'react'
+
 import { Process } from "components/process"
 import { NetworkInterface } from "models/gw"
 
@@ -19,14 +21,14 @@ export interface TunTapDetailsProps {
 export const TunTapDetails = ({ nif, className }: TunTapDetailsProps) => {
     const tuntap = nif.tuntapDetails
 
-    if (!tuntap || !nif.tuntapDetails.processors.length) {
+    if (!tuntap || !tuntap.processors.length) {
         return null
     }
     return (<div className={className || ''}>
-        {nif.tuntapDetails.processors
+        {tuntap.processors
             .sort((proc1, proc2) => proc1.pid - proc2.pid)
             .map((proc) =>
-                <div key={proc.pid}>
+                <div key={`${nif.name}-${proc.pid}`} >
                     <Process
                         cmdline={proc.cmdline}
                         containee={proc.containee}

@@ -118,7 +118,7 @@ func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	defer mntneer.Close()
 	netwConfigsDir, err := mntneer.Resolve(NetworkConfigurationsDir)
 	if err != nil {
-		log.Errorf("cannot resolve CNI plugins configuration path, reason: %s",
+		log.Infof("cannot resolve CNI plugins configuration path, reason: %s",
 			err.Error())
 		return nerdynets
 	}

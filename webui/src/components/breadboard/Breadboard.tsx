@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo } from 'react'
+import React, { useState, useRef, useMemo, LegacyRef, useEffect } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
@@ -111,14 +111,14 @@ const KitchenTable = styled('div')(({ theme }) => ({
 
 // Allow the content pane to grow as necessary, as to snatch up any free
 // horizontal room.
-const ContentPane = styled('div')(({ theme }) => ({
+const ContentPane = styled('div')(() => ({
     flexGrow: 1,
 }))
 
 // The wiring pane will automatically size itself horizontally to the
 // width needed in order to accommodate the wiring. This can be done only
 // programmatically, as SVG doesn't happen to do "auto" size calculations.
-const WiringPane = styled(Wiring)(({ theme }) => ({
+const WiringPane = styled(Wiring)(() => ({
     overflow: 'visible',
     flexGrow: 0,
     flexShrink: 0,
@@ -152,7 +152,7 @@ const extractWiring = (
 ) => {
     // To start with, bring the specified network namespace(s) into our
     // canonical form of an array of network namespaces.
-    var netnses: NetworkNamespace[]
+    let netnses: NetworkNamespace[]
     if (Array.isArray(netns)) {
         netnses = netns
     } else if ('netnsid' in netns) {
@@ -211,9 +211,9 @@ const extractWiring = (
                 case 'macvlan':
                     wires.set(nif, {
                         kind: nif.kind,
-                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.macvlan.operstate === OperationalState.Down),
+                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.macvlan!.operstate === OperationalState.Down),
                         nif1Id: domIdBase + nifId(nif),
-                        nif2Id: domIdBase + nifId(nif.macvlan),
+                        nif2Id: domIdBase + nifId(nif.macvlan!),
                     } as Wire)
                     break;
                 case 'vlan':
@@ -221,7 +221,7 @@ const extractWiring = (
                         kind: nif.kind,
                         operStateDown: nif.operstate === OperationalState.Down,
                         nif1Id: domIdBase + nifId(nif),
-                        nif2Id: domIdBase + nifId(nif.master),
+                        nif2Id: domIdBase + nifId(nif.master!),
                     } as Wire)
                     break;
                 case 'vxlan':
@@ -229,7 +229,7 @@ const extractWiring = (
                         kind: nif.kind,
                         operStateDown: nif.operstate === OperationalState.Down,
                         nif1Id: domIdBase + nifId(nif),
-                        nif2Id: domIdBase + nifId(nif.underlay),
+                        nif2Id: domIdBase + nifId(nif.underlay!),
                     } as Wire)
                     break;
             }
@@ -247,8 +247,8 @@ const extractWiring = (
  * @param el a DOM element, usually an event target object.
  * @param domIdBase DOM element ID context (namespace, hehe).
  */
-const locateTargetRelationClasses = (el: Element, domIdBase: string) => {
-    for (var hierarchy = 1; hierarchy <= 5 && el; hierarchy++) {
+const locateTargetRelationClasses = (el: Element | null, domIdBase: string) => {
+    for (let hierarchy = 1; hierarchy <= 5 && el; hierarchy++) {
         const classNames = [...el.classList]
         const relations = classNames
             .filter(className => isRelationClassName(domIdBase, className))
@@ -283,9 +283,10 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     const [hotWireClasses, setHotWireClasses] = useState<string[]>([])
     const [selected, setSelected] = useState(false)
 
-    const breadboardref = useRef()
+    const breadboardref = useRef<HTMLDivElement>(null)
 
-    const wires = extractWiring(netns, domIdBase)
+    const prevnetnsref = useRef<NetworkNamespaces | NetworkNamespace[] | NetworkNamespace | null>(null)
+    const [generation, setGeneration] = useState(0)
 
     // beautiful react hooks to the (layouting) rescue, as they offer us a slick
     // resize observer with integrated debouncing/throttling. We need to
@@ -295,25 +296,34 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     // the wires in those circumstances, we simply derive a "layout token"
     // changing whenever the dimensions of the content change (as this then can
     // shuffle the wired network interfaces around) and we need to follow.
-    const contentref = useRef()
+    const contentref = useRef<HTMLElement>(null)
     const contentRect = useResizeObserver(contentref, 100/*ms*/)
-    const layoutToken = contentRect ? `${contentRect.width}x${contentRect.height}` : 0
+    const layoutToken = contentRect 
+        ? `${contentRect.width}x${contentRect.height}-${generation}` 
+        : generation.toString()
 
     const contentMemo = useMemo(() => (
-        <ContentPane id={nifContainerDomId} ref={contentref}>
+        <ContentPane id={nifContainerDomId} ref={contentref as LegacyRef<HTMLDivElement>}>
             {children}
         </ContentPane>
     ), [nifContainerDomId, children])
+
+    useEffect(() => {
+        prevnetnsref.current = netns
+        setGeneration(generation+1)
+    }, [netns])
+
+    const wires = extractWiring(netns, domIdBase)
 
     // tag or untag the wires identified by their wire classes as "hot" (to
     // highlight) or "cold" (normal appearance).
     const tagElementsWithClasses = (wireClasses: string[], hot: boolean) => {
         const alreadyHotEls = hotWireClasses
-            .map(className => [...(breadboardref.current as HTMLDivElement).getElementsByClassName(className)])
+            .map(className => breadboardref.current ? [...breadboardref.current.getElementsByClassName(className)] : [])
             .flat()
         if (hot) {
             const els = wireClasses
-                .map(className => [...(breadboardref.current as HTMLDivElement).getElementsByClassName(className)])
+                .map(className => breadboardref.current ? [...breadboardref.current.getElementsByClassName(className)] : [])
                 .flat()
             // cool down wires that shouldn't be hot anymore but where Firefox
             // incorrectly swallows the corresponding mouse out events.
@@ -322,14 +332,14 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
                 .forEach(el => {
                     el.classList.remove('hot')
                     if (el instanceof SVGElement) {
-                        el.parentElement.classList.remove('hot')
+                        el.parentElement?.classList.remove('hot')
                     }
                 })
             // Highlight the new hot wire and network interface(s).
             els.forEach(el => {
                 el.classList.add('hot')
                 if (el instanceof SVGElement) {
-                    el.parentElement.classList.add('hot')
+                    el.parentElement?.classList.add('hot')
                 }
             })
             setHotWireClasses(wireClasses)
@@ -337,7 +347,7 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
             alreadyHotEls.forEach(el => {
                 el.classList.remove('hot')
                 if (el instanceof SVGElement) {
-                    el.parentElement.classList.remove('hot')
+                    el.parentElement?.classList.remove('hot')
                 }
             })
             setHotWireClasses([])
@@ -365,7 +375,7 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
             tagElementsWithClasses([], false)
             return
         }
-        tagElementsWithClasses(newHotWireClasses, hot)
+        tagElementsWithClasses(newHotWireClasses, hot || false)
     }
 
     const handleMouseOver = (e: React.MouseEvent) => {

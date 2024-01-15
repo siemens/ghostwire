@@ -65,7 +65,7 @@ export const showMACAtom = atomWithStorage(showMACKey, false)
 export const showIpv4Atom = atomWithStorage(showIpv4Key, true)
 export const showIpv6Atom = atomWithStorage(showIpv6Key, false) // this default is PAINFUL!
 export const showIpFamiliesAtom = atom((get) => {
-    let families = get(showIpv4Atom) ? [AddressFamily.IPv4] : []
+    const families = get(showIpv4Atom) ? [AddressFamily.IPv4] : []
     get(showIpv6Atom) && families.push(AddressFamily.IPv6)
     return families
 })

@@ -48,7 +48,7 @@ const ProjCard = styled(Card)(({ theme }) => ({
     },
 }))
 
-const AppTitle = styled("span")(({theme})=>({
+const AppTitle = styled("span")(()=>({
     fontStyle: "italic",
     paddingRight: "0.1em",
 }))

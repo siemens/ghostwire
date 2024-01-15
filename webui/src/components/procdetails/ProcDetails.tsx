@@ -2,15 +2,17 @@
 //
 // SPDX-License-Identifier: MIT
 
+import React from 'react'
+
 import { styled } from "@mui/material"
 import ProcessIcon from 'icons/Process'
 
-const Details = styled('span')(({ theme }) => ({
+const Details = styled('span')(() => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
 }))
 
-const Cmdline = styled('span')(({ theme }) => ({
+const Cmdline = styled('span')(() => ({
     maxWidth: '16em',
     // "overflow: hidden" needs either a block or inline-block, but in our
     // case we need an inline-block.
@@ -26,7 +28,7 @@ const Cmdline = styled('span')(({ theme }) => ({
     textOverflow: 'ellipsis',
 }))
 
-const PID = styled('span')(({ theme }) => ({
+const PID = styled('span')(() => ({
     // Keep the same alignment as for the (potentially clipped) command
     // information, as otherwise the rendered outcome will just suck.
     display: 'inline-block',

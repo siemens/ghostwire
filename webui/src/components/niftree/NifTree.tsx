@@ -5,7 +5,8 @@
 import React from 'react'
 import { TransitionGroup } from 'react-transition-group'
 
-import { Collapse, styled } from '@mui/material';
+import { Collapse, IconButton, Tooltip, styled } from '@mui/material'
+import InfoIcon from '@mui/icons-material/Info'
 
 import { AddressFamily, AddressFamilySet, PrimitiveContainee, NetworkInterface, NetworkNamespace, orderNifByName } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
@@ -13,7 +14,8 @@ import { RelatedNif } from 'components/relatednif'
 import { NifAddressList } from 'components/nifadresslist'
 import { VxlanDetails } from 'components/vxlandetails'
 import { NamespaceContainees } from 'components/namespacecontainees'
-import { TunTapDetails } from 'components/tuntapdetails';
+import { TunTapDetails } from 'components/tuntapdetails'
+import { useNifInfoModal } from 'components/nifinfomodal'
 
 
 // Indent of (1) nif properties, addresses, etc.; (2) sub-level nifs.
@@ -68,8 +70,12 @@ const TunTapInfo = styled(TunTapDetails)(({ theme }) => ({
     marginLeft: nifPropsIndent,
 }))
 
-const VxlanInfo = styled(VxlanDetails)(({ theme }) => ({
+const VxlanInfo = styled(VxlanDetails)(() => ({
     marginLeft: nifPropsIndent,
+}))
+
+const InfoButton = styled(IconButton)(() => ({
+    marginLeft: '0.25em',
 }))
 
 
@@ -103,6 +109,8 @@ interface SubordinateNifsProps {
  * component renders nothing.
  */
 const SubordinateNifs = ({ nif, filterMAC, families, onNavigation, onContaineeNavigation }: SubordinateNifsProps) => {
+    const setNifInfo = useNifInfoModal()
+
     const subnifs = (nif.slaves || [])
         .concat(nif.macvlans || [])
         .concat(nif.overlays || [])
@@ -133,6 +141,14 @@ const SubordinateNifs = ({ nif, filterMAC, families, onNavigation, onContaineeNa
                                 onClick={() => handleNavigation(nif)}
                                 families={families}
                             />
+                            <Tooltip title="network interface information">
+                                <InfoButton
+                                    size="small"
+                                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                        event.stopPropagation()
+                                        if (setNifInfo) setNifInfo(nif)
+                                    }}><InfoIcon /></InfoButton>
+                            </Tooltip>
                             {nif.master &&
                                 <RelatedNif
                                     nif={nif}
@@ -215,8 +231,10 @@ export interface NifTreeProps {
  * ports". This official terminology is also reflected in RTNETLINK API field
  * names, as well as network tools, such as the set "ip" (sub)commands.
  */
-export const NifTree = ({ netns, filterLo, filterMAC, families, onNavigation, onContaineeNavigation }: NifTreeProps) => {
-    families = families || [AddressFamily.IPv4, AddressFamily.IPv6]
+export const NifTree = ({ netns, filterLo, filterMAC, families: fam, onNavigation, onContaineeNavigation }: NifTreeProps) => {
+    const setNifInfo = useNifInfoModal()
+
+    const families = fam || [AddressFamily.IPv4, AddressFamily.IPv6]
 
     // List all network interfaces not acting as bridge ports.
     const toplevelnifs = Object.values(netns.nifs)
@@ -244,6 +262,14 @@ export const NifTree = ({ netns, filterLo, filterMAC, families, onNavigation, on
                                     families={families}
                                     capture
                                 />
+                                <Tooltip title="network interface information">
+                                    <InfoButton
+                                        size="small"
+                                        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                            event.stopPropagation()
+                                            if (setNifInfo) setNifInfo(nif)
+                                        }}><InfoIcon /></InfoButton>
+                                </Tooltip>
                                 <RelatedNif
                                     nif={nif}
                                     onNavigation={onNavigation}

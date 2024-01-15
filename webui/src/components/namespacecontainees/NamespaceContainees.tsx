@@ -6,7 +6,7 @@ import React from 'react'
 
 import { styled } from '@mui/material'
 
-import { PrimitiveContainee, NetworkNamespace, sortContaineesByName, containeesOfNetns, isPod } from 'models/gw'
+import { PrimitiveContainee, NetworkNamespace, sortContaineesByName, containeesOfNetns, isPod, Containee } from 'models/gw'
 import { ContaineeBadge } from 'components/containeebadge'
 
 
@@ -81,7 +81,7 @@ export const NamespaceContainees = ({ netns, limit, onNavigation }: NamespaceCon
                         key={containee.name}
                         containee={containee}
                         button
-                        onClick={handleBadgeClick}
+                        onClick={handleBadgeClick as (_: Containee) => void}
                     />
                 </span>))}{optionalEllipsis}
         </Containees>

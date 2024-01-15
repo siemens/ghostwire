@@ -102,7 +102,7 @@ const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
     let collapsedPrefix = false // signals when we collapse groups in the prefix.
     let prefix: string
     if (prefixNibbles) {
-        let p = []
+        const p = []
         for (let idx = 0; idx < prefixDigits.length; idx += 4) {
             p.push(trimZero(prefixDigits.slice(idx, idx + 4)))
         }
@@ -145,7 +145,7 @@ const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
     // ("::") and dropping leading zero nibbles in a group into consideration.
     // We start with grouping the IID nibbles into groups of four nibbles,
     // removing leading 0 nibbles while we're at it.
-    let i = []
+    const i = []
     for (let idx = prefixNibbles; idx < 32; idx += 4) {
         i.push(trimZero(exploded.slice(idx, idx + 4)))
     }

@@ -18,8 +18,13 @@ import { notDockerDefaultCaps } from 'utils/capabilities'
 export type Containee = PrimitiveContainee | Pod
 
 /** Type guard for any containee. */
-export const isContainee = (containee: any): containee is Containee => (
-    !!containee && (isPod(containee) || isSandbox(containee) || isBusybox(containee) || isContainer(containee))
+export const isContainee = (containee: unknown): containee is Containee => (
+    !!containee && (
+        isPod(containee as Containee)
+        || isSandbox(containee as Containee)
+        || isBusybox(containee as Containee)
+        || isContainer(containee as Containee)
+    )
 )
 
 /**
@@ -194,11 +199,13 @@ export enum ContaineeTypes {
 // has some Ghostwire v1 legacy...
 export enum ContainerFlavors {
     DOCKER = 'docker',
-    DOCKERPLUGIN= 'dockerplugin',
+    DOCKERPLUGIN = 'dockerplugin',
     CONTAINERD = 'containerd',
     IERUNTIME = 'ie-runtime',
     IEAPP = 'ie-app',
     KIND = 'kind',
+    PODMAN = 'podman',
+    CRI = 'CRI',
 }
 
 /**
@@ -251,7 +258,8 @@ export enum ContainerState {
     Restarted
 }
 
-// TODO: cover all states?
+// containerState converts a textual container state, such as "running" or
+// "paused" into its corresponding enumeration value.
 export const containerState = (cs: string) => {
     switch (cs) {
         case "exited":
@@ -264,6 +272,7 @@ export const containerState = (cs: string) => {
         case "restarted":
             return ContainerState.Restarted
     }
+    return ContainerState.Running
 }
 
 const containerStateStrings = {
@@ -278,18 +287,20 @@ export const containerStateString = (cs: ContainerState) => containerStateString
 
 // The container type description map only needs entries for container flavors
 // which cannot be covered generically.
-const containerFlavorDescriptions = {
+const containerFlavorDescriptions: { [key: string]: string } = {
     [ContainerFlavors.DOCKERPLUGIN]: 'Managed Docker Plugin',
     [ContainerFlavors.IERUNTIME]: 'Industrial Edge Runtime',
     [ContainerFlavors.IEAPP]: 'Industrial Edge App',
     [ContainerFlavors.KIND]: 'KinD Kuhbernetes node',
+    [ContainerFlavors.CRI]: 'k8s CRI-API',
+    [ContainerFlavors.PODMAN]: 'Podman',
 }
 
 export enum PodFlavors {
     K8SPOD = 'pod',
 }
 
-const podFlavorDescriptions = {
+const podFlavorDescriptions: { [key: string]: string } = {
     [PodFlavors.K8SPOD]: 'Kuhbernetes pod',
 }
 
@@ -317,7 +328,7 @@ export const containeeDescription = (containee: Containee) => {
     // It's a ... container!
     const flavor = containerFlavorDescriptions[containee.flavor]
         || (containee.flavor.charAt(0) + containee.flavor.slice(1))
-    const privileged = isPrivilegedContainer(containee)  ? 'privileged ' : ''
+    const privileged = isPrivilegedContainer(containee) ? 'privileged ' : ''
     const elevated = !privileged && isElevatedContainer(containee) ? ' with additional non-default capabilities' : ''
     return `${containerStateString(containee.state)} ${privileged}${flavor} container${elevated}`
 }
@@ -407,7 +418,7 @@ export type NetworkNamespaceOrProject = NetworkNamespace | Project
 /**
  * Returns true if project is a project (and not a network namespace).
  * 
- * @param project project object
+ * @param project project object.
  * @returns true if project is a project.
  */
 export const isProject = (project: NetworkNamespaceOrProject): project is Project => (
@@ -420,11 +431,18 @@ export enum ProjectFlavors {
     IEAPP = ContainerFlavors.IEAPP,
 }
 
-const projectFlavorDescriptions = {
+const projectFlavorDescriptions: { [key: string]: string } = {
     [ProjectFlavors.COMPOSER]: 'Docker composer project',
     [ProjectFlavors.IEAPP]: 'Industrial Edge app project',
 }
 
+/**
+ * Returns a description of the type of project specified, or an empty
+ * description if not known.
+ * 
+ * @param project project object.
+ * @returns descriptive text.
+ */
 export const projectDescription = (project: Project) => {
     if (!project) {
         return '???'
@@ -441,7 +459,7 @@ export const projectDescription = (project: Project) => {
  */
 export const inProject = (containee: Containee) => (
     (containee && isContainer(containee)
-    && containee.labels && containee.labels['com.docker.compose.project'])
+        && containee.labels && containee.labels['com.docker.compose.project'])
     || ""
 )
 

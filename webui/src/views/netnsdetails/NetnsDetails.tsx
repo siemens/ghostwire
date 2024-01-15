@@ -21,6 +21,7 @@ import { Ghost } from 'components/ghost'
 import { ContaineeBadge } from 'components/containeebadge'
 import RefreshButton from 'components/refreshbutton'
 import Metadata from 'components/metadata';
+import { NifInfoModalProvider } from 'components/nifinfomodal';
 
 
 const SeeAlsoList = styled('ul')(({ theme }) => ({
@@ -66,8 +67,8 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     // identifier first.
     const navigate = useNavigate()
     const match = useMatch('/:view/:slug')
-    let netns: NetworkNamespace
-    const netnsid = parseInt(match.params['slug'])
+    let netns: NetworkNamespace | undefined
+    const netnsid = parseInt((match?.params as { [key: string]: string })['slug'])
     if (!isNaN(netnsid)) {
         netns = Object.values(discovery.networkNamespaces)
             .find(netns => netns.netnsid === netnsid)
@@ -76,7 +77,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     // didn't get a match, so let's try to match with a tenant name instead...
     let didyoumean: Containee[] = []
     if (!netns) {
-        const tenantname = decodeURIComponent(match.params['slug'])
+        const tenantname = decodeURIComponent((match?.params as { [key: string]: string })['slug'])
         if (tenantname) {
             const containees = Object.values(discovery.networkNamespaces)
                 // here, we really want to see ALL containees, including pod'ed
@@ -96,7 +97,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
                         .filter((rat: { rating: number }) => rat.rating >= 0.2)
                         .map((rat: { target: string }) =>
                             containees.find(containee => containee.name === rat.target)
-                        )
+                        ) as Containee[]
                 }
             }
         }
@@ -105,23 +106,25 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     // Navigate to a specific containee on badge clicking ... "badge", not
     // "binge".
     const onContaineeClick = (containee: Containee) => {
-        navigate(`/${match.params['view']}/${encodeURIComponent(containee.name)}`)
+        navigate(`/${(match?.params as { [key: string]: string })['view']}/${encodeURIComponent(containee.name)}`)
     }
 
     return (netns &&
         <Box m={0} flex={1} overflow="auto">
-            <div ref={ref} /* so we can take a snapshot */>
-                <Metadata />
-                <Box m={1}>
-                    <NetnsDetailCard
-                        netns={netns}
-                        filterLo={!showLoopbacks}
-                        filterMAC={!showMAC}
-                        families={families}
-                        canMinimize
-                    />
-                </Box>
-            </div>
+            <NifInfoModalProvider>
+                <div ref={ref} /* so we can take a snapshot */>
+                    <Metadata />
+                    <Box m={1}>
+                        <NetnsDetailCard
+                            netns={netns}
+                            filterLo={!showLoopbacks}
+                            filterMAC={!showMAC}
+                            families={families}
+                            canMinimize
+                        />
+                    </Box>
+                </div>
+            </NifInfoModalProvider>
         </Box >)
         || (<Ghost m={1}>
             <div ref={ref}>
@@ -151,5 +154,6 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
             </div>
         </Ghost>)
 })
+NetnsDetails.displayName = "NetnsDetails"
 
 export default NetnsDetails

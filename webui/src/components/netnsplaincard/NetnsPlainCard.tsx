@@ -9,7 +9,7 @@ import { Paper } from '@mui/material'
 import FullscreenIcon from '@mui/icons-material/Fullscreen'
 
 import { ContaineeBadge } from 'components/containeebadge'
-import { PrimitiveContainee, containeeKey, netnsId, NetworkNamespace, orderNifByName, NetworkInterface, AddressFamilySet, containeesOfNetns, sortContaineesByName } from 'models/gw'
+import { PrimitiveContainee, containeeKey, netnsId, NetworkNamespace, orderNifByName, NetworkInterface, AddressFamilySet, containeesOfNetns, sortContaineesByName, Containee } from 'models/gw'
 import { useContextualId } from 'components/idcontext'
 import { NifBadge } from 'components/nifbadge'
 import { NifNavigator } from 'components/nifnavigator'
@@ -172,7 +172,7 @@ const BridgePort = styled(Nif)(({ theme }) => ({
     },
 }))
 
-const StretchedNif = styled(NifNavigator)(({ theme }) => ({
+const StretchedNif = styled(NifNavigator)(() => ({
     width: '100%',
 }))
 
@@ -246,7 +246,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
         .sort(orderNifByName)
 
     const handleRouting = () => {
-        onNetnsZoom(netns, 'routes')
+        onNetnsZoom && onNetnsZoom(netns, 'routes')
     }
 
     // Render the individual network interfaces, with bridge network
@@ -341,7 +341,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
     // bubble up the zoom navigation, adding the network namespace object to
     // zoom into.
     const handleZoom = () => {
-        onNetnsZoom(netns)
+        onNetnsZoom && onNetnsZoom(netns)
     }
 
     return (
@@ -367,7 +367,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                             button
                             capture
                             endIcon={<FullscreenIcon />}
-                            onClick={onContaineeZoom}
+                            onClick={onContaineeZoom as (_: Containee) => void}
                         />)}
             </Containees>
 
