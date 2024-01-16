@@ -73,8 +73,8 @@ func makeDockerNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 		client.WithHost(engine.API),
 		client.WithAPIVersionNegotiation())
 	if err != nil {
-		log.Warnf("cannot discover Docker-managed networks from API %s, reason: %w",
-			engine.API, err)
+		log.Warnf("cannot discover Docker-managed networks from API %s, reason: %s",
+			engine.API, err.Error())
 		return
 	}
 	networks, _ := dockerclient.NetworkList(ctx, types.NetworkListOptions{})
