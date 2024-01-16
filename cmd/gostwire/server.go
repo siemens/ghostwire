@@ -23,7 +23,7 @@ import (
 // dynVarsRe matches the window.dynvars assignment, so we can rewrite (or
 // rather, insert) the current values of variables that might or might not
 // changed based on the particular HTTP request.
-var dynVarsRe = regexp.MustCompile(`(<script>window\.dynvars=){}(</script>)`)
+var dynVarsRe = regexp.MustCompile(`(<script>window\.dynvars\s*=\s*){}(\s*</script>)`)
 
 var (
 	once   sync.Once
