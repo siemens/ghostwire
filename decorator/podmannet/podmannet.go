@@ -60,7 +60,7 @@ func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 		return
 	}
 	libpodclient.libpodVersion = info.Version.APIVersion
-	networks, _ := libpodclient.NetworkList(ctx)
+	networks, _ := libpodclient.networkList(ctx)
 	_ = libpodclient.Close()
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
 	podmannets.networks = networks

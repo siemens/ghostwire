@@ -28,6 +28,11 @@ type Client struct {
 	libpodVersion string // libpod API semver, without "v" prefix.
 }
 
+// newLibpodClient returns a new podman libpod API client. The endpoint must be
+// using the "unix" protocol.
+//
+// Please note that this libpod API client is absolutely minimalist and just
+// suffices for querying the podman-managed networks.
 func newLibpodClient(endpoint string) (*Client, error) {
 	epurl, err := url.Parse(endpoint)
 	if err != nil {
@@ -58,6 +63,7 @@ func newLibpodClient(endpoint string) (*Client, error) {
 	return c, nil
 }
 
+// Close closes idle connections.
 func (c *Client) Close() error {
 	if c.httpClient == nil {
 		return nil
@@ -66,6 +72,13 @@ func (c *Client) Close() error {
 	return nil
 }
 
+// apiPath takes a non-versioned libpod API endpoint, such as “/info” and
+// “networks/json”; it then returns a versioned libpod path when the libpod
+// version is already known, such as “/v1.2.3/libpod/networks/json”. Otherwise
+// it returns a “/v0/libpod/...”-based path. In consequence, without the
+// libpodVersion set on the Client, only use the “/info” service endpoint, as
+// this seems to be version-independent, but still needs any version in its
+// endpoint path.
 func (c *Client) apiPath(apipath string) string {
 	if c.libpodVersion == "" {
 		// use only for initial libpod info (API version) retrieval; please note
@@ -76,6 +89,9 @@ func (c *Client) apiPath(apipath string) string {
 	return path.Join("/v"+c.libpodVersion+"/libpod", apipath)
 }
 
+// get issues an HTTP GET request for the specified (yet unversioned) API
+// endpoint, such as “/networks/json”. It then returns the HTTP response or an
+// error.
 func (c *Client) get(ctx context.Context, apipath string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(
 		ctx,
@@ -96,6 +112,7 @@ func (c *Client) get(ctx context.Context, apipath string) (*http.Response, error
 	return resp, nil
 }
 
+// ensureReaderClosed helper to drain any service response.
 func ensureReaderClosed(resp *http.Response) {
 	if resp.Body == nil {
 		return
@@ -112,6 +129,8 @@ type essentialLibpodInformation struct {
 	} `json:"version"`
 }
 
+// info returns the “essential” libpod information, that is, the libpod API
+// version.
 func (c *Client) info(ctx context.Context) (essentialLibpodInformation, error) {
 	resp, err := c.get(ctx, "/info")
 	var info essentialLibpodInformation
@@ -135,7 +154,8 @@ type NetworkResource struct {
 	Labels           map[string]string `json:"labels"`
 }
 
-func (c *Client) NetworkList(ctx context.Context) ([]NetworkResource, error) {
+// networkList returns the list of managed podman networks.
+func (c *Client) networkList(ctx context.Context) ([]NetworkResource, error) {
 	var netrscs []NetworkResource
 	resp, err := c.get(ctx, "/networks/json")
 	defer ensureReaderClosed(resp)
