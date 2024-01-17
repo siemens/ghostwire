@@ -43,13 +43,17 @@ var _ = Describe("nerdctlnet decorator", func() {
 			goodfds := Filedescriptors()
 			goodgos := Goroutines() // avoid other failed goroutine tests to spill over
 
-			nerdctl.NerdctlIgnore("rm", "-f", testWorkloadName)
-			nerdctl.NerdctlIgnore("network", "rm", testNetworkName)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			nerdctl.NerdctlIgnore(ctx, "rm", "-f", testWorkloadName)
+			nerdctl.NerdctlIgnore(ctx, "network", "rm", testNetworkName)
 
 			DeferCleanup(func() {
 				gexec.KillAndWait()
-				nerdctl.NerdctlIgnore("rm", "-f", testWorkloadName)
-				nerdctl.NerdctlIgnore("network", "rm", testNetworkName)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				nerdctl.NerdctlIgnore(ctx, "rm", "-f", testWorkloadName)
+				nerdctl.NerdctlIgnore(ctx, "network", "rm", testNetworkName)
 
 				Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(250 * time.Millisecond).
 					ShouldNot(HaveLeaked(goodgos))
@@ -65,18 +69,22 @@ var _ = Describe("nerdctlnet decorator", func() {
 			nerdctl.SkipWithout()
 
 			By(fmt.Sprintf("creating a test bridge network %q", testNetworkName))
-			nerdctl.Nerdctl("network", "create", "--label=foo=bar", testNetworkName)
+			cmdctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+			nerdctl.Nerdctl(cmdctx, "network", "create", "--label=foo=bar", testNetworkName)
 
 			By("creating a test workload and connecting it to the test network")
-			nerdctl.NerdctlIgnore("rm", "-f", testWorkloadName)
-			nerdctl.Nerdctl(
+			cmdctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+			defer cancel()
+			nerdctl.NerdctlIgnore(cmdctx, "rm", "-f", testWorkloadName)
+			nerdctl.Nerdctl(cmdctx,
 				"run", "-d",
 				"--name", testWorkloadName,
 				"--network", testNetworkName,
 				"busybox", "/bin/sleep", "120s")
 
 			By("running a discovery")
-			ctx, cancel := context.WithCancel(ctx)
+			ctx, cancel = context.WithCancel(ctx)
 			cizer := turtlefinder.New(func() context.Context { return ctx })
 			defer cancel()
 			defer cizer.Close()

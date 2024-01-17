@@ -5,7 +5,9 @@
 package nerdctl
 
 import (
+	"context"
 	"os/exec"
+	"time"
 
 	"github.com/onsi/gomega/gexec"
 
@@ -15,18 +17,21 @@ import (
 
 // Nerdctl runs a nerdctl command with the specified CLI arguments, expecting
 // the command to succeed without any error code.
-func Nerdctl(args ...string) {
+func Nerdctl(ctx context.Context, args ...string) {
+	gi.GinkgoHelper()
 	session, err := gexec.Start(
 		exec.Command("nerdctl", args...),
 		gi.GinkgoWriter,
 		gi.GinkgoWriter)
-	g.ExpectWithOffset(1, err).NotTo(g.HaveOccurred())
-	g.EventuallyWithOffset(1, session, "5s").Should(gexec.Exit(0))
+	g.Expect(err).NotTo(g.HaveOccurred())
+	g.Eventually(ctx, session).ProbeEvery(100 * time.Millisecond).
+		Should(gexec.Exit(0))
 }
 
 // NerdctlIgnore runs a nerdctl command with the specified CLI arguments and
 // ignores whatever outcome of running the nerdctl command will be.
-func NerdctlIgnore(args ...string) {
+func NerdctlIgnore(ctx context.Context, args ...string) {
+	gi.GinkgoHelper()
 	session, err := gexec.Start(
 		exec.Command("nerdctl", args...),
 		gi.GinkgoWriter,
@@ -34,7 +39,7 @@ func NerdctlIgnore(args ...string) {
 	if err != nil {
 		return
 	}
-	g.EventuallyWithOffset(1, session, "5s").Should(gexec.Exit())
+	g.Eventually(ctx, session).Should(gexec.Exit())
 }
 
 // SkipWithout skips a test if nerdctl cannot be found in PATH.

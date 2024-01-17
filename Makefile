@@ -53,9 +53,11 @@ build: ## build the Gostwire stripped static binary
 build-embedded: ## build the Gostwire stripped static binary with embedded web UI
 	@$(GENAPIDOC)
 	( \
-		$(GETGITVERSION) \
-		cd webui \
-		REACT_APP_GIT_VERSION=$$GIT_VERSION yarn build \
+		$(GETGITVERSION) && \
+		cd webui && \
+		echo "$$GIT_VERSION" && \
+		sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=$$GIT_VERSION/" .env && \
+		yarn build \
 	)
 	go build -v $(GOSTATIC),webui ./cmd/gostwire
 	@file gostwire
@@ -80,7 +82,7 @@ deploy: ## deploy Gostwire service exposed on host port 5999
 		&& echo "deploying version" $$GIT_VERSION \
 		&& scripts/docker-build.sh deployments/gostwire/Dockerfile \
 			-t gostwire \
-			--build-arg GIT_VERSION=$$GIT_VERSION \
+			--build-arg REACT_APP_GIT_VERSION=$$GIT_VERSION \
 			--build-context webappsrc=./webui \
 	)
 	docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml up

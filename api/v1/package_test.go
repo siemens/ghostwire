@@ -96,16 +96,18 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 }
 
 func tabulaRasa() {
-	nerdctl.NerdctlIgnore("rm", "-f", podc1)
-	nerdctl.NerdctlIgnore("rm", "-f", podc2)
-	nerdctl.NerdctlIgnore("rm", "-f", bareName)
-	nerdctl.NerdctlIgnore("network", "rm", podNetworkName)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	nerdctl.NerdctlIgnore(ctx, "rm", "-f", podc1)
+	nerdctl.NerdctlIgnore(ctx, "rm", "-f", podc2)
+	nerdctl.NerdctlIgnore(ctx, "rm", "-f", bareName)
+	nerdctl.NerdctlIgnore(ctx, "network", "rm", podNetworkName)
 }
 
 var v1apispec *openapi3.T
 var disco gostwire.DiscoveryResult
 
-var _ = BeforeSuite(func() {
+var _ = BeforeSuite(func(ctx context.Context) {
 	if os.Getuid() != 0 {
 		return
 	}
@@ -124,12 +126,16 @@ var _ = BeforeSuite(func() {
 	tabulaRasa()
 
 	By("setting up some fake pod containers")
-	nerdctl.Nerdctl("network", "create", podNetworkName)
-	nerdctl.Nerdctl(
+	cmdctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	nerdctl.Nerdctl(cmdctx, "network", "create", podNetworkName)
+	cmdctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+	nerdctl.Nerdctl(cmdctx,
 		"run", "-d",
 		"--name", bareName,
 		"busybox", "/bin/sleep", "120s")
-	nerdctl.Nerdctl(
+	nerdctl.Nerdctl(cmdctx,
 		"run", "-d",
 		"--name", podc1,
 		"--network", podNetworkName,
@@ -137,7 +143,7 @@ var _ = BeforeSuite(func() {
 		"--label", kuhbernetes.PodNameLabel+"="+podName,
 		"--label", kuhbernetes.PodContainerNameLabel+"="+podc1,
 		"busybox", "/bin/sleep", "120s")
-	nerdctl.Nerdctl(
+	nerdctl.Nerdctl(cmdctx,
 		"run", "-d",
 		"--name", podc2,
 		"--network", podNetworkName,
@@ -147,7 +153,7 @@ var _ = BeforeSuite(func() {
 		"busybox", "/bin/sleep", "120s")
 
 	By("discovering")
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(ctx)
 	cizer := turtlefinder.New(func() context.Context { return ctx })
 	defer cancel()
 	defer cizer.Close()
