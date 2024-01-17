@@ -33,7 +33,7 @@ type Client struct {
 //
 // Please note that this libpod API client is absolutely minimalist and just
 // suffices for querying the podman-managed networks.
-func newLibpodClient(endpoint string, libpodapiversion string) (*Client, error) {
+func newLibpodClient(endpoint string) (*Client, error) {
 	epurl, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("invalid endpoint, reason: %w", err)
@@ -47,8 +47,7 @@ func newLibpodClient(endpoint string, libpodapiversion string) (*Client, error) 
 				DisableCompression: true,
 			},
 		},
-		endpointURL:   epurl,
-		libpodVersion: libpodapiversion,
+		endpointURL: epurl,
 	}
 	dialer := &net.Dialer{
 		// same as Docker's unix socket default transport configuration, see
@@ -81,11 +80,11 @@ func (c *Client) Close() error {
 // this seems to be version-independent, but still needs any version in its
 // endpoint path.
 func (c *Client) apiPath(apipath string) string {
-	if c.libpodVersion == "" {
+	if apipath == "/_ping" {
 		// use only for initial libpod info (API version) retrieval; please note
-		// that all libpod API endpoints are versioned, there are not
+		// that all libpod API endpoints are versioned, there are no
 		// un-versioned endpoints like the Docker API does.
-		return path.Join("/v0/libpod", apipath)
+		return apipath
 	}
 	return path.Join("/v"+c.libpodVersion+"/libpod", apipath)
 }
@@ -120,6 +119,15 @@ func ensureReaderClosed(resp *http.Response) {
 	}
 	_, _ = io.CopyN(io.Discard, resp.Body, 512)
 	resp.Body.Close()
+}
+
+func (c *Client) ping(ctx context.Context) (libpodAPIVersion string) {
+	resp, err := c.get(ctx, "/_ping")
+	defer ensureReaderClosed(resp)
+	if err != nil {
+		return ""
+	}
+	return resp.Header.Get("Libpod-Api-Version")
 }
 
 // NetworkResource grabs just the few things from a podman network we're

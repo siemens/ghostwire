@@ -29,9 +29,6 @@ const (
 	pindName      = "ghostwire-pind"
 	pindImageName = "siemens/ghostwire-pind"
 
-	spinupTimeout = 10 * time.Second
-	spinupPolling = 500 * time.Millisecond
-
 	goroutinesUnwindTimeout = 2 * time.Second
 	goroutinesUnwindPolling = 250 * time.Millisecond
 )
