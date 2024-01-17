@@ -33,7 +33,7 @@ type Client struct {
 //
 // Please note that this libpod API client is absolutely minimalist and just
 // suffices for querying the podman-managed networks.
-func newLibpodClient(endpoint string) (*Client, error) {
+func newLibpodClient(endpoint string, libpodapiversion string) (*Client, error) {
 	epurl, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("invalid endpoint, reason: %w", err)
@@ -47,7 +47,8 @@ func newLibpodClient(endpoint string) (*Client, error) {
 				DisableCompression: true,
 			},
 		},
-		endpointURL: epurl,
+		endpointURL:   epurl,
+		libpodVersion: libpodapiversion,
 	}
 	dialer := &net.Dialer{
 		// same as Docker's unix socket default transport configuration, see
@@ -119,26 +120,6 @@ func ensureReaderClosed(resp *http.Response) {
 	}
 	_, _ = io.CopyN(io.Discard, resp.Body, 512)
 	resp.Body.Close()
-}
-
-// essentialLibpodInformation grabs just the API version information from the
-// JSON salad returned by a “/vX/libpod/info” endpoint.
-type essentialLibpodInformation struct {
-	Version struct {
-		APIVersion string // major.minor.patch, without "v" prefix
-	} `json:"version"`
-}
-
-// info returns the “essential” libpod information, that is, the libpod API
-// version.
-func (c *Client) info(ctx context.Context) (essentialLibpodInformation, error) {
-	resp, err := c.get(ctx, "/info")
-	var info essentialLibpodInformation
-	if err != nil {
-		return info, err
-	}
-	err = json.NewDecoder(resp.Body).Decode(&info)
-	return info, err
 }
 
 // NetworkResource grabs just the few things from a podman network we're
