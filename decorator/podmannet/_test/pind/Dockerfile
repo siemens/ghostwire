@@ -8,4 +8,17 @@ RUN dnf -y install \
         dnf clean all && \
         rm -rf /var/cache /var/log/dnf* /var/log/yum.* && \
         systemctl enable podman.socket
+RUN echo $'[containers]\n\
+netns="host"\n\
+userns="host"\n\
+ipcns="host"\n\
+utsns="host"\n\
+cgroupns="host"\n\
+cgroups="disabled"\n\
+log_driver = "k8s-file"\n\
+[engine]\n\
+cgroup_manager = "cgroupfs"\n\
+events_logger="file"\n\
+runtime="crun"\n\
+' > /etc/containers/containers.conf
 CMD [ "/usr/sbin/init" ]

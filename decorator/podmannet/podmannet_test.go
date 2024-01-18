@@ -13,13 +13,14 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/siemens/ghostwire/v2/internal/discover"
+	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/turtlefinder"
+	"github.com/thediveo/lxkns/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
-	"github.com/thediveo/lxkns/model"
 	. "github.com/thediveo/success"
 )
 
@@ -28,6 +29,9 @@ const (
 
 	pindName      = "ghostwire-pind"
 	pindImageName = "siemens/ghostwire-pind"
+
+	nifDiscoveryTimeout = 5 * time.Second
+	nifDiscoveryPolling = 250 * time.Millisecond
 
 	goroutinesUnwindTimeout = 2 * time.Second
 	goroutinesUnwindPolling = 250 * time.Millisecond
@@ -89,9 +93,9 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 				Repository: pindImageName,
 				Privileged: true,
 				Mounts: []string{
-					"/var", // well, this actually is an unnamed volume
+					"/var/lib/containers", // well, this actually is an unnamed volume
 				},
-				Tty: true,
+				Tty: false,
 			}, func(hc *docker.HostConfig) {
 				hc.Init = false
 				hc.Tmpfs = map[string]string{
@@ -135,7 +139,11 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 
 		By("running a canary container connected to the default 'podman' network")
 		Expect(pindCntr.Exec([]string{
-			"podman", "run", "-d", "-it", "--rm", "--name", "canary", "busybox",
+			"podman", "run", "-d", "--rm",
+			"--name", "canary",
+			"--net", "podman", /* WHAT?? otherwise doesn't connect the container??? */
+			"busybox",
+			"/bin/sh", "-c", "while true; do sleep 1; done",
 		}, dockertest.ExecOptions{
 			StdOut: GinkgoWriter,
 			StdErr: GinkgoWriter,
@@ -169,18 +177,12 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 		defer cizer.Close()
 
 		By("running a full Ghostwire discovery that should pick up the podman networks")
-		allnetns, lxknsdisco := discover.Discover(ctx, cizer, nil)
-		Expect(lxknsdisco.Processes).To(HaveKey(model.PIDType(pindCntr.Container.State.Pid)))
-		pindNetnsID := lxknsdisco.Processes[model.PIDType(pindCntr.Container.State.Pid)].
-			Namespaces[model.NetNS].ID()
-		Expect(pindNetnsID).NotTo(BeZero())
-		Expect(allnetns).To(HaveKey(pindNetnsID))
-		pindNetns := allnetns[pindNetnsID]
-		// We expect the following network interfaces to be present inside our
-		// podman-in-docker container:
-		//  - eth0 ... a.k.a. the "mcwielahm" network
-		//  - podman0 ... a.k.a. the "podman" network
-		Expect(pindNetns.Nifs).To(ContainElements(
+		Eventually(ctx, func() map[int]network.Interface {
+			allnetns, lxknsdisco := discover.Discover(ctx, cizer, nil)
+			pindNetnsID := lxknsdisco.Processes[model.PIDType(pindCntr.Container.State.Pid)].
+				Namespaces[model.NetNS].ID()
+			return allnetns[pindNetnsID].Nifs
+		}).Within(nifDiscoveryPolling).ProbeEvery(nifDiscoveryPolling).Should(ContainElements(
 			HaveField("Nif()", And(
 				HaveField("Name", "eth0"),
 				HaveField("Alias", "mcwielahm"))),
@@ -188,6 +190,7 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 				HaveField("Name", "podman0"),
 				HaveField("Alias", "podman"))),
 		))
+
 	})
 
 })
