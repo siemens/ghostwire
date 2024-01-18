@@ -80,11 +80,11 @@ func (c *Client) Close() error {
 // this seems to be version-independent, but still needs any version in its
 // endpoint path.
 func (c *Client) apiPath(apipath string) string {
-	if c.libpodVersion == "" {
+	if apipath == "/_ping" {
 		// use only for initial libpod info (API version) retrieval; please note
-		// that all libpod API endpoints are versioned, there are not
+		// that all libpod API endpoints are versioned, there are no
 		// un-versioned endpoints like the Docker API does.
-		return path.Join("/v0/libpod", apipath)
+		return apipath
 	}
 	return path.Join("/v"+c.libpodVersion+"/libpod", apipath)
 }
@@ -121,24 +121,20 @@ func ensureReaderClosed(resp *http.Response) {
 	resp.Body.Close()
 }
 
-// essentialLibpodInformation grabs just the API version information from the
-// JSON salad returned by a “/vX/libpod/info” endpoint.
-type essentialLibpodInformation struct {
-	Version struct {
-		APIVersion string // major.minor.patch, without "v" prefix
-	} `json:"version"`
-}
-
-// info returns the “essential” libpod information, that is, the libpod API
-// version.
-func (c *Client) info(ctx context.Context) (essentialLibpodInformation, error) {
-	resp, err := c.get(ctx, "/info")
-	var info essentialLibpodInformation
+// ping the /_ping API endpoint (which is unversioned) and return the value of
+// the “Libpod-Api-Version” header that came back from this endpoint, or an
+// empty string. The libpod API version is in semver format, without any “v”
+// prefix.
+//
+// Use the returned API version to set Client.libpodVersion so that following
+// libpod endpoint calls are properly versioned.
+func (c *Client) ping(ctx context.Context) (libpodAPIVersion string) {
+	resp, err := c.get(ctx, "/_ping")
+	defer ensureReaderClosed(resp)
 	if err != nil {
-		return info, err
+		return ""
 	}
-	err = json.NewDecoder(resp.Body).Decode(&info)
-	return info, err
+	return resp.Header.Get("Libpod-Api-Version")
 }
 
 // NetworkResource grabs just the few things from a podman network we're
