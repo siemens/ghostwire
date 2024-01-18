@@ -53,13 +53,7 @@ func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 			engine.API, err.Error())
 		return
 	}
-	info, err := libpodclient.info(ctx)
-	if err != nil {
-		log.Warnf("cannot discover podman-managed networks from API %s, reason: %s",
-			engine.API, err.Error())
-		return
-	}
-	libpodclient.libpodVersion = info.Version.APIVersion
+	libpodclient.libpodVersion = libpodclient.ping(ctx)
 	networks, _ := libpodclient.networkList(ctx)
 	_ = libpodclient.Close()
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
