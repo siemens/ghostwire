@@ -7,7 +7,6 @@ package podmannet
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
@@ -48,7 +47,6 @@ type podmanNetworks struct {
 func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, allnetns network.NetworkNamespaces) (
 	podmannets podmanNetworks,
 ) {
-	start := time.Now()
 	libpodclient, err := newLibpodClient(engine.API)
 	if err != nil {
 		log.Warnf("cannot discover podman-managed networks from API %s, reason: %s",
@@ -58,8 +56,6 @@ func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	libpodclient.libpodVersion = libpodclient.ping(ctx)
 	networks, _ := libpodclient.networkList(ctx)
 	_ = libpodclient.Close()
-	span := time.Since(start)
-	log.Debugf("podman(%d) network ls took %s", engine.PID, span)
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
 	podmannets.networks = networks
 	podmannets.engine = engine

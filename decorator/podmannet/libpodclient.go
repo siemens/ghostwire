@@ -121,6 +121,13 @@ func ensureReaderClosed(resp *http.Response) {
 	resp.Body.Close()
 }
 
+// ping the /_ping API endpoint (which is unversioned) and return the value of
+// the “Libpod-Api-Version” header that came back from this endpoint, or an
+// empty string. The libpod API version is in semver format, without any “v”
+// prefix.
+//
+// Use the returned API version to set Client.libpodVersion so that following
+// libpod endpoint calls are properly versioned.
 func (c *Client) ping(ctx context.Context) (libpodAPIVersion string) {
 	resp, err := c.get(ctx, "/_ping")
 	defer ensureReaderClosed(resp)

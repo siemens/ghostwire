@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/network"
@@ -70,7 +69,6 @@ type dockerNetworks struct {
 func makeDockerNetworks(ctx context.Context, engine *model.ContainerEngine, allnetns network.NetworkNamespaces) (
 	docknets dockerNetworks,
 ) {
-	start := time.Now()
 	dockerclient, err := client.NewClientWithOpts(
 		client.WithHost(engine.API),
 		client.WithAPIVersionNegotiation())
@@ -81,8 +79,6 @@ func makeDockerNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	}
 	networks, _ := dockerclient.NetworkList(ctx, types.NetworkListOptions{})
 	_ = dockerclient.Close()
-	span := time.Since(start)
-	log.Debugf("docker(%d) network ls took %s", engine.PID, span)
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
 	docknets.networks = networks
 	docknets.engine = engine
