@@ -286,10 +286,12 @@ export const fromjson = (jsondata: JSONObject) => {
                 // this VXLAN is the overlay, resolve our underlay reference,
                 // and then backlink the underlay to us (the overlay).
                 nif.underlay = nifmap[(jnif.vxlan as JSONObject).idref as string]
-                if (!nif.underlay.overlays) {
-                    nif.underlay.overlays = []
+                if (nif.underlay) {
+                    if (!nif.underlay.overlays) {
+                        nif.underlay.overlays = []
+                    }
+                    nif.underlay.overlays.push(nif)
                 }
-                nif.underlay.overlays.push(nif)
             }
             // TAP/TUNs don't reference other network interfaces, but processes
             // ... but hey. we need to resolve this relation, too!
