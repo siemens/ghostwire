@@ -4,13 +4,23 @@
 
 import React, { useState } from 'react'
 
-import { Box, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material'
+import { Box, IconButton, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material'
 import CaseIcon from 'icons/Case'
 import RegexpIcon from 'icons/Regexp'
+import { Clear } from '@mui/icons-material'
 
 export const FilterInput = () => {
 
+    const [filter, setFilter] = useState('')
     const [filterOptions, setFilterOptions] = useState<string[]>(() => [])
+
+    const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setFilter(event.target.value)
+    }
+
+    const handleClear = () => {
+        setFilter('')
+    }
 
     const handleOptions = (event: React.MouseEvent<HTMLElement>, newopts: string[]) => {
         setFilterOptions(newopts)
@@ -22,6 +32,16 @@ export const FilterInput = () => {
             size="small"
             variant="standard"
             placeholder="filter"
+            onChange={handleInput}
+            value={filter}
+            InputProps={{
+                endAdornment: <IconButton
+                    sx={{ visibility: filter && 'visible' || 'hidden'}}
+                    onClick={handleClear}
+                >
+                    <Clear fontSize="small"/>
+                </IconButton>
+            }}
         />
         <ToggleButtonGroup
             size="small"
