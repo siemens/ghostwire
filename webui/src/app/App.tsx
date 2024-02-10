@@ -44,7 +44,7 @@ import OpenHouseIcon from 'icons/views/OpenHouse'
 
 import { About as AboutView } from 'views/about'
 import { Help as HelpView } from 'views/help'
-import { Settings as SettingsView, showEmptyNetnsAtom, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
+import { Settings as SettingsView, showEmptyNetnsAtom, themeAtom, THEME_DARK, THEME_USERPREF, filterPatternAtom, filterCaseSensitiveAtom, filterRegexpAtom } from 'views/settings'
 import { Everything as EverythingView } from 'views/everything'
 import { NetnsWiring } from 'views/netnswiring'
 import { NetnsDetails as NetnsDetailsView } from 'views/netnsdetails'
@@ -58,7 +58,7 @@ import { BrandIcon } from 'components/brandicon'
 import { useDynVars } from 'components/dynvars'
 import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
-import { FilterInput } from 'components/filterinput'
+import { FilterInput, FilterPattern } from 'components/filterinput'
 
 
 const SettingsViewIcon = SettingsIcon
@@ -84,6 +84,9 @@ const refresherIntervals = [
 const GhostwireApp = () => {
 
     const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
+    const [filterPattern, setFilterPattern] = useAtom(filterPatternAtom)
+    const [filterCase, setFilterCase] = useAtom(filterCaseSensitiveAtom)
+    const [filterRegexp, setFilterRegexp] = useAtom(filterRegexpAtom)
 
     // Determine the number of discovered network namespaces, as well as the
     // number of shown network namespaces: depending on filter settings and
@@ -120,6 +123,12 @@ const GhostwireApp = () => {
     const snapshotRef = useRef<HTMLDivElement | null>(null)
 
     const setModal = useScreenShooterModal()
+
+    const onFilterChangeHandler = (fp: FilterPattern) => {
+        if (filterPattern != fp.pattern) setFilterPattern(fp.pattern)
+        if (filterCase != fp.isCaseSensitive) setFilterCase(fp.isCaseSensitive)
+        if (filterRegexp != fp.isRegexp) setFilterRegexp(fp.isRegexp)
+    }
 
     useScrollToHash(scrollIdIntoView)
 
@@ -197,12 +206,21 @@ const GhostwireApp = () => {
                         <Divider />
                         <List
                             subheader={<ListSubheader onClick={(event) => {
-                                    event.stopPropagation()
-                                    event.preventDefault()
-                                }}>
+                                event.stopPropagation()
+                                event.preventDefault()
+                            }}>
                                 <Grid container direction="column">
                                     <Grid item>Containees</Grid>
-                                    <Grid item><FilterInput/></Grid>
+                                    <Grid item>
+                                        <FilterInput
+                                            filterPattern={{
+                                                pattern: filterPattern,
+                                                isCaseSensitive: filterCase,
+                                                isRegexp: filterRegexp,
+                                            }}
+                                            onChange={onFilterChangeHandler}
+                                        />
+                                    </Grid>
                                 </Grid>
                             </ListSubheader>}
                             onClick={closeDrawer}

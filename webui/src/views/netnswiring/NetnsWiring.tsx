@@ -12,10 +12,11 @@ import { Box, Typography } from '@mui/material'
 import { useDiscovery } from 'components/discovery'
 import { orderNetnsByContainees } from 'models/gw'
 import { NetnsBreadboard } from 'components/netnsbreadboard'
-import { showEmptyNetnsAtom, showIpFamiliesAtom, showLoopbackAtom } from 'views/settings'
+import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, showEmptyNetnsAtom, showIpFamiliesAtom, showLoopbackAtom } from 'views/settings'
 import { Ghost } from 'components/ghost'
 import RefreshButton from 'components/refreshbutton'
 import Metadata from 'components/metadata'
+import { getFilterFn } from 'components/filterinput'
 
 
 /**
@@ -30,8 +31,24 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
     const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
     const [showIpFamilies] = useAtom(showIpFamiliesAtom)
 
+    const [filterPattern] = useAtom(filterPatternAtom)
+    const [filterCase] = useAtom(filterCaseSensitiveAtom)
+    const [filterRegexp] = useAtom(filterRegexpAtom)
+
+    const filterfn = getFilterFn({
+        pattern: filterPattern,
+        isCaseSensitive: filterCase,
+        isRegexp: filterRegexp,
+    })
+
     const discovery = useDiscovery()
     const netnses = Object.values(discovery.networkNamespaces)
+        .filter(ns => {
+            if (ns.containers.find(primcntee => filterfn(primcntee.name))) {
+                return true
+            }
+            return ns.pods.find(pod => filterfn(pod.name))
+        })
         .sort(orderNetnsByContainees)
 
     return (

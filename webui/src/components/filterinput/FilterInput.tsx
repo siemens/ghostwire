@@ -2,28 +2,86 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
-import { Box, IconButton, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material'
+import { Box, IconButton, TextField, ToggleButton, ToggleButtonGroup, debounce } from '@mui/material'
 import CaseIcon from 'icons/Case'
 import RegexpIcon from 'icons/Regexp'
 import { Clear } from '@mui/icons-material'
 
-export const FilterInput = () => {
+export interface FilterPattern {
+    pattern: string
+    isCaseSensitive: boolean
+    isRegexp: boolean
+}
 
-    const [filter, setFilter] = useState('')
-    const [filterOptions, setFilterOptions] = useState<string[]>(() => [])
+export const getFilterFn = (fp: FilterPattern) => {
+    if (!fp.isRegexp) {
+        if (fp.isCaseSensitive) {
+            return (s: string) => s.includes(fp.pattern)
+        }
+        const filter = fp.pattern.toLocaleLowerCase()
+        return (s: string) => s.toLocaleLowerCase().includes(filter)
+    }
+    try {
+        const re = new RegExp(fp.pattern, fp.isCaseSensitive ? "" : "i")
+        return (s: string) => re.test(s)
+    } catch (e) {
+        return () => false
+    }
+}
+
+export interface FilterInputProps {
+    filterPattern?: FilterPattern
+    onChange: (fp: FilterPattern) => void
+    debounceWait?: number
+}
+
+export const FilterInput = ({ filterPattern, onChange, debounceWait }: FilterInputProps) => {
+
+    debounceWait = debounceWait || 300
+
+    const [pattern, setPattern] = useState('')
+    const [filterOptions, setFilterOptions] = useState<string[]>([])
+
+    useEffect(() => {
+        setPattern(filterPattern?.pattern || '')
+        setFilterOptions((filterPattern?.isCaseSensitive ? ["case"] : []).concat(filterPattern?.isRegexp ? ["regexp"] : []))
+    }, [filterPattern])
+
+    const onChangeHandler = (pattern: string, options: string[]) => {
+        if (!onChange) {
+            return
+        }
+        const isCaseSensitive = options.includes('case')
+        const isRegexp = options.includes('regexp')
+        const fp = {
+            pattern: pattern,
+            isCaseSensitive: isCaseSensitive,
+            isRegexp: isRegexp,
+        } as FilterPattern
+        onChange(fp)
+    }
+
+    const debouncedOnChange = useMemo(
+        () => debounce(onChangeHandler, debounceWait),
+        [onChange])
 
     const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setFilter(event.target.value)
+        const newPattern = event.target.value
+        setPattern(newPattern)
+        debouncedOnChange(newPattern, filterOptions)
     }
 
     const handleClear = () => {
-        setFilter('')
+        const newPattern = ''
+        setPattern(newPattern)
+        debouncedOnChange(newPattern, filterOptions)
     }
 
     const handleOptions = (event: React.MouseEvent<HTMLElement>, newopts: string[]) => {
         setFilterOptions(newopts)
+        debouncedOnChange(pattern, newopts)
     }
 
     return <Box sx={{ display: "inline-flex", alignItems: "center", width: "100%" }}>
@@ -33,13 +91,13 @@ export const FilterInput = () => {
             variant="standard"
             placeholder="filter"
             onChange={handleInput}
-            value={filter}
+            value={pattern}
             InputProps={{
                 endAdornment: <IconButton
-                    sx={{ visibility: filter && 'visible' || 'hidden'}}
+                    sx={{ visibility: pattern && 'visible' || 'hidden' }}
                     onClick={handleClear}
                 >
-                    <Clear fontSize="small"/>
+                    <Clear fontSize="small" />
                 </IconButton>
             }}
         />
@@ -52,7 +110,7 @@ export const FilterInput = () => {
             <ToggleButton value="case">
                 <CaseIcon />
             </ToggleButton>
-            <ToggleButton value="regex">
+            <ToggleButton value="regexp">
                 <RegexpIcon />
             </ToggleButton>
         </ToggleButtonGroup>
