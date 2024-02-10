@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import React, { useRef } from 'react'
-import { BrowserRouter as Router, Route, Routes, useMatch, Navigate} from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes, useMatch, Navigate } from 'react-router-dom'
 
 import { basename } from 'utils/basename'
 
@@ -25,6 +25,7 @@ import {
     Tooltip,
     Typography,
     useMediaQuery,
+    Grid,
 } from '@mui/material';
 
 import { gwDarkTheme, gwLightTheme } from './appstyles'
@@ -57,6 +58,7 @@ import { BrandIcon } from 'components/brandicon'
 import { useDynVars } from 'components/dynvars'
 import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
+import { FilterInput } from 'components/filterinput'
 
 
 const SettingsViewIcon = SettingsIcon
@@ -106,7 +108,7 @@ const GhostwireApp = () => {
     const nmatch1 = useMatch('/n')
     const nmatch2 = useMatch('/n/:slug')
     const isDetails = nmatch1 !== null || nmatch2 != null
-    
+
     const listContainees = isWiring || isDetails
 
     const alsoSnapshotable = useMatch('/lochla') !== null
@@ -115,7 +117,7 @@ const GhostwireApp = () => {
     const enableSnapshot = listContainees || alsoSnapshotable
 
     // What to capture, if any.
-    const snapshotRef = useRef<HTMLDivElement|null>(null)
+    const snapshotRef = useRef<HTMLDivElement | null>(null)
 
     const setModal = useScreenShooterModal()
 
@@ -194,7 +196,15 @@ const GhostwireApp = () => {
                     {listContainees && <>
                         <Divider />
                         <List
-                            subheader={<ListSubheader>Containees</ListSubheader>}
+                            subheader={<ListSubheader onClick={(event) => {
+                                    event.stopPropagation()
+                                    event.preventDefault()
+                                }}>
+                                <Grid container direction="column">
+                                    <Grid item>Containees</Grid>
+                                    <Grid item><FilterInput/></Grid>
+                                </Grid>
+                            </ListSubheader>}
                             onClick={closeDrawer}
                         >
                             <ContaineeNavigator
@@ -209,7 +219,7 @@ const GhostwireApp = () => {
             {/* main content area */}
             <Box m={0} flex={1} overflow="auto">
                 <Routes>
-                    <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef}/>} />
+                    <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
                     <Route path="/w" element={<NetnsWiring ref={snapshotRef} />} />
                     <Route path="/n/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
                     <Route path="/n" element={<EverythingView ref={snapshotRef} />} />
