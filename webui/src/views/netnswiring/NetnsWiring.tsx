@@ -6,6 +6,7 @@ import React from 'react'
 
 import { useAtom } from 'jotai'
 
+import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { Box, Typography } from '@mui/material'
 
@@ -34,7 +35,6 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
     const [filterPattern] = useAtom(filterPatternAtom)
     const [filterCase] = useAtom(filterCaseSensitiveAtom)
     const [filterRegexp] = useAtom(filterRegexpAtom)
-
     const filterfn = getFilterFn({
         pattern: filterPattern,
         isCaseSensitive: filterCase,
@@ -42,7 +42,8 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
     })
 
     const discovery = useDiscovery()
-    const netnses = Object.values(discovery.networkNamespaces)
+    const orignetnses = Object.values(discovery.networkNamespaces)
+    const netnses = orignetnses
         .filter(ns => {
             if (ns.containers.find(primcntee => filterfn(primcntee.name))) {
                 return true
@@ -53,7 +54,7 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
 
     return (
         <Box m={0} flex={1} overflow="auto">
-            {(netnses.length !== 0 &&
+            {(netnses.length &&
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />
                     <NetnsBreadboard
@@ -63,6 +64,11 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
                         families={showIpFamilies}
                     />
                 </div>)
+                || (orignetnses.length &&
+                    <Typography m={1} variant="body1" color="textSecondary" ref={ref}>
+                        <FilterAltIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
+                        no matches, please check the filter settings in the sidebar.
+                    </Typography>)
                 || (<Ghost m={1}>
                     <Typography variant="body1" color="textSecondary" ref={ref}>
                         <InfoOutlinedIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;

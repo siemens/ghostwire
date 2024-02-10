@@ -13,6 +13,9 @@ import { ContaineeIcon } from 'utils/containeeicon'
 import { useContextualId } from 'components/idcontext'
 import PrivilegedIcon from 'icons/containeestates/Privileged'
 import CapableIcon from 'icons/containeestates/Capable'
+import { useAtom } from 'jotai'
+import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom } from 'views/settings'
+import { getFilterFn } from 'components/filterinput'
 
 
 const ContaineeItem = styled(ListItemButton)<RouterLinkProps>(({ theme }) => ({
@@ -176,6 +179,7 @@ export interface ContaineeNavigatorProps {
  * navigator will not show any containees of such empty network namespaces.
  */
 export const ContaineeNavigator = ({ allnetns, filterEmpty, nolink }: ContaineeNavigatorProps) => {
+
     const domIdBase = useContextualId('')
 
     const match1 = useMatch('/:view')
@@ -184,14 +188,26 @@ export const ContaineeNavigator = ({ allnetns, filterEmpty, nolink }: ContaineeN
 
     const inDetails = !!match && !!(match.params as { [key: string]: string })['details']
 
+    const [filterPattern] = useAtom(filterPatternAtom)
+    const [filterCase] = useAtom(filterCaseSensitiveAtom)
+    const [filterRegexp] = useAtom(filterRegexpAtom)
+    const filterfn = getFilterFn({
+        pattern: filterPattern,
+        isCaseSensitive: filterCase,
+        isRegexp: filterRegexp,
+    })
+
     // Get all pods and those pesky primitive containees that aren't pot'ed. In
     // case a containee should appear multiple times, it is attached to multiple
     // network namespaces and we're fine with that.
     const allContainees = Object.values(allnetns)
         .filter(netns => !emptyNetns(netns) || !filterEmpty)
-        .map(netns =>
-            (netns.pods as Containee[]).concat(
-                netns.containers.filter(primcontainee => !isPodContainer(primcontainee))))
+        .map(netns => {
+            const primcontainees = netns.containers.filter(primcntee => filterfn(primcntee.name))
+            const pods = netns.pods.filter(pod => filterfn(pod.name))
+            return (pods as Containee[]).concat(
+                primcontainees.filter(primcontainee => !isPodContainer(primcontainee)))
+            })
         .flat() // bang all namespace-local containees into a single flat list.
 
     // Prepare the item list from the containees where this list now replaces
