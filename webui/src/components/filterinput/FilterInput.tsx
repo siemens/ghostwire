@@ -84,12 +84,25 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait }: FilterInp
         debouncedOnChange(pattern, newopts)
     }
 
+    // If the pattern is to be used as a regular expression, do a dry run in
+    // order to determine whether the regexp pattern is valid or not. We later
+    // use this to control the text input field's error indication.
+    let regexpError = false
+    if (filterOptions.includes('regexp')) {
+        try {
+            new RegExp(pattern)
+        } catch (e) {
+            regexpError = true
+        }
+    }
+
     return <Box sx={{ display: "inline-flex", alignItems: "center", width: "100%" }}>
         <TextField
             sx={{ flexGrow: 1 }}
             size="small"
             variant="standard"
             placeholder="filter"
+            error={regexpError}
             onChange={handleInput}
             value={pattern}
             InputProps={{

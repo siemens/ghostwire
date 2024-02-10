@@ -107,6 +107,7 @@ const GhostwireApp = () => {
     const wmatch1 = useMatch('/w')
     const wmatch2 = useMatch('/w/:slug')
     const isWiring = wmatch1 !== null || wmatch2 !== null
+    const isBreadboard = wmatch1 != null
 
     const nmatch1 = useMatch('/n')
     const nmatch2 = useMatch('/n/:slug')
@@ -211,16 +212,18 @@ const GhostwireApp = () => {
                             }}>
                                 <Grid container direction="column">
                                     <Grid item>Containees</Grid>
-                                    <Grid item>
-                                        <FilterInput
-                                            filterPattern={{
-                                                pattern: filterPattern,
-                                                isCaseSensitive: filterCase,
-                                                isRegexp: filterRegexp,
-                                            }}
-                                            onChange={onFilterChangeHandler}
-                                        />
-                                    </Grid>
+                                    { isBreadboard &&
+                                        <Grid item>
+                                            <FilterInput
+                                                filterPattern={{
+                                                    pattern: filterPattern,
+                                                    isCaseSensitive: filterCase,
+                                                    isRegexp: filterRegexp,
+                                                }}
+                                                onChange={onFilterChangeHandler}
+                                            />
+                                        </Grid>
+                                    }
                                 </Grid>
                             </ListSubheader>}
                             onClick={closeDrawer}
