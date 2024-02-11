@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import React, { useRef } from 'react'
-import { BrowserRouter as Router, Route, Routes, useMatch, Navigate} from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes, useMatch, Navigate } from 'react-router-dom'
 
 import { basename } from 'utils/basename'
 
@@ -25,6 +25,7 @@ import {
     Tooltip,
     Typography,
     useMediaQuery,
+    Grid,
 } from '@mui/material';
 
 import { gwDarkTheme, gwLightTheme } from './appstyles'
@@ -43,7 +44,7 @@ import OpenHouseIcon from 'icons/views/OpenHouse'
 
 import { About as AboutView } from 'views/about'
 import { Help as HelpView } from 'views/help'
-import { Settings as SettingsView, showEmptyNetnsAtom, themeAtom, THEME_DARK, THEME_USERPREF } from 'views/settings'
+import { Settings as SettingsView, showEmptyNetnsAtom, themeAtom, THEME_DARK, THEME_USERPREF, filterPatternAtom, filterCaseSensitiveAtom, filterRegexpAtom } from 'views/settings'
 import { Everything as EverythingView } from 'views/everything'
 import { NetnsWiring } from 'views/netnswiring'
 import { NetnsDetails as NetnsDetailsView } from 'views/netnsdetails'
@@ -57,6 +58,7 @@ import { BrandIcon } from 'components/brandicon'
 import { useDynVars } from 'components/dynvars'
 import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
+import { FilterInput, FilterPattern } from 'components/filterinput'
 
 
 const SettingsViewIcon = SettingsIcon
@@ -72,9 +74,9 @@ const refresherIntervals = [
 ]
 
 /**
- * The `LxGhostwireApp` component renders the general app layout without
- * thinking about providers for routing, themes, discovery, et cetera. So this
- * component deals with:
+ * The `GhostwireApp` component renders the general app layout without thinking
+ * about providers for routing, themes, discovery, et cetera. So this component
+ * deals with:
  * - app bar with title, number of namespaces badge, quick actions.
  * - drawer for navigating the different views and types of namespaces.
  * - scrollable content area.
@@ -82,6 +84,9 @@ const refresherIntervals = [
 const GhostwireApp = () => {
 
     const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
+    const [filterPattern, setFilterPattern] = useAtom(filterPatternAtom)
+    const [filterCase, setFilterCase] = useAtom(filterCaseSensitiveAtom)
+    const [filterRegexp, setFilterRegexp] = useAtom(filterRegexpAtom)
 
     // Determine the number of discovered network namespaces, as well as the
     // number of shown network namespaces: depending on filter settings and
@@ -106,7 +111,9 @@ const GhostwireApp = () => {
     const nmatch1 = useMatch('/n')
     const nmatch2 = useMatch('/n/:slug')
     const isDetails = nmatch1 !== null || nmatch2 != null
-    
+
+    const canFilter = wmatch1 !== null || nmatch1 !== null
+
     const listContainees = isWiring || isDetails
 
     const alsoSnapshotable = useMatch('/lochla') !== null
@@ -115,9 +122,15 @@ const GhostwireApp = () => {
     const enableSnapshot = listContainees || alsoSnapshotable
 
     // What to capture, if any.
-    const snapshotRef = useRef<HTMLDivElement|null>(null)
+    const snapshotRef = useRef<HTMLDivElement | null>(null)
 
     const setModal = useScreenShooterModal()
+
+    const onFilterChangeHandler = (fp: FilterPattern) => {
+        if (filterPattern != fp.pattern) setFilterPattern(fp.pattern)
+        if (filterCase != fp.isCaseSensitive) setFilterCase(fp.isCaseSensitive)
+        if (filterRegexp != fp.isRegexp) setFilterRegexp(fp.isRegexp)
+    }
 
     useScrollToHash(scrollIdIntoView)
 
@@ -150,7 +163,7 @@ const GhostwireApp = () => {
                         <Brand />
                     </Typography>
                 </>}
-                drawer={closeDrawer => <>
+                drawer={(closeDrawer, focusRef) => <>
                     <List onClick={closeDrawer}>
                         <DrawerLinkItem
                             key="wiring"
@@ -194,7 +207,28 @@ const GhostwireApp = () => {
                     {listContainees && <>
                         <Divider />
                         <List
-                            subheader={<ListSubheader>Containees</ListSubheader>}
+                            subheader={<ListSubheader onClick={(event) => {
+                                event.stopPropagation()
+                                event.preventDefault()
+                            }}>
+                                <Grid container direction="column">
+                                    <Grid item>Containees</Grid>
+                                    { canFilter &&
+                                        <Grid item>
+                                            <FilterInput
+                                                focusRef={focusRef}
+                                                filterPattern={{
+                                                    pattern: filterPattern,
+                                                    isCaseSensitive: filterCase,
+                                                    isRegexp: filterRegexp,
+                                                }}
+                                                onChange={onFilterChangeHandler}
+                                                onEnter={closeDrawer}
+                                            />
+                                        </Grid>
+                                    }
+                                </Grid>
+                            </ListSubheader>}
                             onClick={closeDrawer}
                         >
                             <ContaineeNavigator
@@ -209,7 +243,7 @@ const GhostwireApp = () => {
             {/* main content area */}
             <Box m={0} flex={1} overflow="auto">
                 <Routes>
-                    <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef}/>} />
+                    <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
                     <Route path="/w" element={<NetnsWiring ref={snapshotRef} />} />
                     <Route path="/n/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
                     <Route path="/n" element={<EverythingView ref={snapshotRef} />} />

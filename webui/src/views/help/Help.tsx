@@ -14,7 +14,7 @@ import { HelpViewer, HelpViewerChapter } from 'components/helpviewer'
 import { GwMarkdown } from 'components/gwmarkdown'
 import { MuiMarkdownProps } from 'components/muimarkdown'
 
-import { containeesCutoffAtom, nifsCutoffAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
+import { containeesCutoffAtom, filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, nifsCutoffAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
 import { useHydrateAtoms } from 'jotai/utils'
 
 
@@ -134,6 +134,9 @@ export const Help = () => {
             [nifsCutoffAtom, 100],
             [showSandboxesAtom, false],
             [showNamespaceIdsAtom, true],
+            [filterPatternAtom, ""],
+            [filterCaseSensitiveAtom, false],
+            [filterRegexpAtom, false]
         ]}>
             <HelpViewer
                 chapters={chapters}
