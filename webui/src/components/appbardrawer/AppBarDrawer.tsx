@@ -2,12 +2,13 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { AppBar, Box, Divider, IconButton, styled, SwipeableDrawer, Theme, Toolbar, useTheme } from '@mui/material'
+import { useHotkeys } from 'react-hotkeys-hook'
 
 
 // Width of drawer.
@@ -74,7 +75,7 @@ export interface AppBarDrawerProps {
      * want to close the drawer whenever the user clicks on them in order to
      * navigate to a different route.
      */
-    drawer?: (drawerCloser: drawerCloser) => React.ReactNode
+    drawer?: (drawerCloser: drawerCloser, focusRef?: React.RefObject<HTMLDivElement>) => React.ReactNode
     /**
      * optionally sets the width in pixels of the drawer. Defaults to 240 pixels
      * if unspecified.
@@ -124,6 +125,29 @@ const AppBarDrawer = ({
     // Not much state here in ... Denmark?!
     const [drawerOpen, setDrawerOpen] = useState(false)
 
+    // We need to get hold onto the filter pattern input field in order to
+    // autofocus upon opening the drawer. Below, we pass it to the drawer
+    // rendering function, so it can pass it down even further into whatever
+    // HTML it want to set the focus on. 
+    const focusRef = useRef<HTMLDivElement>(null)
+
+    // Register hotkey to open the drawer and put the focus on the containee
+    // filter pattern input, if any.
+    useHotkeys(['/', 'ctrl+f'], (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setDrawerOpen(true)
+    }, { useKey: true })
+
+    // When the drawer opens, and if there is an HTML element reference then set
+    // the focus to this HTML element. This will be the containee filter pattern
+    // input field, where enabled depending on view.
+    useEffect(() => {
+        if (!drawerOpen) return
+        if (!focusRef.current) return
+        focusRef.current.focus()
+    }, [drawerOpen])
+
     // Convenience handlers for dealing with the swipeable drawer, that should
     // keep users busy on a rainy Sunday afternoon.
     const openDrawer = () => { setDrawerOpen(true) }
@@ -169,7 +193,7 @@ const AppBarDrawer = ({
                 </IconButton>
             </DrawerHeader>
             <Divider />
-            {drawer && drawer(closeDrawer)}
+            {drawer && drawer(closeDrawer, focusRef)}
         </SwappyDrawer>
     </>
 }

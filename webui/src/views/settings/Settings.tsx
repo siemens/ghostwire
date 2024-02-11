@@ -51,6 +51,11 @@ const showIEAppIconsKey = 'ghostwire.showieappicons'
 
 const showMultiBroadcastRoutesKey = 'ghostwire.showmultibroadcastroutes'
 
+const filterPatternKey = 'ghostwire.filter.pattern'
+const filterCaseSensitiveKey = 'ghostwire.filter.case'
+const filterRegexpKey = 'ghostwire.filter.regexp'
+
+
 export const THEME_USERPREF = 0
 export const THEME_LIGHT = 1
 export const THEME_DARK = -1
@@ -86,6 +91,10 @@ export const snapshotDensityAtom = atomWithStorage(snapshotDensityKey, 1)
 export const showIEAppIconsAtom = atomWithStorage(showIEAppIconsKey, false)
 
 export const showMultiBroadcastRoutesAtom = atomWithStorage(showMultiBroadcastRoutesKey, false)
+
+export const filterPatternAtom = atomWithStorage(filterPatternKey, '')
+export const filterCaseSensitiveAtom = atomWithStorage(filterCaseSensitiveKey, false)
+export const filterRegexpAtom = atomWithStorage(filterRegexpKey, false)
 
 const cutOffEm = 12
 

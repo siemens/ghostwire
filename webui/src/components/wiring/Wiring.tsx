@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactElement, useLayoutEffect, useState } from 'react'
 import clsx from 'clsx'
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
 
 import { styled, useTheme } from '@mui/material'
 
@@ -121,8 +121,6 @@ const nifBoundingRect = (domEl: HTMLElement, refRect: DOMRect): Rect => {
  * @returns [layouted wires, number of swin-laned required]
  */
 const layoutWires = (wires: Wire[], nifContainerDomId: string): [SwimlaneWire[], number] => {
-    // No wires yet in any swim-lanes.
-    const lanes: (SwimlaneWire[])[] = []
     const refPosition = document.getElementById(nifContainerDomId)!.getBoundingClientRect()
     const refWidth = refPosition.right - refPosition.left
     // Determine the layout information for each individual wire.
@@ -168,30 +166,30 @@ const layoutWires = (wires: Wire[], nifContainerDomId: string): [SwimlaneWire[],
         return swr
     })
         // Remove any wires that we couldn't layout.
-        .filter(w => !!w)
+        .filter((w): w is SwimlaneWire => !!w) // https://stackoverflow.com/a/51577579
         // Sort the wire according to their length and then wires of the same
         // length according to their position.
-        .sort((w1, w2) => (w1!.len - w2!.len) || (w1!.from - w2!.from))
-    // Now let's play ... FROGGER! Well, kind of.
-    wiresInLanes.forEach(wire => {
+        .sort((w1, w2) => (w1.len - w2.len) || (w1.from - w2.from))
+    // No wires yet in any swim-lanes. So ..... let's play ... FROGGER! Well,
+    // kind of.
+    const lanes: (SwimlaneWire[])[] = []
+    wiresInLanes.forEach((wire: SwimlaneWire) => {
         for (let lane = 0; ; lane++) {
             const wiresInThisLane = lanes[lane]
-            if (wiresInThisLane) {
-                if (!wiresInThisLane.find(placedWire => (wire!.to > placedWire.from) || (wire!.from < placedWire.to))) {
-                    // no overlap, we can use this lane.
-                    wire!.lane = lane
-                    lanes[lane].push(wire!)
-                    return // proceed with placing the next wire...
-                }
-                // continue searching in the next lane for some room to place
-                // our frogger in...
-            } else {
+            if (!wiresInThisLane) {
                 // we've found no suitable place in the existing lanes, so add a
                 // new lane and place just our wire into it for the moment.
                 wire!.lane = lane
-                lanes[lane] = [wire!]
-                return // proceed with placing new wire...
+                lanes[lane] = [wire]
+                return // proceed with placing the nextt wire...
             }
+            if (wiresInThisLane.find(placedWire => (placedWire.from <= wire.to) && (placedWire.to >= wire.from))) {
+                continue
+            }
+            // no overlap, we can use this lane.
+            wire.lane = lane
+            lanes[lane].push(wire)
+            return // proceed with placing the next wire...
         }
     })
     // Done, all wires have been placed in some lane. Someone else might now
