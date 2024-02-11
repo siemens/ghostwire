@@ -18,6 +18,7 @@ import { Ghost } from 'components/ghost'
 import RefreshButton from 'components/refreshbutton'
 import Metadata from 'components/metadata'
 import { getFilterFn } from 'components/filterinput'
+import { StripedNotice } from 'components/stripednotice'
 
 
 /**
@@ -57,6 +58,11 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
             {(netnses.length &&
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />
+                    {!!filterPattern &&
+                        <StripedNotice>
+                            <FilterAltIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
+                            filtering applied
+                        </StripedNotice>}
                     <NetnsBreadboard
                         netns={netnses}
                         filterLo={!showLoopbacks}
