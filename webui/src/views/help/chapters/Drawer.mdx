@@ -1,3 +1,6 @@
+import { Grid, List, ListSubheader } from '@mui/material'
+import { useAtom } from 'jotai'
+import { filterPatternAtom, filterCaseSensitiveAtom, filterRegexpAtom } from 'views/settings'
 import MenuIcon from '@mui/icons-material/Menu'
 import WiringViewIcon from 'icons/views/Wiring'
 import OpenHouseIcon from 'icons/views/OpenHouse'
@@ -7,6 +10,9 @@ import HelpIcon from '@mui/icons-material/Help'
 import GhostwireIcon from 'icons/Ghostwire'
 import Privileged from 'icons/containeestates/Privileged'
 import Capable from 'icons/containeestates/Capable'
+import CaseIcon from 'icons/Case'
+import RegexpIcon from 'icons/Regexp'
+import { FilterInput } from 'components/filterinput'
 import { ContaineeNavigator } from 'components/containeenavigator'
 import { initNetns, morbidNetns, containerBox, containerBoxProcess, podBox, pod } from '../mockdata'
 import { ContainerState, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
@@ -17,7 +23,41 @@ export const netns = [
   {...morbidNetns, containers: [{...containerBox, ealdorman: {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}, state: ContainerState.Paused, name: 'Patient_Penguin_1'}]},
   {...morbidNetns, pods: [pod], containers: [podBox]},
   {...morbidNetns, containers: [{...containerBox, name: 'Privileged_Pinhead_1', labels: {[GHOSTWIRE_LABEL_ROOT+'container.privileged']: 'True'}}]},
-]
+];
+export const Navi = () => {
+  const [filterPattern, setFilterPattern] = useAtom(filterPatternAtom)
+  const [filterCase, setFilterCase] = useAtom(filterCaseSensitiveAtom)
+  const [filterRegexp, setFilterRegexp] = useAtom(filterRegexpAtom)
+
+  const onFilterChangeHandler = (fp) => {
+      if (filterPattern != fp.pattern) setFilterPattern(fp.pattern)
+      if (filterCase != fp.isCaseSensitive) setFilterCase(fp.isCaseSensitive)
+      if (filterRegexp != fp.isRegexp) setFilterRegexp(fp.isRegexp)
+  }
+
+  return <List
+      subheader={<ListSubheader onClick={(event) => {
+          event.stopPropagation()
+          event.preventDefault()
+      }}>
+        <Grid container direction="column">
+          <Grid item>Containees</Grid>
+          <Grid item>
+              <FilterInput
+                  filterPattern={{
+                      pattern: filterPattern,
+                      isCaseSensitive: filterCase,
+                      isRegexp: filterRegexp,
+                  }}
+                  onChange={onFilterChangeHandler}
+              />
+          </Grid>
+        </Grid>
+      </ListSubheader>}
+    >
+    <ContaineeNavigator nolink allnetns={netns} />
+  </List>
+}
 
 # <MenuIcon className="icon"/> Navigation Drawer
 
@@ -57,15 +97,31 @@ swiping from the left side of the <Brand/> application.
 Only when the <WiringViewIcon className="icon" />&nbsp;wiring and
 &#32;<NetnsViewIcon className="icon"/>&nbsp;details views the navigation drawer
 will additionally show the list of available pods, containers, and stand-alone
-processes – the so-called ["containees"](containees). For instance:
+processes – the so-called "[containees](containees)". For instance:
 
 <p/>
 
 <Example style={{ maxWidth: '20em'}}>
-  <ContaineeNavigator nolink allnetns={netns} />
+  <Navi/>
 </Example>
 
 <p/>
+
+##### Filter
+
+The list – as well as the wiring and details views – can be filtered to show
+only elements matching a filter pattern. The pattern is interpreted to be either
+a substring or an ECMAScript/JavaScript [regular
+expression](https://regex101.com/). If you like, you can try in our above
+example: it is live!
+
+- &#32;<CaseIcon className="icon"/> switches case sensitivity on or off.
+
+- &#32;<RegexpIcon className="icon"/> switches between substring match and
+  regular expression match.
+
+> **Note:** press "/" or Ctrl+f to open the drawer and move your text cursor
+> directly into the filter input field.
 
 ##### Pods ./. Containers
 
