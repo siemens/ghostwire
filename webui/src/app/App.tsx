@@ -74,9 +74,9 @@ const refresherIntervals = [
 ]
 
 /**
- * The `LxGhostwireApp` component renders the general app layout without
- * thinking about providers for routing, themes, discovery, et cetera. So this
- * component deals with:
+ * The `GhostwireApp` component renders the general app layout without thinking
+ * about providers for routing, themes, discovery, et cetera. So this component
+ * deals with:
  * - app bar with title, number of namespaces badge, quick actions.
  * - drawer for navigating the different views and types of namespaces.
  * - scrollable content area.
@@ -107,11 +107,12 @@ const GhostwireApp = () => {
     const wmatch1 = useMatch('/w')
     const wmatch2 = useMatch('/w/:slug')
     const isWiring = wmatch1 !== null || wmatch2 !== null
-    const isBreadboard = wmatch1 != null
 
     const nmatch1 = useMatch('/n')
     const nmatch2 = useMatch('/n/:slug')
     const isDetails = nmatch1 !== null || nmatch2 != null
+
+    const canFilter = wmatch1 !== null || nmatch1 !== null
 
     const listContainees = isWiring || isDetails
 
@@ -162,7 +163,7 @@ const GhostwireApp = () => {
                         <Brand />
                     </Typography>
                 </>}
-                drawer={closeDrawer => <>
+                drawer={(closeDrawer, focusRef) => <>
                     <List onClick={closeDrawer}>
                         <DrawerLinkItem
                             key="wiring"
@@ -212,15 +213,17 @@ const GhostwireApp = () => {
                             }}>
                                 <Grid container direction="column">
                                     <Grid item>Containees</Grid>
-                                    { isBreadboard &&
+                                    { canFilter &&
                                         <Grid item>
                                             <FilterInput
+                                                focusRef={focusRef}
                                                 filterPattern={{
                                                     pattern: filterPattern,
                                                     isCaseSensitive: filterCase,
                                                     isRegexp: filterRegexp,
                                                 }}
                                                 onChange={onFilterChangeHandler}
+                                                onEnter={closeDrawer}
                                             />
                                         </Grid>
                                     }

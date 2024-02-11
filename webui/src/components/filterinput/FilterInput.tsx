@@ -32,12 +32,36 @@ export const getFilterFn = (fp: FilterPattern) => {
 }
 
 export interface FilterInputProps {
+    /**
+     * an optional filter pattern, including the matching options, such as
+     * case-sensitive and interpretation of the pattern as a regexp instead of a
+     * verbatim substring.
+     */
     filterPattern?: FilterPattern
+    /**
+     * callback that is called whenever the filter pattern or its options
+     * changes; this callback already is debounced.
+     * 
+     * @param fp filter patting including options.
+     * @returns void
+     */
     onChange: (fp: FilterPattern) => void
+    /**
+     * callback when the Enter key is pressed.
+     * 
+     * @returns void
+     */
+    onEnter?: () => void
+    /** pattern change callback debounce wait in milliseconds. */
     debounceWait?: number
+    /**
+     * an optional React reference (object) that will be set to the text input's
+     * HTML input field. 
+     */
+    focusRef?: React.RefObject<HTMLDivElement>
 }
 
-export const FilterInput = ({ filterPattern, onChange, debounceWait }: FilterInputProps) => {
+export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, onEnter }: FilterInputProps) => {
 
     debounceWait = debounceWait || 300
 
@@ -84,6 +108,13 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait }: FilterInp
         debouncedOnChange(pattern, newopts)
     }
 
+    const handleEnter = (event: React.KeyboardEvent) => {
+        if (event.key !== 'Enter' || !onEnter) {
+            return
+        }
+        onEnter()
+    }
+
     // If the pattern is to be used as a regular expression, do a dry run in
     // order to determine whether the regexp pattern is valid or not. We later
     // use this to control the text input field's error indication.
@@ -98,17 +129,20 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait }: FilterInp
 
     return <Box sx={{ display: "inline-flex", alignItems: "center", width: "100%" }}>
         <TextField
-            sx={{ flexGrow: 1 }}
+            placeholder="filter"
+            value={pattern}
             size="small"
             variant="standard"
-            placeholder="filter"
+            sx={{ flexGrow: 1 }}
+            inputRef={focusRef}
             error={regexpError}
             onChange={handleInput}
-            value={pattern}
+            onKeyDown={handleEnter}
             InputProps={{
                 endAdornment: <IconButton
                     sx={{ visibility: pattern && 'visible' || 'hidden' }}
                     onClick={handleClear}
+                    size="small"
                 >
                     <Clear fontSize="small" />
                 </IconButton>
