@@ -133,7 +133,7 @@ const AppBarDrawer = ({
 
     // Register hotkey to open the drawer and put the focus on the containee
     // filter pattern input, if any.
-    useHotkeys(['/', 'ctrl+s'], (e) => {
+    useHotkeys(['/', 'ctrl+f'], (e) => {
         e.preventDefault()
         e.stopPropagation()
         setDrawerOpen(true)

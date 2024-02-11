@@ -139,6 +139,7 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, o
             onChange={handleInput}
             onKeyDown={handleEnter}
             InputProps={{
+                spellCheck: false,
                 endAdornment: <IconButton
                     sx={{ visibility: pattern && 'visible' || 'hidden' }}
                     onClick={handleClear}
