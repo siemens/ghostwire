@@ -2,9 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { NetworkInterface } from "models/gw";
-
-
 export type Target = NetnsTarget | NamedTarget
 
 /**
