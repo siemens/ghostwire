@@ -212,7 +212,9 @@ export const TargetCapture = ({ target, size = 'medium', className, demo }: Targ
             || (isPod(containee as Containee) && (containee as Pod).containers[0].turtleNamespace)
             || '',
     }
-    const capturl = `packetflix:${baseURI.toString()}capture?container=${encodeURIComponent(JSON.stringify(targetDetails))}`
+    const capturl = `packetflix:${baseURI.toString()}capture`
+        + `?container=${encodeURIComponent(JSON.stringify(targetDetails))}`
+        + `&nif=${nifs.join("/")}`
 
     return (
         <SharkButton
