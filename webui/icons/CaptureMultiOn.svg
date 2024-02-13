@@ -5,7 +5,7 @@
    width="24"
    version="1.1"
    id="svg6"
-   sodipodi:docname="Capture.svg"
+   sodipodi:docname="CaptureMultiOn.svg"
    inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -42,9 +42,9 @@
      showgrid="true"
      inkscape:pagecheckerboard="false"
      showguides="true"
-     inkscape:zoom="32"
-     inkscape:cx="6.15625"
-     inkscape:cy="14.140625"
+     inkscape:zoom="22.627417"
+     inkscape:cx="-0.72920387"
+     inkscape:cy="7.8002717"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -63,7 +63,7 @@
        visible="true" />
   </sodipodi:namedview>
   <path
-     style="color:#000000;fill:#000000;stroke-linejoin:round;-inkscape-stroke:none"
-     d="M 15.853516,5.0117187 C 14.286645,5.2438478 12.136948,6.0574516 10.298828,7.7988281 8.6361458,9.3740009 7.3410928,11.785581 7.0976562,15 H 3 v 2 H 8 A 1.0001,1.0001 0 0 0 9,16 C 9,12.752384 10.188904,10.65862 11.675781,9.25 12.671888,8.3063201 13.7601,7.7840415 14.757813,7.4277344 14.037957,10.774242 14.005339,13.091169 15.048828,16.308594 A 1.0001,1.0001 0 0 0 16,17 h 5 V 15 H 16.814453 C 15.905337,11.964915 15.876696,10.34569 16.966797,6.2578125 A 1.0001,1.0001 0 0 0 15.853516,5.0117187 Z"
-     id="path1" />
+     id="path3-9"
+     style="color:#000000;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+     d="M 12.984375 5 C 12.941061 5.0008131 12.897959 5.0051273 12.853516 5.0117188 C 9.4789217 5.5116585 4 8.658822 4 16 C 4.000055 16.552261 4.4477386 16.999945 5 17 L 10.037109 17 C 10.013029 17.324812 10 17.658152 10 18 C 10.000055 18.552261 10.447739 18.999945 11 19 L 19 19 C 19.679123 18.999892 20.160657 18.337413 19.951172 17.691406 C 18.780536 14.081947 18.7839 12.693655 19.966797 8.2578125 C 20.467822 6.3721213 16.276457 6.7741388 13.173828 9.9140625 C 13.304197 8.9068236 13.566529 7.7588118 13.966797 6.2578125 C 14.139856 5.6064742 13.634085 4.9878031 12.984375 5 z " />
 </svg>
