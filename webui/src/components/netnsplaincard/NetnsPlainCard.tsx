@@ -16,7 +16,7 @@ import { NifNavigator } from 'components/nifnavigator'
 import { RoutingEtcIcon } from 'icons/RoutingEtc'
 import CaptureMultiIcon from 'icons/CaptureMulti'
 import CaptureMultiOnIcon from 'icons/CaptureMultiOn'
-import CaptureIcon from 'icons/Capture'
+import { TargetCapture } from 'components/targetcapture'
 
 
 const NetnsPaper = styled(Paper)(({ theme }) => ({
@@ -388,17 +388,29 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
             <Box id={netnsid} sx={{ position: 'relative' }}>
                 <CardButtonBox>
                     <Fade in={selectNifs} timeout={500}>
-                        <IconButton size="small">
-                            <CaptureIcon />
-                        </IconButton>
+                        <Tooltip title="start capture from selected network interfaces">
+                            <span>
+                                <TargetCapture
+                                    target={netns}
+                                    targetNifs={selectedNifs}
+                                    disabled={!selectNifs || !selectedNifs.length}
+                                />
+                            </span>
+                        </Tooltip>
                     </Fade>
-                    <Checkbox
-                        size="small"
-                        checked={selectNifs}
-                        icon={<CaptureMultiIcon />}
-                        checkedIcon={<CaptureMultiOnIcon />}
-                        onChange={handleMultiNic}
-                    />
+                    <Tooltip
+                        title={!selectNifs
+                            ? "select network interfaces for capture"
+                            : "exit selecting network interfaces for capture"}
+                    >
+                        <Checkbox
+                            size="small"
+                            checked={selectNifs}
+                            icon={<CaptureMultiIcon />}
+                            checkedIcon={<CaptureMultiOnIcon />}
+                            onChange={handleMultiNic}
+                        />
+                    </Tooltip>
                     {/* only render the zoom button when there's a callback for it ;) */}
                     {onNetnsZoom &&
                         <Tooltip title="show only this network namespace">

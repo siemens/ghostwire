@@ -115,12 +115,16 @@ const SharkButton = styled(Button)(({ theme }) => ({
 export interface TargetCaptureProps {
     /** capture target */
     target: Containee | NetworkInterface | NetworkNamespace
+    /** optionally list of network interfaces to restrict capture to in target */
+    targetNifs?: string[]
     /** button size */
     size?: 'small' | 'medium'
     /** CSS class name(s) */
     className?: string
     /** for use in help, always shows up, doesn't start capture. */
     demo?: boolean
+
+    disabled?: boolean
 }
 
 /**
@@ -159,7 +163,7 @@ export interface TargetCaptureProps {
  *   consistency checks and re-lookup will work the same as when specifying a
  *   containee directly.
  */
-export const TargetCapture = ({ target, size = 'medium', className, demo }: TargetCaptureProps) => {
+export const TargetCapture = ({ target, targetNifs, size = 'medium', className, demo, disabled }: TargetCaptureProps) => {
     // Is capturing enabled in the UI?
     const { enableMonolith } = useDynVars()
 
@@ -180,16 +184,17 @@ export const TargetCapture = ({ target, size = 'medium', className, demo }: Targ
 
     // We never hide the capture button, but we'll disable it for a network
     // interface target which isn't operational.
-    const biting = !isNetworkInterface(target) || isOperational(target)
+    const biting = (!isNetworkInterface(target) || isOperational(target)) && !disabled
 
     // Unless a specific network interface is targetted, capture from all
     // "working" network interfaces of the network namespace involved.
     const nifs: string[] =
-        (isNetworkInterface(target) && [target.name])
-        || (!!netns && Object.values(netns.nifs)
-            .filter(nif => isOperational(nif))
-            .map(nif => nif.name))
-        || []
+        ((isNetworkInterface(target) && [target.name])
+            || (!!netns && Object.values(netns.nifs)
+                .filter(nif => isOperational(nif))
+                .map(nif => nif.name))
+            || [])
+            .filter(nif => !targetNifs || targetNifs.includes(nif))
 
     // Try to get a suitable containee that we can use to later add some useful
     // meta information to the packet capture stream.
