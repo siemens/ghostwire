@@ -17,6 +17,12 @@ import { RoutingEtcIcon } from 'icons/RoutingEtc'
 import CaptureMultiIcon from 'icons/CaptureMulti'
 import CaptureMultiOnIcon from 'icons/CaptureMultiOn'
 import { TargetCapture } from 'components/targetcapture'
+import { useDynVars } from 'components/dynvars'
+
+
+// During development The (Capturing) Monolith can be enabled using
+// VITE_APP_ENABLE_MONOLITH.
+const forceMonolith = !!import.meta.env.VITE_APP_ENABLE_MONOLITH
 
 
 const NetnsPaper = styled(Paper)(({ theme }) => ({
@@ -245,6 +251,9 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
 
     const netnsid = useContextualId(netnsId(netns))
 
+    // Is capturing enabled in the UI?
+    const { enableMonolith } = useDynVars()
+
     const [selectNifs, setSelectNifs] = useState(false)
     const [selectedNifs, setSelectedNifs] = useState<string[]>([])
 
@@ -387,30 +396,32 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
         <NetnsPaper className={className}>
             <Box id={netnsid} sx={{ position: 'relative' }}>
                 <CardButtonBox>
-                    <Fade in={selectNifs} timeout={500}>
-                        <Tooltip title="start capture from selected network interfaces">
-                            <span>
-                                <TargetCapture
-                                    target={netns}
-                                    targetNifs={selectedNifs}
-                                    disabled={!selectNifs || !selectedNifs.length}
-                                />
-                            </span>
+                    <Box sx={{ display: (enableMonolith || forceMonolith) ? 'inline-block' : 'none' }}>
+                        <Fade in={selectNifs} timeout={500}>
+                            <Tooltip title="start capture from selected network interfaces">
+                                <span>
+                                    <TargetCapture
+                                        target={netns}
+                                        targetNifs={selectedNifs}
+                                        disabled={!selectNifs || !selectedNifs.length}
+                                    />
+                                </span>
+                            </Tooltip>
+                        </Fade>
+                        <Tooltip
+                            title={!selectNifs
+                                ? "select network interfaces for capture"
+                                : "exit selecting network interfaces for capture"}
+                        >
+                            <Checkbox
+                                size="small"
+                                checked={selectNifs}
+                                icon={<CaptureMultiIcon />}
+                                checkedIcon={<CaptureMultiOnIcon />}
+                                onChange={handleMultiNic}
+                            />
                         </Tooltip>
-                    </Fade>
-                    <Tooltip
-                        title={!selectNifs
-                            ? "select network interfaces for capture"
-                            : "exit selecting network interfaces for capture"}
-                    >
-                        <Checkbox
-                            size="small"
-                            checked={selectNifs}
-                            icon={<CaptureMultiIcon />}
-                            checkedIcon={<CaptureMultiOnIcon />}
-                            onChange={handleMultiNic}
-                        />
-                    </Tooltip>
+                    </Box>
                     {/* only render the zoom button when there's a callback for it ;) */}
                     {onNetnsZoom &&
                         <Tooltip title="show only this network namespace">

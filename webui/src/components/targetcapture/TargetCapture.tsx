@@ -16,8 +16,8 @@ import { keyframes } from '@mui/system';
 
 
 // During development The (Capturing) Monolith can be enabled using
-// REACT_APP_ENABLE_MONOLITH.
-const forceMonolith = true //FIXME: !!import.meta.env.REACT_APP_ENABLE_MONOLITH
+// VITE_APP_ENABLE_MONOLITH.
+const forceMonolith = !!import.meta.env.VITE_APP_ENABLE_MONOLITH
 
 // Calculate the static part of any remote live packet capture URL; it bases on
 // the base URI of the application, so we only calculate it once when this
