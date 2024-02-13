@@ -70,8 +70,8 @@
     "vite-tsconfig-paths": "^4.2.3"
   },
   "scripts": {
-    "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} REACT_APP_ENABLE_MONOLITH=true vite --port 3300",
-    "unstrict": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} REACT_APP_UNSTRICT=true REACT_APP_ENABLE_MONOLITH=true vite --port 3300",
+    "start": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} vite --port 3300",
+    "unstrict": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} VITE_VITE_APP_UNSTRICT=true VITE_APP_ENABLE_MONOLITH=true vite --port 3300",
     "build": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} vite build",
     "imagebuild": "REACT_APP_GIT_VERSION=${GIT_VERSION:-$(git describe)} vite build",
     "icons": "node genicons",
