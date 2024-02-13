@@ -1,4 +1,9 @@
 import CaptureIcon from 'icons/Capture'
+import CaptureMultiIcon from 'icons/CaptureMulti'
+import CaptureMultiOnIcon from 'icons/CaptureMultiOn'
+import CaptureCheckIcon from 'icons/CaptureCheck'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
+import FullscreenIcon from "@mui/icons-material/Fullscreen"
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { ContaineeBadge } from 'components/containeebadge'
 import { NifBadge } from 'components/nifbadge'
@@ -19,9 +24,11 @@ plugin](https://github.com/siemens/cshargextcap/releases) installed.
 Live captures allow you to see network packets in "real time" (albeit with some
 delay due to transmitting them from the capture host to your desktop Wireshark).
 
-No more first having to do start and later stop some "blind" capturing and
-downloading a capture file afterwards – just to find out that you got it wrong,
-so you need to rinse and repeat, hoping it'll work this time.
+No more "blind capturing" and downloading huge pcap files – just to find out
+that you got it wrong, so you need to rinse and repeat, hoping it'll work this
+time.
+
+## One-Click Capture
 
 To start live captures, simply click on one of the <CaptureIcon
 className="icon"/> capture buttons.
@@ -41,6 +48,31 @@ traffic differs as follows:
 | <span style={{whiteSpace: "nowrap"}}><ContaineeBadge containee={pod} /><TargetCapture demo target={containerBox.netns} /></span> | captures from all containers of this particular pod – *please see note below*. |
 | <span style={{whiteSpace: "nowrap"}}><NifBadge nif={veth1Nif} /><TargetCapture demo target={veth1Nif} /></span> | captures only from this particular network interface. |
 
+## Selective Multi-Interface Capture
+
+If you want to selectively capture from a subset of network interfaces of a
+virtual IP stack/network namespace, first tap or click on a <CaptureMultiIcon
+className="icon"/> multi capture button (next to a details zoom <FullscreenIcon
+className="icon"/> button). Notice how it turns active, displaying now as
+<CaptureMultiOnIcon className="icon"/>. Tap or click this button again to leave
+mult-interface selection mode.
+
+While in multi-interface selection mode, the capture buttons next to network
+interfaces are replaced by <CheckBoxOutlineBlankIcon
+className="icon"/>/<CaptureCheckIcon className="icon"/> checkboxes. You can now
+check the network interfaces you want to capture from in the same live capture
+session.
+
+To start a live capture session, touch or click the <CaptureIcon
+className="icon"/> capture button that is now visible right next to the
+multi-interface selection button <CaptureMultiIcon className="icon"/>. Please
+note this capture button will be disabled as long as no network interface has
+been selected.
+
+To leave the multi-interface selection mode, tap or click the
+<CaptureMultiOnIcon className="icon"/> button. It then turns into
+<CaptureMultiIcon className="icon"/> back again.
+
 ## Notes
 
 #### Live Capture Wireshark Plugin and Service
@@ -52,6 +84,7 @@ To use live packet capture you'll need:
   **Wireshark™ version 3.0.2** or later installed on your client system.
   Supported systems are:
   - Linux x86 64 bit and ARM 64 bit,
+  - macos x86 64 bit and ARM 64 bit,
   - Windows x86 64 bit only.
 
 - on the server side you'll need the [Packetflix live capture streaming
