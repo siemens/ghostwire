@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { ChangeEvent, useState } from 'react'
 
-import { IconButton, styled, Tooltip } from '@mui/material'
+import { Box, Checkbox, Fade, IconButton, styled, Tooltip } from '@mui/material'
 import { Paper } from '@mui/material'
 import FullscreenIcon from '@mui/icons-material/Fullscreen'
 
@@ -14,6 +14,9 @@ import { useContextualId } from 'components/idcontext'
 import { NifBadge } from 'components/nifbadge'
 import { NifNavigator } from 'components/nifnavigator'
 import { RoutingEtcIcon } from 'icons/RoutingEtc'
+import CaptureMultiIcon from 'icons/CaptureMulti'
+import CaptureMultiOnIcon from 'icons/CaptureMultiOn'
+import CaptureIcon from 'icons/Capture'
 
 
 const NetnsPaper = styled(Paper)(({ theme }) => ({
@@ -176,7 +179,7 @@ const StretchedNif = styled(NifNavigator)(() => ({
     width: '100%',
 }))
 
-const MaximizeButton = styled(IconButton)(({ theme }) => ({
+const CardButtonBox = styled(Box)(({ theme }) => ({
     float: 'right',
     // Move the right-floated button partly back into the padding, as the
     // button has a large "corona" and we thus get a more pleasing visual
@@ -184,7 +187,7 @@ const MaximizeButton = styled(IconButton)(({ theme }) => ({
     // the top of the network namespace card.
     position: 'relative',
     top: theme.spacing(-1),
-    left: theme.spacing(1),
+    right: theme.spacing(-1),
 }))
 
 export interface NetnsPlainCardProps {
@@ -239,7 +242,10 @@ export interface NetnsPlainCardProps {
  * up to its parent. Use the callbacks, Luke!
  */
 export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZoom, families, className }: NetnsPlainCardProps) => {
+
     const netnsid = useContextualId(netnsId(netns))
+
+    const [selectNifs, setSelectNifs] = useState(false)
 
     const nifsWithoutBridgePorts = Object.values(netns.nifs)
         .filter(nif => !nif.master || nif.master.kind !== 'bridge')
@@ -264,7 +270,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                 >
                     <StretchedNif
                         nif={nif}
-                        capture
+                        capture={!selectNifs}
                         anchor
                         stretch
                         alignRight
@@ -281,7 +287,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
             >
                 <NifBadge
                     nif={nif}
-                    capture
+                    capture={!selectNifs}
                     anchor
                     families={families}
                 />
@@ -307,7 +313,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                             <NifNavigator
                                 key={nif.name}
                                 nif={nif}
-                                capture
+                                capture={!selectNifs}
                                 anchor
                                 families={families}
                                 stretch
@@ -344,36 +350,55 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
         onNetnsZoom && onNetnsZoom(netns)
     }
 
+    const handleMultiNic = (e: ChangeEvent<HTMLInputElement>) => {
+        setSelectNifs(e.target.checked)
+    }
+
     return (
         <NetnsPaper className={className}>
-            <span id={netnsid} />
-            {/* only render the zoom button when there's a callback for it ;) */}
-            {onNetnsZoom &&
-                <Tooltip title="show only this network namespace">
-                    <MaximizeButton onClick={handleZoom} size="large">
-                        <FullscreenIcon />
-                    </MaximizeButton>
-                </Tooltip>}
+            <Box id={netnsid} sx={{ position: 'relative' }}>
+                <CardButtonBox>
+                    <Fade in={selectNifs} timeout={500}>
+                        <IconButton size="small">
+                            <CaptureIcon />
+                        </IconButton>
+                    </Fade>
+                    <Checkbox
+                        size="small"
+                        checked={selectNifs}
+                        icon={<CaptureMultiIcon />}
+                        checkedIcon={<CaptureMultiOnIcon />}
+                        onChange={handleMultiNic}
+                    />
+                    {/* only render the zoom button when there's a callback for it ;) */}
+                    {onNetnsZoom &&
+                        <Tooltip title="show only this network namespace">
+                            <IconButton onClick={handleZoom} size="small">
+                                <FullscreenIcon />
+                            </IconButton>
+                        </Tooltip>}
+                </CardButtonBox>
 
-            {/* render the containees of this network namespace. */}
-            <Containees>
-                {containeesOfNetns(netns)
-                    .sort(sortContaineesByName)
-                    .map(cntr =>
-                        <ContaineeBadge
-                            containee={cntr}
-                            key={containeeKey(cntr)}
-                            angled
-                            button
-                            capture
-                            endIcon={<FullscreenIcon />}
-                            onClick={onContaineeZoom as (_: Containee) => void}
-                        />)}
-            </Containees>
+                {/* render the containees of this network namespace. */}
+                <Containees>
+                    {containeesOfNetns(netns)
+                        .sort(sortContaineesByName)
+                        .map(cntr =>
+                            <ContaineeBadge
+                                containee={cntr}
+                                key={containeeKey(cntr)}
+                                angled
+                                button
+                                capture={!selectNifs}
+                                endIcon={<FullscreenIcon />}
+                                onClick={onContaineeZoom as (_: Containee) => void}
+                            />)}
+                </Containees>
 
-            {/* and finally render all the network interfaces in this namespace */}
-            <Nifs>{renderNifs()}</Nifs>
-        </NetnsPaper>
+                {/* and finally render all the network interfaces in this namespace */}
+                <Nifs>{renderNifs()}</Nifs>
+            </Box>
+        </NetnsPaper >
     );
 }
 
