@@ -5,7 +5,7 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import { Button, styled, Tooltip } from '@mui/material'
+import { Box, Button, styled, Tooltip } from '@mui/material'
 
 import { containeeDescription, containeeState, ContainerState, containerStateString, Containee, containeeFullName, isPrivilegedContainer, isElevatedContainer, isContainer, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
 import { ContaineeIcon } from 'utils/containeeicon'
@@ -161,6 +161,7 @@ export interface ContaineeBadgeProps {
     notooltip?: boolean
     /** show an additional capture button? */
     capture?: boolean
+    hideCapture?: boolean
 }
 
 /**
@@ -203,6 +204,7 @@ export const ContaineeBadge = ({
     endIcon,
     notooltip,
     capture,
+    hideCapture,
     onClick
 }: ContaineeBadgeProps) => {
     const privileged = isPrivilegedContainer(containee)
@@ -220,7 +222,9 @@ export const ContaineeBadge = ({
 
     const CeeIcon = ContaineeIcon(containee)
 
-    const shark = capture && <CaptureButton target={containee} />
+    const shark = capture && (!hideCapture
+        ? <CaptureButton target={containee} />
+        : <Box sx={{width: '30px', display:'inline-block'}} />)
 
     const kingOfBoxIcon = privileged
         ? <PrivilegedIcon className="kinginthebox" />

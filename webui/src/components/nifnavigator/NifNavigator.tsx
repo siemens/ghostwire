@@ -53,6 +53,9 @@ export interface NifNavigatorProps {
     nif: NetworkInterface
     /** optionally show a network interface capture button? */
     capture?: boolean
+    /** optionally show a nif capture checkbox */
+    nifCheck?: boolean
+    checked?: boolean
     /** put an ID to this badge in any case (for placing the wiring). */
     anchor?: boolean
     /** 
@@ -67,6 +70,11 @@ export interface NifNavigatorProps {
      * related network interface.
      */
     onNavigation?: (nif: NetworkInterface) => void
+    /**
+     * optional callback handler: when set, the callback will fire when the
+     * network interface case checked/unchecked.
+     */
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>, nif: NetworkInterface) => void
     /** 
      * the IP address family/families to show (filter *through*, as opposed to
      * filtering *out*). If left undefined, then it defaults to showing both
@@ -97,10 +105,13 @@ export interface NifNavigatorProps {
 export const NifNavigator = ({
     nif,
     capture,
+    nifCheck,
     anchor,
     stretch,
     alignRight,
     onNavigation,
+    onChange,
+    checked,
     families,
     className,
     style
@@ -154,12 +165,15 @@ export const NifNavigator = ({
         <NifBadge
             nif={nif}
             capture={capture}
+            nifCheck={nifCheck}
+            checked={checked}
             anchor={anchor}
             families={families}
             button={relatedNifs.length > 0}
             stretch={stretch}
             alignRight={alignRight}
             onClick={handleBadgeClick}
+            onChange={onChange}
             className={className}
             style={style}
         />

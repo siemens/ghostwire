@@ -18,6 +18,7 @@ import { TooltipWrapper } from 'utils/tooltipwrapper'
 import { relationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 import { TargetCapture } from 'components/targetcapture'
+import { NifCheckbox } from 'components/nifcheckbox'
 
 
 // The outer span holding together an optional "hardware" NIC icon as well
@@ -65,6 +66,14 @@ const Promiscuous = styled('span')(({ theme }) => ({
 }))
 
 const Capture = styled(TargetCapture)(() => ({
+    marginLeft: '0.2em',
+    '&.alignright': {
+        marginLeft: 0,
+        marginRight: '0.2em',
+    }
+}))
+
+const FinCheckbox = styled(NifCheckbox)(() => ({
     marginLeft: '0.2em',
     '&.alignright': {
         marginLeft: 0,
@@ -235,6 +244,9 @@ export interface NifBadgeProps {
     notooltip?: boolean
     /** optionally show a capture button? */
     capture?: boolean
+    /** optionally show a nif capture checkbox */
+    nifCheck?: boolean
+    checked?: boolean
     /** 
      * the IP address family/families to show (filter *through*, as opposed to
      * filtering *out*) as part of the tooltip. If left undefined, then it
@@ -254,10 +266,15 @@ export interface NifBadgeProps {
      */
     endIcon?: React.ReactNode
     /** 
-     * optional callback handler: when set, the callback will be fired when
-     * the user clicks on the badge.
+     * optional callback handler: when set, the callback will fire when the user
+     * clicks on the badge.
      */
     onClick?: (event: React.MouseEvent<HTMLElement>, nif: NetworkInterface) => void
+    /**
+     * optional callback handler: when set, the callback will fire when the
+     * network interface case checked/unchecked.
+     */
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>, nif: NetworkInterface) => void
 }
 
 /**
@@ -307,11 +324,14 @@ export const NifBadge = ({
     style,
     notooltip,
     capture,
+    nifCheck,
+    checked,
     families: fam,
     stretch,
     alignRight,
     endIcon,
-    onClick
+    onClick,
+    onChange
 }: NifBadgeProps) => {
     // We might later need the contextual base DOM element ID for constructing
     // the DOM element identifiers of related network interfaces in order to
@@ -408,6 +428,12 @@ export const NifBadge = ({
         }
     }
 
+    const HandleNifChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (onChange) {
+            onChange(event, nif)
+        }
+    }
+
     const HWIcon = nifSRIOVIcons[nif.sriovrole || SRIOVRole.None]
 
     // With lots of information prepared we can finally render the badge,
@@ -419,7 +445,10 @@ export const NifBadge = ({
             style={style}
             id={anchor || !button ? nifDomId : ''}
         >
-            {capture && alignRight && <Capture className="nifcaptureicon alignright" target={nif} />}
+            {(capture || nifCheck) && alignRight &&
+                (nifCheck
+                    ? <FinCheckbox className="alignright" checked={checked} nif={nif} onChange={HandleNifChange} />
+                    : <Capture className="nifcaptureicon alignright" target={nif} />)}
             {nif.isPhysical &&
                 <HWNif className="nifbagdeicon">
                     <HWIcon />
@@ -442,7 +471,10 @@ export const NifBadge = ({
                     className={clsx(nif.operstate.toLowerCase(), stretchBadgeClass, alignRightClass)}
                 >{content}{endIcon}</Nif>
             }
-            {capture && !alignRight && <Capture className="nifcaptureicon" target={nif} />}
+            {(capture || nifCheck) && !alignRight &&
+                (nifCheck
+                    ? <FinCheckbox checked={checked} nif={nif} onChange={HandleNifChange} />
+                    : <Capture className="nifcaptureicon" target={nif} />)}
         </Badge>
         , tooltip, !notooltip)
 }

@@ -246,6 +246,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
     const netnsid = useContextualId(netnsId(netns))
 
     const [selectNifs, setSelectNifs] = useState(false)
+    const [selectedNifs, setSelectedNifs] = useState<string[]>([])
 
     const nifsWithoutBridgePorts = Object.values(netns.nifs)
         .filter(nif => !nif.master || nif.master.kind !== 'bridge')
@@ -253,6 +254,25 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
 
     const handleRouting = () => {
         onNetnsZoom && onNetnsZoom(netns, 'routes')
+    }
+
+    // keep an up-to-date list of selected network interfaces in this network
+    // namespace.
+    const handleNifChange = (event: React.ChangeEvent<HTMLInputElement>, nif: NetworkInterface) => {
+        const idx = selectedNifs.indexOf(nif.name)
+        if (event.target.checked) {
+            if (idx >= 0) {
+                return
+            }
+            setSelectedNifs([...selectedNifs, nif.name])
+            return
+        }
+        if (idx < 0) {
+            return
+        }
+        const dup = [...selectedNifs]
+        dup.splice(idx, 1)
+        setSelectedNifs(dup)
     }
 
     // Render the individual network interfaces, with bridge network
@@ -271,10 +291,13 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                     <StretchedNif
                         nif={nif}
                         capture={!selectNifs}
+                        nifCheck={selectNifs}
+                        checked={selectedNifs.includes(nif.name)}
                         anchor
                         stretch
                         alignRight
                         onNavigation={onNavigation}
+                        onChange={handleNifChange}
                         families={families}
                     />
                 </Nif>
@@ -288,8 +311,11 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                 <NifBadge
                     nif={nif}
                     capture={!selectNifs}
+                    nifCheck={selectNifs}
+                    checked={selectedNifs.includes(nif.name)}
                     anchor
                     families={families}
+                    onChange={handleNifChange}
                 />
             </Bridge>]
             // If the bridge has ports, then render them and place them into the
@@ -314,11 +340,14 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                                 key={nif.name}
                                 nif={nif}
                                 capture={!selectNifs}
+                                nifCheck={selectNifs}
+                                checked={selectedNifs.includes(nif.name)}
                                 anchor
                                 families={families}
                                 stretch
                                 alignRight
                                 onNavigation={onNavigation}
+                                onChange={handleNifChange}
                             />
 
                         )}
@@ -351,7 +380,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
     }
 
     const handleMultiNic = (e: ChangeEvent<HTMLInputElement>) => {
-        setSelectNifs(e.target.checked)
+        setSelectNifs(!!e.target.checked)
     }
 
     return (
@@ -389,7 +418,8 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
                                 key={containeeKey(cntr)}
                                 angled
                                 button
-                                capture={!selectNifs}
+                                capture
+                                hideCapture={selectNifs}
                                 endIcon={<FullscreenIcon />}
                                 onClick={onContaineeZoom as (_: Containee) => void}
                             />)}
