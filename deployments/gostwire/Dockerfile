@@ -9,8 +9,8 @@
 # versions might work, so you'll need to check Docker hub for the available base
 # image versions.
 ARG ALPINE_VERSION=3.19
-ARG ALPINE_PATCH=0
-ARG GO_VERSION=1.21.6
+ARG ALPINE_PATCH=1
+ARG GO_VERSION=1.21.7
 ARG NODE_VERSION=21
 
 # Go build settings
