@@ -41,6 +41,11 @@ maintainability, and good extensibility.
 
 - the discovery service is just a **single static binary**.
 
+## Minimal Kernel Requirement
+
+Make sure you have a Linux kernel of at least version 4.11 installed, however we
+highly recommend at least kernel version 5.6 or later.
+
 ## Name and Mascot
 
 The name "G(h)ostwire" sprang from the view of virtual (VETH) wires somehow
