@@ -21,6 +21,14 @@ export interface RelatedNifProps {
      * determined for suitable (A)s.
      */
     nif: NetworkInterface
+    /**
+     * optional network interface object to which we should not relate back;
+     * this breaks funny locking cycles especially on VxLAN interfaces enslaved
+     * to a bridge and at the same time enslaved to their master underlay
+     * interface: don't relate back to the master when we're not shown
+     * subordinate to a bridge.
+     */
+    unrelatedNif?: NetworkInterface
     /** 
      * the IP address family/families to show (filter *through*, as opposed to
      * filtering *out*). If left undefined, then it defaults to showing both
@@ -75,7 +83,14 @@ export interface RelatedNifProps {
  *
  * All other kinds of network interfaces don't render any related interfaces.
  */
-export const RelatedNif = ({ nif, families, onNavigation, onContaineeNavigation, className }: RelatedNifProps) => {
+export const RelatedNif = ({
+    nif,
+    unrelatedNif,
+    families,
+    onNavigation,
+    onContaineeNavigation,
+    className,
+}: RelatedNifProps) => {
     let othernif: NetworkInterface | undefined
     switch (nif.sriovrole) {
         case SRIOVRole.VF:
@@ -113,7 +128,7 @@ export const RelatedNif = ({ nif, families, onNavigation, onContaineeNavigation,
         }
     }
 
-    if (!othernif) {
+    if (!othernif || othernif === unrelatedNif) {
         return <></>
     }
     return (<span className={className || ''}>
