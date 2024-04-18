@@ -9,6 +9,9 @@ import (
 	"syscall"
 
 	"github.com/google/nftables"
+	"github.com/siemens/ghostwire/v2/network/portfwd"
+	_ "github.com/siemens/ghostwire/v2/network/portfwd/all"
+	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/nufftables"
@@ -75,20 +78,13 @@ func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, f
 			family, err.Error())
 		return nil
 	}
-	nattable := iptables.Table("nat", family)
-	if nattable == nil {
-		return nil
-	}
 	forwardedPorts := []ForwardedPort{}
-	for _, chain := range nattable.ChainsByName {
-		for _, rule := range chain.Rules {
-			fp := portfinder.ForwardedPort(rule)
-			if fp == nil {
-				continue
-			}
-			log.Debugf("discovered %s", fp)
+	for _, portForwardings := range plugger.Group[portfwd.PortForwardings]().Symbols() {
+		fwdports := portForwardings(iptables, family)
+		for _, fwdp := range fwdports {
+			log.Debugf("discovered %s", fwdp)
 			var proto Protocol
-			switch fp.Protocol {
+			switch fwdp.Protocol {
 			case "tcp":
 				proto = syscall.IPPROTO_TCP
 			case "udp":
@@ -97,7 +93,7 @@ func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, f
 				proto = syscall.IPPROTO_SCTP
 			}
 			forwardedPorts = append(forwardedPorts, ForwardedPort{
-				ForwardedPortRange: *fp,
+				ForwardedPortRange: *fwdp,
 				Protocol:           proto,
 			})
 		}
