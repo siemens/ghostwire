@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/nftables"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
-	_ "github.com/siemens/ghostwire/v2/network/portfwd/all"
+	_ "github.com/siemens/ghostwire/v2/network/portfwd/all" // activate all port forwarding detectors.
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
@@ -211,9 +211,9 @@ func (n *NetworkNamespace) WhereIs(destIP net.IP) (*NetworkNamespace, Interface)
 	if bestRoute.DestinationPrefixLen < 0 {
 		return nil, nil
 	}
-	// ...otherweise since we didn't have a direct hit on one of our network
-	// interfaces, now see through network interface we are leaving this network
-	// namespace and where this will lead us to?
+	// ...otherwise since we didn't have a direct destination hit on one of our
+	// network interfaces, now see through the network interface we are leaving
+	// this network namespace and where this will lead us to?
 	ip := destIP
 	if bestRoute.NextHop != nil && !bestRoute.NextHop.IsUnspecified() {
 		ip = bestRoute.NextHop
@@ -233,8 +233,12 @@ func (n *NetworkNamespace) WhereIs(destIP net.IP) (*NetworkNamespace, Interface)
 		// It's a directly connected VETH, for what that is worth. The other
 		// VETH end must be either the next hop or the ultimate destination,
 		// otherwise we know it's a complete and utter miss.
-		peer, ok := bestRoute.Nif.(Veth)
+		veth, ok := bestRoute.Nif.(Veth)
 		if !ok {
+			return nil, nil
+		}
+		peer := veth.Veth().Peer
+		if peer == nil {
 			return nil, nil
 		}
 		if !peer.Nif().HasAddress(ip) {
