@@ -97,6 +97,9 @@ func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
 				continue
 			}
 			taptunFd, err := unix.PidfdGetfd(pidfd, int(fd), 0)
+			if err != nil {
+				continue
+			}
 			netnsFd, err := getTapNetdevNetnsFd(taptunFd)
 			unix.Close(taptunFd)
 			if err != nil {
