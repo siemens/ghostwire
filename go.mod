@@ -41,7 +41,7 @@ require (
 	github.com/thediveo/whalewatcher v0.11.2
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20240223175432-6ab7f5a3765c
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
-	golang.org/x/sys v0.17.0
+	golang.org/x/sys v0.18.0
 	golang.org/x/text v0.14.0
 	sigs.k8s.io/kind v0.22.0
 )
@@ -129,13 +129,13 @@ require (
 	go.opentelemetry.io/otel/metric v1.22.0 // indirect
 	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	golang.org/x/mod v0.15.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/grpc v1.62.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
