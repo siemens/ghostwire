@@ -53,24 +53,23 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 			continue
 		}
 		_ = comment // TODO: upstream nufftables
-		for _, sepChain := range separations(nattable.ChainsByName[svcChainName]) {
+		for _, sepChain := range serviceProviderChains(nattable.ChainsByName[svcChainName]) {
 			sc := nattable.ChainsByName[sepChain]
 			if sc == nil {
 				continue
 			}
 			for _, rule := range sc.Rules {
-				_, target := nufftables.OfTypeFunc(rule.Exprs, isDNAT)
-				if target == nil {
+				_, dnat := nufftables.OfTypeTransformed(rule.Exprs, getDNAT)
+				if dnat == nil {
 					continue
 				}
-				nr := target.Info.(*xt.NatRange2)
 				forwardedPorts = append(forwardedPorts, &portfinder.ForwardedPortRange{
 					Protocol:       proto,
 					IP:             ip,
 					PortMin:        port,
 					PortMax:        port,
-					ForwardIP:      net.IP(nr.MinIP),
-					ForwardPortMin: nr.MinPort,
+					ForwardIP:      net.IP(dnat.MinIP),
+					ForwardPortMin: dnat.MinPort,
 				})
 			}
 		}
@@ -79,34 +78,38 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	return forwardedPorts
 }
 
-// isDNAT returns true, if the passed nft Target expression is a DNAT target
-// expression, otherwise false.
-func isDNAT(target *expr.Target) bool {
+// getDNAT returns the DNAT target expression, otherwise false.
+func getDNAT(target *expr.Target) (*xt.NatRange2, bool) {
 	if target.Name != "DNAT" {
-		return false
+		return nil, false
 	}
-	_, ok := target.Info.(*xt.NatRange2)
-	return ok
+	nr, ok := target.Info.(*xt.NatRange2)
+	return nr, ok
 }
 
-// separations returns a list of service separation chain names, given a
-// specific service chain.
-func separations(chain *nufftables.Chain) (chains []string) {
+// serviceProviderChains returns a list of service separation chain names, given
+// a specific service chain.
+func serviceProviderChains(chain *nufftables.Chain) (chains []string) {
 	if chain == nil {
 		return
 	}
 	for _, rule := range chain.Rules {
-		_, verdict := nufftables.OfTypeFunc(rule.Exprs, isSepVerdict)
-		if verdict == nil {
+		_, chainName := nufftables.OfTypeTransformed(rule.Exprs, getJumpVerdictSeparationChain)
+		if chainName == "" {
 			continue
 		}
-		chains = append(chains, verdict.Chain)
+		chains = append(chains, chainName)
 	}
 	return
 }
 
-func isSepVerdict(verdict *expr.Verdict) bool {
-	return verdict.Kind == -3 && strings.HasPrefix(verdict.Chain, kubeSeparationChainPrefix)
+// getJumpVerdictSeparationChain returns the chain name for a service separation
+// as given in a jump verdict.
+func getJumpVerdictSeparationChain(verdict *expr.Verdict) (string, bool) {
+	if verdict.Kind != expr.VerdictJump || !strings.HasPrefix(verdict.Chain, kubeSeparationChainPrefix) {
+		return "", false
+	}
+	return verdict.Chain, true
 }
 
 // virtualServiceDetails extracts service details (such as service IP address
@@ -124,7 +127,7 @@ func virtualServiceDetails(
 	exprs, ip = nufftables.OfTypeTransformed(exprs, getIPv46)
 	exprs, comment = nufftables.OfTypeTransformed(exprs, getComment)
 	exprs, port = nufftables.OfTypeTransformed(exprs, getPort)
-	exprs, chain = nufftables.OfTypeTransformed(exprs, getJumpVerdictChain)
+	exprs, chain = nufftables.OfTypeTransformed(exprs, getJumpVerdictServiceChain)
 	if exprs == nil {
 		return nil, "", 0, "", ""
 	}
@@ -182,9 +185,9 @@ func getPort(cmp *expr.Cmp) (uint16, bool) {
 	return uint16(cmp.Data[0])<<8 + uint16(cmp.Data[1]), true
 }
 
-// getJumpVerdictChain returns the chain name for a service as given in a jump
-// verdict.
-func getJumpVerdictChain(verdict *expr.Verdict) (string, bool) {
+// getJumpVerdictServiceChain returns the chain name for a service as given in a
+// jump verdict.
+func getJumpVerdictServiceChain(verdict *expr.Verdict) (string, bool) {
 	if verdict.Kind != expr.VerdictJump || !strings.HasPrefix(verdict.Chain, kubeServiceChainPrefix) {
 		return "", false
 	}
