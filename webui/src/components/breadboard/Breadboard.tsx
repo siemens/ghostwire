@@ -232,6 +232,13 @@ const extractWiring = (
                         nif2Id: domIdBase + nifId(nif.underlay!),
                     } as Wire)
                     break;
+                case 'dummy':
+                    wires.set(nif, {
+                        kind: nif.kind,
+                        operStateDown: nif.operstate === OperationalState.Down,
+                        nif1Id: domIdBase + nifId(nif),
+                    } as Wire)
+                    break;
             }
         }))
     return [...wires.values()]

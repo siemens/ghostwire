@@ -274,9 +274,11 @@ export const fromjson = (jsondata: JSONObject) => {
             if (jnif.slaves) {
                 // Nota bene: while the discovery service classifies VXLAN
                 // overlays as slaves, we now sort it out; instead, we are
-                // maintaining a dedicated overlay list.
+                // maintaining a dedicated overlay list. However, if this is a
+                // bridge then we must preserve the slave relationship, and not
+                // confuse it with the underlay relationship.
                 nif.slaves = (jnif.slaves as JSONObject[]).map(nif => nifmap[nif.idref as string])
-                    .filter(slave => !slave.vxlanDetails)
+                    .filter(slave => !slave.vxlanDetails || nif.kind === 'bridge')
             }
             jnif.pf && (nif.pf = nifmap[(jnif.pf as JSONObject).idref as string])
             jnif.master && (nif.master = nifmap[(jnif.master as JSONObject).idref as string])

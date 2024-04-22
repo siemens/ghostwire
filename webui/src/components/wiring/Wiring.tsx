@@ -366,6 +366,8 @@ const ExternallyFacingWire = (
     const down = ew.operStateDown ? 'down' : ''
 
     const relation = relationClassNameFromIds(domIdBase, ew.nifElement.id)
+    
+    const kind = ew.kind || 'external'
 
     return [
         <path
@@ -376,7 +378,7 @@ const ExternallyFacingWire = (
         <path
             key={`${ew.nifElement.id}-ext`}
             className={clsx(wireClass, 'external', relation, down)}
-            markerEnd={`url(#${domIdBase}${markerSpace}external${down})`}
+            markerEnd={`url(#${domIdBase}${markerSpace}${kind}${down})`}
             d={path}
         />
     ]
@@ -444,6 +446,13 @@ const WireArea = styled('svg')(({ theme }) => ({
         fill: `${theme.palette.wire.down} !important`,
     },
 
+    '& .dummy-marker': {
+        fill: theme.palette.wire.external,
+    },
+    '& .dummy-marker-down': {
+        fill: `${theme.palette.wire.down} !important`,
+    },
+
     '& .macvlan-marker': {
         fill: theme.palette.wire.maclvan,
     },
@@ -477,6 +486,13 @@ const externalMarker = <marker
     markerWidth="3" markerHeight="3"
     refX="0" refY="1.5">
     <path d="M 0 3 L 3 1.5 L 0 0 Z" />
+</marker>
+
+const culdesacMarker = <marker
+    stroke="none"
+    markerWidth="3" markerHeight="3"
+    refX="0" refY="1.5">
+    <path d="M 0 0 L 0 3 L 1.5 3 L 1.5 0 Z" />
 </marker>
 
 const macvlanMarker = <marker
@@ -583,6 +599,11 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
                     `${domIdBase}${markerSpace}external`,
                     'ext-marker', 'ext-marker-down',
                     externalMarker
+                )}
+                {marker(
+                    `${domIdBase}${markerSpace}dummy`,
+                    'dummy-marker', 'dummy-marker-down',
+                    culdesacMarker
                 )}
                 {marker(
                     `${domIdBase}${markerSpace}macvlan`,

@@ -49,6 +49,9 @@ highly recommend at least kernel version 5.6 or later.
 ## Name and Mascot
 
 The name "G(h)ostwire" sprang from the view of virtual (VETH) wires somehow
-belonging to the (\*cough\*, _ethereal_) world of ghosts. As a nod to the
-implementation language our mascot is a Go Gopher under a fake Ghost (Specte)
-blanket.
+belonging to the (&#42;_cough_&#42;,
+[ethereal](https://www.wireshark.org/news/20060607.html)) world of ghosts. As a
+nod to the implementation language our mascot is a Go Gopher under a fake Ghost
+(Specte) blanket. [Spectre
+v1](https://en.wikipedia.org/wiki/Spectre_(security_vulnerability)) might have
+been influential, too.

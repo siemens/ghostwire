@@ -80,7 +80,7 @@ const InfoButton = styled(IconButton)(() => ({
 
 
 interface SubordinateNifsProps {
-    /** network namespace object with interfaces. */
+    /** network interface object to render the subordinate interfaces for. */
     nif: NetworkInterface
     /** if `true`, then hides MAC layer addresses. */
     filterMAC?: boolean
@@ -107,8 +107,18 @@ interface SubordinateNifsProps {
  * interface, then renders a list of "subordinate" network interfaces. If the
  * specified network interface doesn't have subordinate interfaces, then this
  * component renders nothing.
+ *
+ * For each subordinate nif rendered, we also show a related nif, unless the
+ * specific related nif has to be skipped (avoiding circles back to the
+ * specific superordinate nif).
  */
-const SubordinateNifs = ({ nif, filterMAC, families, onNavigation, onContaineeNavigation }: SubordinateNifsProps) => {
+const SubordinateNifs = ({
+    nif,
+    filterMAC,
+    families,
+    onNavigation,
+    onContaineeNavigation,
+}: SubordinateNifsProps) => {
     const setNifInfo = useNifInfoModal()
 
     const subnifs = (nif.slaves || [])
@@ -122,23 +132,25 @@ const SubordinateNifs = ({ nif, filterMAC, families, onNavigation, onContaineeNa
         }
     }
 
+
     return (subnifs.length > 0 &&
         <SubNifs>
             <TransitionGroup className="subniflist">
-                {subnifs.map(nif => {
-                    const othernif = nif.macvlan || nif.underlay || nif.pf
+                {subnifs.map(subnif => {
+                    const brport = !!subnif.master && subnif.master.kind === 'bridge'
+                    const othernif = subnif.macvlan || subnif.underlay || subnif.pf
                     return <Collapse
                         className="nif"
-                        key={`${nif.netns.netnsid}-${nif.name}`}
+                        key={`${subnif.netns.netnsid}-${subnif.name}`}
                         in
                     >
                         <div className="nifandrels">
                             {othernif && <>&nbsp;·····&nbsp;</>}
                             <NifBadge
-                                nif={nif}
+                                nif={subnif}
                                 capture={!othernif}
                                 button={othernif !== undefined}
-                                onClick={() => handleNavigation(nif)}
+                                onClick={() => handleNavigation(subnif)}
                                 families={families}
                             />
                             <Tooltip title="network interface information">
@@ -146,26 +158,35 @@ const SubordinateNifs = ({ nif, filterMAC, families, onNavigation, onContaineeNa
                                     size="small"
                                     onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
                                         event.stopPropagation()
-                                        if (setNifInfo) setNifInfo(nif)
+                                        if (setNifInfo) setNifInfo(subnif)
                                     }}><InfoIcon /></InfoButton>
                             </Tooltip>
-                            {nif.master &&
+                            {subnif.master &&
                                 <RelatedNif
-                                    nif={nif}
+                                    nif={subnif}
+                                    unrelatedNif={nif}
                                     onNavigation={onNavigation}
                                     onContaineeNavigation={onContaineeNavigation}
                                     families={families}
                                 />}
-                            {othernif && nif.netns !== othernif.netns &&
+                            {othernif && subnif.netns !== othernif.netns &&
                                 <NamespaceContainees
-                                    netns={nif.netns}
-                                    key={nif.netns.netnsid}
+                                    netns={subnif.netns}
+                                    key={subnif.netns.netnsid}
                                     onNavigation={onContaineeNavigation}
                                 />}
                         </div>
 
+                        {brport && <>
+                            {/* optionally: TAP/TUN details */}
+                            {subnif.tuntapDetails && <TunTapInfo nif={subnif} />}
+
+                            {/* optionally: VXLAN details */}
+                            {subnif.vxlanDetails && <VxlanInfo nif={subnif} />}
+                        </>}
+
                         <Addresses
-                            nif={nif}
+                            nif={subnif}
                             filterMAC={filterMAC}
                             families={families}
                         />
@@ -203,7 +224,7 @@ export interface NifTreeProps {
 
 /**
  * Component `NifTree` renders the network interfaces belonging to a specific
- * network namespace as a tree-like hierarchy. Here, top-level network
+ * network namespace in a tree-like hierarchy. Here, top-level network
  * interfaces are all interfaces which are not "enslaved"(\*) into a bridge.
  * The network interfaces are sorted (on all levels) according to their names.
  *
