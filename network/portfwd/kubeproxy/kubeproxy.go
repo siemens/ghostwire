@@ -2,10 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-package docker
+package kubeproxy
 
 import (
-	"bytes"
 	"net"
 	"strings"
 
@@ -49,7 +48,7 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	}
 
 	for _, svcRules := range kubeServices.Rules {
-		ip, proto, port, comment, svcChainName := service(svcRules.Exprs)
+		ip, proto, port, comment, svcChainName := virtualServiceDetails(svcRules.Exprs)
 		if svcChainName == "" {
 			continue
 		}
@@ -80,6 +79,8 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	return forwardedPorts
 }
 
+// isDNAT returns true, if the passed nft Target expression is a DNAT target
+// expression, otherwise false.
 func isDNAT(target *expr.Target) bool {
 	if target.Name != "DNAT" {
 		return false
@@ -88,6 +89,8 @@ func isDNAT(target *expr.Target) bool {
 	return ok
 }
 
+// separations returns a list of service separation chain names, given a
+// specific service chain.
 func separations(chain *nufftables.Chain) (chains []string) {
 	if chain == nil {
 		return
@@ -106,60 +109,84 @@ func isSepVerdict(verdict *expr.Verdict) bool {
 	return verdict.Kind == -3 && strings.HasPrefix(verdict.Chain, kubeSeparationChainPrefix)
 }
 
-func service(
+// virtualServiceDetails extracts service details (such as service IP address
+// and port, et cetera) from the specified nft expressions. In case of any
+// errors, it returns zero values.
+func virtualServiceDetails(
 	exprs nufftables.Expressions,
 ) (
 	ip net.IP, protocol string, port uint16, comment string, chain string,
 ) {
-	exprs, svcproto := nufftables.OfTypeFunc(exprs, isIPProtoTcpUdp)
-	exprs, svcip := nufftables.OfTypeFunc(exprs, isIP)
-	exprs, svccomment := nufftables.OfTypeFunc(exprs, isComment)
-	exprs, svcport := nufftables.OfTypeFunc(exprs, isServicePort)
-	exprs, svcchain := nufftables.OfTypeFunc(exprs, isServiceChain)
+	// Try to glance the needed information from the expressions we were given;
+	// if there is any problem, then we will end up with nil remaining
+	// expressions as our warning signal.
+	exprs, protocol = nufftables.OfTypeTransformed(exprs, getTcpUdp)
+	exprs, ip = nufftables.OfTypeTransformed(exprs, getIPv46)
+	exprs, comment = nufftables.OfTypeTransformed(exprs, getComment)
+	exprs, port = nufftables.OfTypeTransformed(exprs, getPort)
+	exprs, chain = nufftables.OfTypeTransformed(exprs, getJumpVerdictChain)
 	if exprs == nil {
 		return nil, "", 0, "", ""
 	}
-
-	ip = net.IP(svcip.Data)
-	switch svcproto.Data[0] {
-	case unix.IPPROTO_TCP:
-		protocol = "tcp"
-	case unix.IPPROTO_UDP:
-		protocol = "udp"
-	}
-	port = uint16(svcport.Data[0])<<8 + uint16(svcport.Data[1])
-	comment = string(bytes.TrimRight([]byte(*svccomment.Info.(*xt.Unknown)), "\x00"))
-	chain = svcchain.Chain
 	return
 }
 
-func isIPProtoTcpUdp(cmp *expr.Cmp) bool {
+// getTcpUdp returns the transport protocol name enclosed in a Cmp expression
+// for TCP and UDP, otherwise false.
+func getTcpUdp(cmp *expr.Cmp) (string, bool) {
 	if len(cmp.Data) != 1 {
-		return false
+		return "", false
 	}
 	switch cmp.Data[0] {
-	case unix.IPPROTO_TCP, unix.IPPROTO_UDP:
-		return true
+	case unix.IPPROTO_TCP:
+		return "tcp", true
+	case unix.IPPROTO_UDP:
+		return "udp", true
 	}
-	return false
+	return "", false
 }
 
-func isIP(cmp *expr.Cmp) bool {
+// getIPv46 returns the IPv4 or IPv6 address enclosed in a Cmp expression,
+// otherwise false.
+func getIPv46(cmp *expr.Cmp) (net.IP, bool) {
 	switch len(cmp.Data) {
 	case 4, 16:
-		return true
+		return net.IP(cmp.Data), true
 	}
-	return false
+	return nil, false
 }
 
-func isComment(match *expr.Match) bool {
-	return match.Name == "comment"
+// getComment returns the comment enclosed in a “comment” Match expression, or
+// otherwise false if the passed Match expression isn't a comment. Ah, turtles
+// all the way down.
+//
+// Use with [nufftables.OfTypeTransformed].
+func getComment(match *expr.Match) (string, bool) {
+	if match.Name != "comment" {
+		return "", false
+	}
+	info, ok := match.Info.(*xt.Comment)
+	if !ok {
+		return "", false
+	}
+	return string(*info), true
 }
 
-func isServicePort(cmp *expr.Cmp) bool {
-	return len(cmp.Data) == 2
+// getPort returns the port number from a Cmp expression; otherwise, returns
+// false.
+func getPort(cmp *expr.Cmp) (uint16, bool) {
+	if len(cmp.Data) != 2 {
+		return 0, false
+	}
+	// network order
+	return uint16(cmp.Data[0])<<8 + uint16(cmp.Data[1]), true
 }
 
-func isServiceChain(verdict *expr.Verdict) bool {
-	return verdict.Kind == -3 && strings.HasPrefix(verdict.Chain, kubeServiceChainPrefix)
+// getJumpVerdictChain returns the chain name for a service as given in a jump
+// verdict.
+func getJumpVerdictChain(verdict *expr.Verdict) (string, bool) {
+	if verdict.Kind != expr.VerdictJump || !strings.HasPrefix(verdict.Chain, kubeServiceChainPrefix) {
+		return "", false
+	}
+	return verdict.Chain, true
 }
