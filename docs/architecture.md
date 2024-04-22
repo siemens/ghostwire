@@ -159,11 +159,12 @@ container engine, such as the engine's `ID`, `Type` and `API` endpoint path.
 
 ## Turtle Finder
 
-Gostwire's unique `turtlefinder.TurtleFinder` auto-detects container engines in
-the process tree and then continously watches their container workload in the
-background. Additionally, the hierarchy of container engines is detected, such
-as when operating a container engine inside a container in case of [Kubernetes
-in Docker (KinD)](https://github.com/kubernetes-sigs/kind).
+Gostwire leverages the [turtlefinder](https://github.com/siemens/turtlefinder)
+package to auto-detect container engines in the process tree and then
+continously watching their container workload in the background. Additionally,
+the hierarchy of container engines is detected, such as when operating a
+container engine inside a container in case of [Kubernetes in Docker
+(KinD)](https://github.com/kubernetes-sigs/kind).
 
 The `TurtleFinder` implements the lxkns interface `containerizer.Containerizer`
 with the logic to auto-detect container engine processes and then querying their

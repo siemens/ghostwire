@@ -27,6 +27,7 @@ The engine detection bases on daemon process names.
 
 #### Detector
 
-A Gostwire plugin that detects if a given process is a particular container
-engine and then contacts its API for discovering the containers this particular
-engine manages. The Detector plugin group name is `"turtlefinders"`.
+A [turtlefinder](https://github.com/siemens/turtlefinder) plugin that detects if
+a given process is a particular container engine and then contacts its API for
+discovering the containers this particular engine manages. The Detector plugin
+group name is `"turtlefinders"`.
