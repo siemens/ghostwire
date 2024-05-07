@@ -1,5 +1,5 @@
 /*
-Package nftget provides getters to retrieve certain information from nftable
+Package nftget help with conveniently retrieving information from nftable
 expressions.
 */
 package nftget

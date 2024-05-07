@@ -6,11 +6,13 @@ package docker
 
 import (
 	"github.com/google/nftables/expr"
+	"github.com/google/nftables/xt"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
 	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/nufftables"
+	"github.com/thediveo/nufftables/dsl"
 	"github.com/thediveo/nufftables/portfinder"
 )
 
@@ -37,6 +39,9 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	return forwardedPorts
 }
 
+// forwardedPortsMk1 discovers host and container-local port forwarding rules
+// (especially for Docker's embedded DNS resolver) as created by older Docker
+// versions and/or an older iptables compatibility layer.
 func forwardedPortsMk1(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
 	forwardedPorts := []*portfinder.ForwardedPortRange{}
 	for _, chain := range nattable.ChainsByName {
@@ -52,25 +57,53 @@ func forwardedPortsMk1(nattable *nufftables.Table) []*portfinder.ForwardedPortRa
 	return forwardedPorts
 }
 
-// forwardedPortsMk2 discovers container-local port forwarding rules (especially
-// for Docker's embedded DNS resolver) as created by newer Docker versions
-// (25+?).
-func forwardedPortsMk2(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
-	chain := nattable.ChainsByName["DOCKER_OUTPUT"]
+// forwardedPortsInChainMk2 discovers container-local port forwarding rules from
+// the given chain. When given a nil chain, it simply returns a nil slice.
+func forwardedPortsInChainMk2(chain *nufftables.Chain) []*portfinder.ForwardedPortRange {
 	if chain == nil {
 		return nil
 	}
+	family := chain.Table.Family
 	forwardedPorts := []*portfinder.ForwardedPortRange{}
 	for _, rule := range chain.Rules {
-		exprs, _ := nufftables.OfTypeFunc(rule.Exprs, isL4Proto)
-		exprs, proto := nufftables.OfTypeTransformed(exprs, nftget.TcpUdp)
-		if exprs == nil {
+		exprs, proto := nftget.L4ProtoTcpUdp(rule.Exprs)
+		exprs, origIP := nftget.OptionalIPv46(exprs, family)
+		exprs, port := nufftables.OfTypeTransformed(exprs, nftget.Port)
+		exprs, dnat := dsl.TargetDNAT(exprs)
+		if exprs == nil || dnat.Flags&dnatWithIPsAndPorts != dnatWithIPsAndPorts || port == 0 {
 			continue
 		}
+		fp := &portfinder.ForwardedPortRange{
+			Protocol:       proto,
+			IP:             origIP,
+			PortMin:        port,
+			PortMax:        port,
+			ForwardIP:      dnat.MinIP,
+			ForwardPortMin: dnat.MinPort,
+		}
+		log.Debugf("discovered %s", fp)
+		forwardedPorts = append(forwardedPorts, fp)
 	}
 	return forwardedPorts
 }
 
+// dnatWithIPsAndPorts are the flags that need to be set in order for the
+// xt.NatRange(2) data structures to contain an IP range as well as a transport
+// layer port range.
+const dnatWithIPsAndPorts = uint(xt.NatRangeMapIPs | xt.NatRangeProtoSpecified)
+
+// forwardedPortsMk2 discovers container-local port forwarding rules (such as
+// for Docker's embedded DNS resolver) as created by newer Docker versions
+// (25+?) and/or "newer" iptables compatibility layer.
+func forwardedPortsMk2(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
+	forwardedPorts := forwardedPortsInChainMk2(nattable.ChainsByName["DOCKER"])
+	forwardedPorts = append(forwardedPorts, forwardedPortsInChainMk2(nattable.ChainsByName["DOCKER_OUTPUT"])...)
+	return forwardedPorts
+}
+
+// isL4Proto returns true if the given Meta expression accesses the L4PROTO key.
+// See also "Matching Packet metainformation" from the nftables wiki:
+// https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation
 func isL4Proto(meta *expr.Meta) bool {
 	return meta.Key == expr.MetaKeyL4PROTO
 }
