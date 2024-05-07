@@ -11,6 +11,7 @@ import (
 	"github.com/google/nftables/expr"
 	"github.com/google/nftables/xt"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
+	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/nufftables"
 	"github.com/thediveo/nufftables/portfinder"
@@ -124,9 +125,9 @@ func virtualServiceDetails(
 	// if there is any problem, then we will end up with nil remaining
 	// expressions as our warning signal.
 	exprs, protocol = nufftables.OfTypeTransformed(exprs, getTcpUdp)
-	exprs, ip = nufftables.OfTypeTransformed(exprs, getIPv46)
+	exprs, ip = nufftables.OfTypeTransformed(exprs, nftget.IPv46)
 	exprs, comment = nufftables.OfTypeTransformed(exprs, getComment)
-	exprs, port = nufftables.OfTypeTransformed(exprs, getPort)
+	exprs, port = nufftables.OfTypeTransformed(exprs, nftget.Port)
 	exprs, chain = nufftables.OfTypeTransformed(exprs, getJumpVerdictServiceChain)
 	if exprs == nil {
 		return nil, "", 0, "", ""
@@ -147,16 +148,6 @@ func getTcpUdp(cmp *expr.Cmp) (string, bool) {
 		return "udp", true
 	}
 	return "", false
-}
-
-// getIPv46 returns the IPv4 or IPv6 address enclosed in a Cmp expression,
-// otherwise false.
-func getIPv46(cmp *expr.Cmp) (net.IP, bool) {
-	switch len(cmp.Data) {
-	case 4, 16:
-		return net.IP(cmp.Data), true
-	}
-	return nil, false
 }
 
 // getComment returns the comment enclosed in a “comment” Match expression, or

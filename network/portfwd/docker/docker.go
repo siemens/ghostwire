@@ -5,7 +5,9 @@
 package docker
 
 import (
+	"github.com/google/nftables/expr"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
+	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/nufftables"
@@ -30,6 +32,12 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	if nattable == nil {
 		return nil
 	}
+	forwardedPorts := forwardedPortsMk1(nattable)
+	forwardedPorts = append(forwardedPorts, forwardedPortsMk2(nattable)...)
+	return forwardedPorts
+}
+
+func forwardedPortsMk1(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
 	forwardedPorts := []*portfinder.ForwardedPortRange{}
 	for _, chain := range nattable.ChainsByName {
 		for _, rule := range chain.Rules {
@@ -42,4 +50,27 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 		}
 	}
 	return forwardedPorts
+}
+
+// forwardedPortsMk2 discovers container-local port forwarding rules (especially
+// for Docker's embedded DNS resolver) as created by newer Docker versions
+// (25+?).
+func forwardedPortsMk2(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
+	chain := nattable.ChainsByName["DOCKER_OUTPUT"]
+	if chain == nil {
+		return nil
+	}
+	forwardedPorts := []*portfinder.ForwardedPortRange{}
+	for _, rule := range chain.Rules {
+		exprs, _ := nufftables.OfTypeFunc(rule.Exprs, isL4Proto)
+		exprs, proto := nufftables.OfTypeTransformed(exprs, nftget.TcpUdp)
+		if exprs == nil {
+			continue
+		}
+	}
+	return forwardedPorts
+}
+
+func isL4Proto(meta *expr.Meta) bool {
+	return meta.Key == expr.MetaKeyL4PROTO
 }

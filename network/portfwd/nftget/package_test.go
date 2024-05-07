@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package kubeproxy
+package nftget
 
 import (
 	"runtime"
@@ -20,5 +20,5 @@ func init() {
 
 func TestGostwireNetwork(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ghostwire/network/portfwd/kubeproxy package")
+	RunSpecs(t, "ghostwire/network/portfwd/nftget package")
 }
