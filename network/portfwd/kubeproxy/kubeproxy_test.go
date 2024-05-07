@@ -196,26 +196,6 @@ var _ = Describe("kube-proxy port forwarding", func() {
 
 	})
 
-	It("matches DNAT target expressions", func() {
-		dnat, ok := getDNAT(&expr.Target{Name: "hellorld"})
-		Expect(ok).To(BeFalse())
-		Expect(dnat).To(BeNil())
-
-		dnat, ok = getDNAT(&expr.Target{Name: "DNAT"})
-		Expect(ok).To(BeFalse())
-		Expect(dnat).To(BeNil())
-
-		dnat, ok = getDNAT(&expr.Target{
-			Name: "DNAT",
-			Info: &xt.NatRange2{
-				BasePort: 42,
-			},
-		})
-		Expect(ok).To(BeTrue())
-		Expect(dnat).NotTo(BeNil())
-		Expect(dnat.BasePort).To(Equal(uint16(42)))
-	})
-
 	Context("service provider chains", func() {
 
 		It("returns nothing for non-existing chain", func() {

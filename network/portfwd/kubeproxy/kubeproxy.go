@@ -14,6 +14,7 @@ import (
 	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/nufftables"
+	"github.com/thediveo/nufftables/dsl"
 	"github.com/thediveo/nufftables/portfinder"
 	"golang.org/x/sys/unix"
 )
@@ -60,7 +61,7 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 				continue
 			}
 			for _, rule := range sc.Rules {
-				_, dnat := nufftables.OfTypeTransformed(rule.Exprs, getDNAT)
+				_, dnat := dsl.TargetDNAT(rule.Exprs)
 				if dnat == nil {
 					continue
 				}
@@ -77,15 +78,6 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	}
 
 	return forwardedPorts
-}
-
-// getDNAT returns the DNAT target expression, otherwise false.
-func getDNAT(target *expr.Target) (*xt.NatRange2, bool) {
-	if target.Name != "DNAT" {
-		return nil, false
-	}
-	nr, ok := target.Info.(*xt.NatRange2)
-	return nr, ok
 }
 
 // serviceProviderChains returns a list of service separation chain names, given
