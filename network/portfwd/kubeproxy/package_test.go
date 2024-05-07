@@ -18,7 +18,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func TestGostwireNetwork(t *testing.T) {
+func TestKubeproxyForwarding(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "ghostwire/network/portfwd/kubeproxy package")
 }

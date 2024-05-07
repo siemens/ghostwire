@@ -18,7 +18,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func TestGostwireNetwork(t *testing.T) {
+func TestNftget(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "ghostwire/network/portfwd/nftget package")
 }
