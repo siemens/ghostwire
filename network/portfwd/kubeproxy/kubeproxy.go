@@ -11,8 +11,10 @@ import (
 	"github.com/google/nftables/expr"
 	"github.com/google/nftables/xt"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
+	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/nufftables"
+	"github.com/thediveo/nufftables/dsl"
 	"github.com/thediveo/nufftables/portfinder"
 	"golang.org/x/sys/unix"
 )
@@ -59,7 +61,7 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 				continue
 			}
 			for _, rule := range sc.Rules {
-				_, dnat := nufftables.OfTypeTransformed(rule.Exprs, getDNAT)
+				_, dnat := dsl.TargetDNAT(rule.Exprs)
 				if dnat == nil {
 					continue
 				}
@@ -76,15 +78,6 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	}
 
 	return forwardedPorts
-}
-
-// getDNAT returns the DNAT target expression, otherwise false.
-func getDNAT(target *expr.Target) (*xt.NatRange2, bool) {
-	if target.Name != "DNAT" {
-		return nil, false
-	}
-	nr, ok := target.Info.(*xt.NatRange2)
-	return nr, ok
 }
 
 // serviceProviderChains returns a list of service separation chain names, given
@@ -124,9 +117,9 @@ func virtualServiceDetails(
 	// if there is any problem, then we will end up with nil remaining
 	// expressions as our warning signal.
 	exprs, protocol = nufftables.OfTypeTransformed(exprs, getTcpUdp)
-	exprs, ip = nufftables.OfTypeTransformed(exprs, getIPv46)
+	exprs, ip = nufftables.OfTypeTransformed(exprs, nftget.IPv46)
 	exprs, comment = nufftables.OfTypeTransformed(exprs, getComment)
-	exprs, port = nufftables.OfTypeTransformed(exprs, getPort)
+	exprs, port = nufftables.OfTypeTransformed(exprs, nftget.Port)
 	exprs, chain = nufftables.OfTypeTransformed(exprs, getJumpVerdictServiceChain)
 	if exprs == nil {
 		return nil, "", 0, "", ""
@@ -147,16 +140,6 @@ func getTcpUdp(cmp *expr.Cmp) (string, bool) {
 		return "udp", true
 	}
 	return "", false
-}
-
-// getIPv46 returns the IPv4 or IPv6 address enclosed in a Cmp expression,
-// otherwise false.
-func getIPv46(cmp *expr.Cmp) (net.IP, bool) {
-	switch len(cmp.Data) {
-	case 4, 16:
-		return net.IP(cmp.Data), true
-	}
-	return nil, false
 }
 
 // getComment returns the comment enclosed in a “comment” Match expression, or
