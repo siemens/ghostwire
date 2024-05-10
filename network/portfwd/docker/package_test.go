@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package kubeproxy
+package docker
 
 import (
 	"runtime"
@@ -18,7 +18,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func TestKubeproxyForwarding(t *testing.T) {
+func TestDockerForwarding(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ghostwire/network/portfwd/kubeproxy package")
+	RunSpecs(t, "ghostwire/network/portfwd/docker package")
 }

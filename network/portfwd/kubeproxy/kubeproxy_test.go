@@ -196,26 +196,6 @@ var _ = Describe("kube-proxy port forwarding", func() {
 
 	})
 
-	It("matches DNAT target expressions", func() {
-		dnat, ok := getDNAT(&expr.Target{Name: "hellorld"})
-		Expect(ok).To(BeFalse())
-		Expect(dnat).To(BeNil())
-
-		dnat, ok = getDNAT(&expr.Target{Name: "DNAT"})
-		Expect(ok).To(BeFalse())
-		Expect(dnat).To(BeNil())
-
-		dnat, ok = getDNAT(&expr.Target{
-			Name: "DNAT",
-			Info: &xt.NatRange2{
-				BasePort: 42,
-			},
-		})
-		Expect(ok).To(BeTrue())
-		Expect(dnat).NotTo(BeNil())
-		Expect(dnat.BasePort).To(Equal(uint16(42)))
-	})
-
 	Context("service provider chains", func() {
 
 		It("returns nothing for non-existing chain", func() {
@@ -286,46 +266,6 @@ var _ = Describe("kube-proxy port forwarding", func() {
 			port, ok = getTcpUdp(&expr.Cmp{Data: []byte{unix.IPPROTO_UDP}})
 			Expect(ok).To(BeTrue())
 			Expect(port).To(Equal("udp"))
-		})
-
-	})
-
-	Context("IP addresses", func() {
-
-		It("ignores Cmp expressions with other data", func() {
-			ip, ok := getIPv46(&expr.Cmp{})
-			Expect(ok).To(BeFalse())
-			Expect(ip).To(BeZero())
-
-			ip, ok = getIPv46(&expr.Cmp{Data: []byte{1, 2, 3}})
-			Expect(ok).To(BeFalse())
-			Expect(ip).To(BeZero())
-		})
-
-		It("returns port", func() {
-			ip, ok := getIPv46(&expr.Cmp{Data: []byte(net.ParseIP("fe80::dead:beef"))})
-			Expect(ok).To(BeTrue())
-			Expect(ip).To(Equal(net.ParseIP("fe80::dead:beef")))
-		})
-
-	})
-
-	Context("ports", func() {
-
-		It("ignores Cmp expressions with other data", func() {
-			port, ok := getPort(&expr.Cmp{})
-			Expect(ok).To(BeFalse())
-			Expect(port).To(BeZero())
-
-			port, ok = getPort(&expr.Cmp{Data: []byte{1, 2, 3}})
-			Expect(ok).To(BeFalse())
-			Expect(port).To(BeZero())
-		})
-
-		It("returns port", func() {
-			port, ok := getPort(&expr.Cmp{Data: []byte{1, 2}})
-			Expect(ok).To(BeTrue())
-			Expect(port).To(Equal(uint16(0x0102)))
 		})
 
 	})
