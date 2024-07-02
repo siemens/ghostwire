@@ -7,6 +7,7 @@ package dockernet
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/siemens/ghostwire/v2/decorator"
@@ -44,6 +45,20 @@ const GhostwireNetworkDefaultBridge = "gostwire/network/default-bridge"
 // DefaultBridgeOptionName optionally identifies a Docker network as the default
 // network.
 const DefaultBridgeOptionName = "com.docker.network.bridge.default_bridge"
+
+// AltNameKVDelemiter defines the delimiter used in network interface alternate
+// names to separate values from keys.
+//
+// Please note that the “ip-route” command places restrictions on what
+// characters are allowed in alternative names, deviating from the completely
+// relaxed Linux kernel. Thus, don't use forward slashes “/” in alternative
+// names.
+const AltNameKVDelemiter = "="
+
+// AltNameDockerNetworkIDPrefix is the prefix of an “alternative name” of the
+// network interface that specifies the Docker network ID the passed-through
+// network interface belongs to.
+const AltNameDockerNetworkIDPrefix = "siemens.passthrough.docker-nw" + AltNameKVDelemiter
 
 // Register this Decorator plugin.
 func init() {
@@ -113,10 +128,13 @@ func Decorate(
 		dockerNets[engine.PID] = makeDockerNetworks(ctx, engine, allnetns)
 	}
 	// Now that we know about the Docker networks, try to locate the matching
-	// Linux-kernel network interfaces so we can set/override the alias names of
-	// the interfaces.
+	// Linux-kernel network interfaces so we can set/override the discovered
+	// alias names of the interfaces.
+	dockerNetsByID := map[string]types.NetworkResource{}
 	for _, docknet := range dockerNets {
 		for _, netw := range docknet.networks {
+			dockerNetsByID[netw.ID] = netw
+
 			var nifname string
 			switch netw.Driver {
 			case "bridge":
@@ -151,123 +169,29 @@ func Decorate(
 			}
 		}
 	}
-	// Next up: process any passthrough networks present...
-	for _, docknet := range dockerNets {
-		throughpassers := map[string]PassedThrough{}
-		for _, netw := range docknet.networks {
-			retrievedDetails := false
-			// when using the managed plugin, the driver name contains a tag,
-			// such as ":latest". No Docker, this isn't thought out well.
-			if netw.Driver != "passthrough" && !strings.HasPrefix(netw.Driver, "passthrough:") {
+	// Next up: process any passthrough interfaces present...
+	for _, netns := range allnetns {
+		for _, netif := range netns.Nifs {
+			// Does this network interface carry altname information about a
+			// Docker network ID?
+			idx := slices.IndexFunc(netif.Nif().AltNames, hasDockernetID)
+			if idx < 0 {
 				continue
 			}
-			nifname := netw.Options[PassthroughHostIfnameOptionName]
-			if nifname == "" {
-				continue
-			}
-			log.Debugf("found passthrough network %s with network interface %s",
-				netw.Name, nifname)
-			// Try to locate the Linux network interface related to this Docker
-			// network, and if successful, set its alias name. We even try this
-			// for passthrough network interfaces as they might be in transition
-			// between the endpoint created but not yet joined to a container's
-			// sandbox.
-			netif, ok := docknet.engineNetns.NamedNifs[nifname]
-			if !ok {
-				// Okay, the network interface currently is passed through into
-				// container, as we don't find it in the Docker engine's
-				// ("host") network namespace.
-				//
-				// We now need more details in order to locate the passed
-				// through network interface ... that has been renamed and
-				// Docker won't tell us the new name. Oh, well.
-				//
-				// Before, we only "listed" the available Docker networks and
-				// this will not return the connected container/endpoint
-				// details. We thus now inspect the current passthrough network
-				// more closely, in order to get the connected container
-				// (endpoint) information. We only need to do it once per
-				// passthrough network.
-				if !retrievedDetails {
-					retrievedDetails = true
-					dockerclient, err := client.NewClientWithOpts(
-						client.WithHost(docknet.engine.API),
-						client.WithAPIVersionNegotiation())
-					if err == nil {
-						netwDetails, err := dockerclient.NetworkInspect(ctx, netw.ID, types.NetworkInspectOptions{})
-						_ = dockerclient.Close()
-						if err == nil {
-							netw = netwDetails
-						} else {
-							log.Errorf("cannot inspect Docker network %s more closely, reason: %s",
-								netw.Name, err.Error())
-						}
-					}
-				}
-				// passthrough can only have at most a single sandbox attached,
-				// so take the first container with its endpoint information we
-				// can find.
-				for cntrID, cntr := range netw.Containers {
-					log.Debugf("network interface %s currently passed into container with ID %s",
-						nifname, cntrID)
-					// Just get the first and only connected sandbox/container.
-					throughpassers[cntrID] = PassedThrough{
-						Alias:     netw.Name,
-						HwAddress: cntr.MacAddress,
-					}
-					break
-				}
-				continue
-			}
-			log.Debugf("network interface %s not yet passed through", nifname)
+			// Do we find matching custom network details?
 			nif := netif.Nif()
+			dockerNetID, _ := strings.CutPrefix(nif.AltNames[idx], AltNameDockerNetworkIDPrefix)
+			netw, ok := dockerNetsByID[dockerNetID]
+			if !ok {
+				continue
+			}
 			nif.Alias = netw.Name
 			// We additionally also label the network interface with the Docker
 			// network name.
 			nif.Labels[GostwireNetworkNameKey] = netw.Name
 			nif.AddLabels(netw.Labels)
 		}
-		// Did we find any currently passed-through network interfaces that
-		// weren't in their home position? Then we now need to find the
-		// containers that "contain" these passed-through network interfaces. We
-		// can identify them only by the endpoint associated container and the
-		// hardware MAC address.
-		if len(throughpassers) > 0 {
-			log.Debugf("scanning containers for passed-through nifs...")
-			for _, netns := range allnetns {
-				for _, tenant := range netns.Tenants {
-					if tenant.Process == nil {
-						continue
-					}
-					cntr := tenant.Process.Container
-					if cntr == nil || cntr.Type != moby.Type {
-						continue
-					}
-					passedthrough, ok := throughpassers[cntr.ID]
-					if !ok {
-						continue
-					}
-					log.Debugf("found network interface %s (MAC %s) inside container %s",
-						passedthrough.Alias, passedthrough.HwAddress, cntr.Name)
-					for _, netif := range netns.Nifs {
-						hwaddr := netif.Nif().Link.Attrs().HardwareAddr.String()
-						if hwaddr == passedthrough.HwAddress && hwaddr != "" {
-							nif := netif.Nif()
-							nif.Alias = passedthrough.Alias
-							// We additionally also label the network interface with the Docker
-							// network name.
-							nif.Labels[GostwireNetworkNameKey] = passedthrough.Alias
-						}
-					}
-				}
-			}
-		}
 	}
-}
-
-type PassedThrough struct {
-	Alias     string
-	HwAddress string
 }
 
 // linuxBridgeName returns the name of the bridge network interface for the
@@ -279,4 +203,10 @@ func linuxBridgeName(netw types.NetworkResource) string {
 		return brname // ...explicitly configured bridge nif name.
 	}
 	return "br-" + netw.ID[0:12] // ...auto-generated nif name.
+}
+
+// hasDockernetID returns true if the alternative name specifies a Docker custom
+// network ID.
+func hasDockernetID(altname string) bool {
+	return strings.HasPrefix(altname, AltNameDockerNetworkIDPrefix)
 }

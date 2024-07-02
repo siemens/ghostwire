@@ -515,6 +515,13 @@ components:
                         optional alias name assigned to this network interface.
                         For instance, a Docker network name.
                     type: string
+                altnames:
+                    description: |-
+                        optional alternative names assigned to this network
+                        interface.
+                    type: array
+                    items:
+                        type: string
                 id:
                     description: |-
                         The JSON document-internal identifier for this network

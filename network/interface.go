@@ -44,6 +44,7 @@ type NifAttrs struct {
 	Kind        string            // kind of interface.
 	Name        string            // interface name.
 	Alias       string            // alias name.
+	AltNames    []string          // alternative interface names.
 	Index       int               // interface index.
 	State       OperState         // operational state.
 	Physical    bool              // or more metaphorical: it has an associated driver.
@@ -206,6 +207,7 @@ func (n *NifAttrs) Init(nlh *netlink.Handle, netns *NetworkNamespace, link netli
 		Kind:        kind,
 		Name:        attrs.Name,
 		Alias:       attrs.Alias,
+		AltNames:    attrs.AltNames,
 		Index:       attrs.Index,
 		State:       OperState(attrs.OperState),
 		Physical:    link.Type() == "device" && (attrs.Flags&net.FlagLoopback == 0),
