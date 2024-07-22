@@ -54,7 +54,8 @@ Finally, visit http://localhost:5000 and start looking around the virtual
 container networking, IP and DNS configuration, open and forwarded ports, and
 much more.
 
-> ⚠ This quick start deployment will **expose TCP port 5000** also to clients
+> [!WARNING]
+> This quick start deployment will **expose TCP port 5000** also to clients
 > external to your host. Make sure to have proper network protection in place.
 
 ## Eye Candy!
