@@ -6,8 +6,8 @@ replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.12
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/containernetworking/cni v1.2.2
-	github.com/docker/docker v27.0.3+incompatible
+	github.com/containernetworking/cni v1.2.3
+	github.com/docker/docker v27.1.0+incompatible
 	github.com/dustinkirkland/golang-petname v0.0.0-20240428194347-eebcea082ee0
 	github.com/getkin/kin-openapi v0.126.0
 	github.com/google/nftables v0.2.1-0.20240422065334-aa8348f7904c
@@ -33,7 +33,7 @@ require (
 	github.com/thediveo/namspill v0.1.6
 	github.com/thediveo/netdb v1.1.2
 	github.com/thediveo/notwork v1.6.2
-	github.com/thediveo/nufftables v0.9.0
+	github.com/thediveo/nufftables v0.10.0
 	github.com/thediveo/osrelease v1.0.2
 	github.com/thediveo/procfsroot v1.0.1
 	github.com/thediveo/spaserve v1.0.2
@@ -41,7 +41,7 @@ require (
 	github.com/thediveo/testbasher v1.0.8
 	github.com/thediveo/whalewatcher v0.11.3
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20240223175432-6ab7f5a3765c
-	golang.org/x/exp v0.0.0-20240716175740-e3f259677ff7
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/sys v0.22.0
 	golang.org/x/text v0.16.0
 	sigs.k8s.io/kind v0.23.0
