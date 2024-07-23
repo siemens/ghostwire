@@ -10,23 +10,54 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// L4ProtoTcpUdp returns the transport layer protocol name checked for from a
-// Meta/Cmp combo together with the remaining expressions; otherwise, it returns
-// nil.
+// L4ProtoTcpUdp returns the transport layer protocol name checked for from
+// either a Meta/Cmp twin-expression or a Payload/Cmp twin-expression, together
+// with the remaining expressions; otherwise, it returns nil.
 func L4ProtoTcpUdp(exprs nufftables.Expressions) (nufftables.Expressions, string) {
-	exprs, _ = nufftables.OfTypeFunc(exprs, isL4Proto)
-	if exprs == nil {
-		return nil, ""
+	if exprs, proto := nufftables.PrefixedOfTypeTransformed(exprs, isMetaL4Proto, TcpUdp); exprs != nil {
+		return exprs, proto
 	}
-	exprs, proto := nufftables.OfTypeTransformed(exprs, TcpUdp)
-	return exprs, proto
+	return nufftables.PrefixedOfTypeTransformed(exprs, isPayloadIPv4L4Proto, TcpUdp)
 }
 
-// isL4Proto returns true if the given Meta expression accesses the L4PROTO key.
-// See also "Matching Packet metainformation" from the nftables wiki:
+// isMetaL4Proto returns true if the given Meta expression accesses the L4PROTO
+// key. See also "Matching Packet metainformation" from the nftables wiki:
 // https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation
-func isL4Proto(meta *expr.Meta) bool {
+//
+// This is the preferred way to do it on especially IPv6, as the “next header”
+// isn't necessarily the transport protocol, but an additional header instead.
+func isMetaL4Proto(meta *expr.Meta) bool {
 	return meta.Key == expr.MetaKeyL4PROTO
+}
+
+// isPayloadIPv4L4Proto returns true if the given Payload expression accesses
+// the “Protocol” IPv4 header field.
+//
+// See also [RFC 791, section 3.1] for the following IPv4 header structure; the
+// word offsets are in decimal and not shown in the original RFC ASCII
+// illustration.
+//
+//	     0                   1                   2                   3
+//	     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//	+00 |Version|  IHL  |Type of Service|          Total Length         |
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//	+04 |         Identification        |Flags|      Fragment Offset    |
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//	+08 |  Time to Live |    Protocol   |         Header Checksum       |
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//	+12 |                       Source Address                          |
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//	+16 |                    Destination Address                        |
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//	+20 |                    Options                    |    Padding    |
+//	    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//
+// [RFC 791, section 3.1]: https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+func isPayloadIPv4L4Proto(payl *expr.Payload) bool {
+	return payl.OperationType == expr.PayloadLoad &&
+		payl.Base == expr.PayloadBaseNetworkHeader &&
+		payl.Offset == 9 && payl.Len == 1
 }
 
 // TcpUdp returns the transport protocol name enclosed in a Cmp expression

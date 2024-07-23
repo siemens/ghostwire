@@ -5,7 +5,6 @@
 package docker
 
 import (
-	"github.com/google/nftables/expr"
 	"github.com/google/nftables/xt"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
 	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
@@ -23,7 +22,10 @@ func init() {
 }
 
 // PortForwardings discovers Docker's forwarded ports from the “nat” table(s)
-// (only for IPv4 and IPv6 respectively).
+// (only for IPv4 and IPv6 respectively). As nftables expression generation is
+// considered to be the private black art by the nftables project and we simply
+// don't want to call arbitrary binaries, including nftables binaries, we need
+// to live with expression generation changing from time to time.
 func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) []*portfinder.ForwardedPortRange {
 	switch family {
 	case nufftables.TableFamilyIPv4, nufftables.TableFamilyIPv6:
@@ -36,6 +38,7 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	}
 	forwardedPorts := forwardedPortsMk1(nattable)
 	forwardedPorts = append(forwardedPorts, forwardedPortsMk2(nattable)...)
+	forwardedPorts = append(forwardedPorts, forwardedPortsMk3(nattable)...)
 	return forwardedPorts
 }
 
@@ -101,9 +104,36 @@ func forwardedPortsMk2(nattable *nufftables.Table) []*portfinder.ForwardedPortRa
 	return forwardedPorts
 }
 
-// isL4Proto returns true if the given Meta expression accesses the L4PROTO key.
-// See also "Matching Packet metainformation" from the nftables wiki:
-// https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation
-func isL4Proto(meta *expr.Meta) bool {
-	return meta.Key == expr.MetaKeyL4PROTO
+func forwardedPortsInChainMk3(chain *nufftables.Chain) []*portfinder.ForwardedPortRange {
+	if chain == nil {
+		return nil
+	}
+	family := chain.Table.Family
+	forwardedPorts := []*portfinder.ForwardedPortRange{}
+	for _, rule := range chain.Rules {
+		exprs, origIP := nftget.OptionalDestIPv46(rule.Exprs, family)
+		exprs, proto := nftget.L4ProtoTcpUdp(exprs)
+		exprs, port := nftget.PayloadPort(exprs)
+		exprs, dnat := dsl.TargetDNAT(exprs)
+		if exprs == nil || dnat.Flags&dnatWithIPsAndPorts != dnatWithIPsAndPorts || port == 0 {
+			continue
+		}
+		fp := &portfinder.ForwardedPortRange{
+			Protocol:       proto,
+			IP:             origIP,
+			PortMin:        port,
+			PortMax:        port,
+			ForwardIP:      dnat.MinIP,
+			ForwardPortMin: dnat.MinPort,
+		}
+		log.Debugf("discovered %s", fp)
+		forwardedPorts = append(forwardedPorts, fp)
+	}
+	return forwardedPorts
+}
+
+func forwardedPortsMk3(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
+	forwardedPorts := forwardedPortsInChainMk3(nattable.ChainsByName["DOCKER"])
+	forwardedPorts = append(forwardedPorts, forwardedPortsInChainMk3(nattable.ChainsByName["DOCKER_OUTPUT"])...)
+	return forwardedPorts
 }
