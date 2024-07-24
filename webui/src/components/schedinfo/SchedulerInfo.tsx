@@ -65,7 +65,7 @@ export interface SchedulerInfoProps {
 }
 
 export const SchedulerInfo = ({ process, showNormal }: SchedulerInfoProps) => {
-    const schedpol = schedulerPolicies[process.policy || 0]
+    const schedpol = schedulerPolicies[process.policy || 0] || `policy #${process.policy}`
     const prio = process.priority || 0
     return <SchedInformation className="schedinfo">
         <HistoryToggleOff fontSize="small" />

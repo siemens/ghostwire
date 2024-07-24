@@ -15,7 +15,13 @@ import {
 } from "views/help/mockdata"
 import { initNetns, morbidNetns as morbid } from "views/help/mockdata"
 import JSBI from "jsbi"
-export const cbp = {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}
+export const cbp = {
+  ...containerBoxProcess,
+  capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21)),
+  affinity: [[1,42],[63,63]],
+  policy: 0,
+  nice: 20,
+}
 export const morbidNetns = {
   ...morbid,
   containers: [{
@@ -78,6 +84,16 @@ among other things details about:
   limits the capabilities any process in this container can gain at most.
   Capabilities that aren't in Docker's set of container default capabilities are
   highlighted, such as `CAP_SYS_ADMIN` in the example above.
+
+- the (effective) affinity to all or only specific CPUs; the Linux terminology
+  of "affinity" actually is a misnomer, because this is a "hard" assignment. Any
+  CPU that is online but not listed under the affinities won't ever be used by
+  the Linux schedulers to run this process or processes on.
+
+- the scheduler strategy name, such as currently "NORMAL", "FIFO", "RR",
+  "BATCH", "IDLE", or "DEADLINE". Additionally shows either "nice" or "prio"
+  settings, depending on the particular scheduler strategy. Default nice values
+  of zero are not explicitly shown in order to reduce visual clutter.
 
 ##### Section "Neighborhood Services"
 
