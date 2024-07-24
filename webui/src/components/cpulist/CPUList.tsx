@@ -7,14 +7,15 @@ import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
 import CPUIcon from 'icons/CPUAffinity'
+import { rgba } from 'utils/rgba'
 
 
 const CPURangeList = styled('span')(({ theme }) => ({
     '&.cpulist > .MuiSvgIcon-root': {
-        color: theme.palette.divider,
+        color: rgba(theme.palette.text.primary, 0.1),
         verticalAlign: 'text-top',
         position: 'relative',
-        top: '-0.1ex',
+        top: '-0.15ex',
         marginRight: '0.2em',
     },
 }))

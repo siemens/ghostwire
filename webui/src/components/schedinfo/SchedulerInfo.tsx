@@ -8,6 +8,7 @@ import clsx from 'clsx'
 import { styled, Tooltip } from '@mui/material'
 import { Process } from 'models/gw/process'
 import { HistoryToggleOff } from '@mui/icons-material'
+import { rgba } from 'utils/rgba'
 
 
 const SchedInformation = styled('span')(({ theme }) => ({
@@ -30,10 +31,10 @@ const SchedInformation = styled('span')(({ theme }) => ({
         color: theme.palette.sched.prio,
     },
     '& > .MuiSvgIcon-root': {
-        color: theme.palette.divider,
+        color: rgba(theme.palette.text.primary, 0.1),
         verticalAlign: 'text-top',
         position: 'relative',
-        top: '-0.1ex',
+        top: '-0.15ex',
         marginRight: '0.2em',
     },
 }))
