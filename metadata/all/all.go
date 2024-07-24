@@ -5,6 +5,7 @@
 package all
 
 import (
+	_ "github.com/siemens/ghostwire/v2/metadata/cpus"
 	_ "github.com/siemens/ghostwire/v2/metadata/engines"
 	_ "github.com/siemens/ghostwire/v2/metadata/host"
 	_ "github.com/siemens/ghostwire/v2/metadata/iecore"

@@ -9,6 +9,7 @@ import { Button, styled, Theme } from '@mui/material'
 
 import { NetworkInterface, NetworkNamespace, Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType, PrimitiveContainee, Pod, isContainer, Container } from 'models/gw'
 import { CaptureIcon } from 'icons/Capture'
+import { CaptureOffIcon } from 'icons/CaptureOff'
 import { useDynVars } from 'components/dynvars'
 import { rgba } from 'utils/rgba'
 import { Target } from 'models/packetflix/target'
@@ -228,6 +229,6 @@ export const TargetCapture = ({ target, targetNifs, size = 'medium', className, 
             size={size}
             variant="outlined"
             disabled={!biting}
-        ><CaptureIcon fontSize="inherit" /></SharkButton>
+        >{(biting || disabled) ? <CaptureIcon fontSize="inherit" /> : <CaptureOffIcon fontSize="inherit" />}</SharkButton>
     )
 }

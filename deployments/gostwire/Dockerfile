@@ -8,10 +8,10 @@
 # Nota bene: not all existing value combinations with respect to Alpine and Node
 # versions might work, so you'll need to check Docker hub for the available base
 # image versions.
-ARG ALPINE_VERSION=3.19
-ARG ALPINE_PATCH=1
-ARG GO_VERSION=1.22.2
-ARG NODE_VERSION=21
+ARG ALPINE_VERSION=3.20
+ARG ALPINE_PATCH=2
+ARG GO_VERSION=1.22.5
+ARG NODE_VERSION=20
 
 # Go build settings
 ARG LDFLAGS="-s -w -extldflags=-static"
@@ -166,7 +166,7 @@ RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_
 #
 # In the final stage we now "only" need to install the gostwire service binary
 # and its web ui application into the final image.
-FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} as final
+FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} AS final
 LABEL maintainer="Harald Albrecht <harald.albrecht@siemens.com>"
 ARG ALPINE_VERSION
 ARG GOLANG_VERSION

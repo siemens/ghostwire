@@ -8,6 +8,7 @@ import { Collapse, IconButton, styled } from '@mui/material'
 import { useDiscovery } from 'components/discovery'
 import { useAtom } from 'jotai'
 import { ExpandLess, ExpandMore } from '@mui/icons-material'
+import { CPUList } from 'components/cpulist'
 
 const expandMetadata = 'ghostwire.expandmd'
 
@@ -76,6 +77,14 @@ const Metadata = () => {
         discovery.metadata['osrel-version']
     ].join(" ")
 
+    const cpus = discovery.metadata['cpus']
+        ? <CPUList
+            showIcon
+            tooltip="CPUs currently online in system"
+            cpus={discovery.metadata['cpus'] as number[][]}
+        />
+        : ''
+
     const iedmeta: { [key: string]: unknown } = (discovery.metadata["industrial-edge"] as { [key: string]: unknown }) || {}
 
     const coresemversion = iedmeta['semversion'] as string || undefined
@@ -107,6 +116,7 @@ const Metadata = () => {
                     <MetaRow name="IE device name" value={iedmeta['device-name'] as string} />
                     <MetaRow name="Host name" value={discovery.metadata.hostname as string} />
                     <MetaRow name="Host OS" value={hostos} />
+                    <MetaRow name="CPUs online" value={cpus} />
                     <MetaRow name="Kernel version" value={discovery.metadata['kernel-version'] as string} />
                     <MetaRow name="Industrial Edge runtime" value={coresemversion} />
                     <MetaRow name="IE device developer mode" value={iedmeta['developer-mode'] === 'true' ? 'enabled' : undefined} />

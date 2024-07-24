@@ -17,6 +17,8 @@ import { showNamespaceIdsAtom } from 'views/settings'
 import { capsnames } from 'utils/capabilities'
 import Capability from 'components/capability/Capability'
 import { styled } from '@mui/material'
+import { SchedulerInfo } from 'components/schedinfo'
+import CPUList from 'components/cpulist'
 
 
 // Set the things applying to all child elements within a single containee
@@ -268,6 +270,8 @@ export const ContaineeDetails = ({ containee, families: fams, className }: Conta
                     prop('PID', cntr.ealdorman.pid),
                     showNamespaceIds && prop('PID namespace ID', cntr.ealdorman.pidnsid),
                     prop('bounding caps', caps),
+                    prop('CPU affinities', <CPUList tooltip="CPU affinities" showIcon cpus={cntr.ealdorman.affinity} />),
+                    prop('scheduling', <SchedulerInfo showNormal process={cntr.ealdorman}/>),
                 ]}
                 {cntr.labels && prop('container labels', containerLabels)}
                 {prop('UTS hostname', cntr.dns.utsHostname)}
