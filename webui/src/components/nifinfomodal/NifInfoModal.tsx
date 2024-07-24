@@ -7,9 +7,10 @@ import { styled } from '@mui/material'
 import { NetworkInterface } from 'models/gw'
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Snackbar, Tooltip } from '@mui/material'
 import ClearIcon from '@mui/icons-material/Clear'
-import LanIcon from '@mui/icons-material/Lan'
 import { ContentCopy } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
+
+import HwNicIcon from 'icons/nifs/HardwareNic'
 
 const NifDialogTitle = styled(DialogTitle)(({theme}) => ({
     '& .close': {
@@ -116,7 +117,7 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                 onClose={handleClose}
             >
                 <NifDialogTitle>
-                    <LanIcon fontSize="inherit" />&nbsp;Network Interface Information
+                    <HwNicIcon fontSize="inherit" />&nbsp;Network Interface Information
                     <CloseButton
                         className="close"
                         aria-label="close"
@@ -128,7 +129,7 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                 <Contents dividers>
                     <Details>
                         {prop('interface name', nif.name)}
-                        {prop('type/kind', nif.kind || '(virtual) hardware')}
+                        {prop('type/kind', nif.kind ? `virtual ${nif.kind}` : '(virtualized) hardware')}
                         {prop('driver', nif.driverinfo.driver)}
                         {prop('firmware version', nif.driverinfo.fwversion !== 'N/A' && nif.driverinfo.fwversion)}
                         {prop('ext ROM version', nif.driverinfo.eromversion)}
