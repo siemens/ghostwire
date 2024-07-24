@@ -50,14 +50,16 @@ export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
     if (containee) {
         if (isContainer(containee) && containee.pod) {
             // This is a "pot'ed" container...
-            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }) as JSX.Element, containee.pod.name])
+            const CI = ContaineeIcon(containee)
+            info.push([<CI key="pod" fontSize="inherit" />, containee.pod.name])
         }
         // Add the container details...
-        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' })  as JSX.Element, containeeDisplayName(containee)])
+        const CI = ContaineeIcon(containee)
+        info.push([<CI key="containee" fontSize="inherit" />, containeeDisplayName(containee)])
     }
     // And finally: the process details ... cmdline and PID.
     info.push(
-        <DetailsOfProcess><ProcessDetails key="process" cmdline={cmdline} pid={pid} /></DetailsOfProcess>
+        <DetailsOfProcess key="process"><ProcessDetails cmdline={cmdline} pid={pid} /></DetailsOfProcess>
     )
     // Finally return the detail elements, separated by commas; and no, we can't
     // use Array.join() here, as we face JSX elements.
