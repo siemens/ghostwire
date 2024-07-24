@@ -60,6 +60,10 @@ const AltNameKVDelemiter = "="
 // network interface belongs to.
 const AltNameDockerNetworkIDPrefix = "siemens.passthrough.docker-nw" + AltNameKVDelemiter
 
+// AltNameDockerNetworkIDSuffixDelemiter delemits a Docker custom network ID
+// from a following random string, in order to ensure altname uniqueness.
+const AltNameDockerNetworkIDSuffixDelemiter = "."
+
 // Register this Decorator plugin.
 func init() {
 	plugger.Group[decorator.Decorate]().Register(
@@ -181,6 +185,9 @@ func Decorate(
 			// Do we find matching custom network details?
 			nif := netif.Nif()
 			dockerNetID, _ := strings.CutPrefix(nif.AltNames[idx], AltNameDockerNetworkIDPrefix)
+			if delidx := strings.Index(dockerNetID, AltNameDockerNetworkIDSuffixDelemiter); delidx >= 0 {
+				dockerNetID = dockerNetID[:delidx]
+			}
 			netw, ok := dockerNetsByID[dockerNetID]
 			if !ok {
 				continue
