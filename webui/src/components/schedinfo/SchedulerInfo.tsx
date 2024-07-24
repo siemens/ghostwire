@@ -30,10 +30,10 @@ const SchedInformation = styled('span')(({ theme }) => ({
         color: theme.palette.sched.prio,
     },
     '& > .MuiSvgIcon-root': {
-        color: theme.palette.text.disabled,
+        color: theme.palette.divider,
         verticalAlign: 'text-top',
         position: 'relative',
-        top: '0.1ex',
+        top: '-0.1ex',
         marginRight: '0.2em',
     },
 }))
@@ -68,7 +68,7 @@ export const SchedulerInfo = ({ process, showNormal }: SchedulerInfoProps) => {
     const schedpol = schedulerPolicies[process.policy || 0]
     const prio = process.priority || 0
     return <SchedInformation className="schedinfo">
-        <HistoryToggleOff fontSize="inherit" />
+        <HistoryToggleOff fontSize="small" />
         {(showNormal || !!process.policy) && <span className={clsx('policy', schedpol.toLowerCase())}>{schedpol}</span>}
         {hasPriority(process) && <span className={clsx(prio > 0 && 'prio')}>&nbsp;priority {prio}</span>}{
             hasNice(process) && !!process.nice &&

@@ -11,10 +11,10 @@ import CPUIcon from 'icons/CPUAffinity'
 
 const CPURangeList = styled('span')(({ theme }) => ({
     '&.cpulist > .MuiSvgIcon-root': {
-        color: theme.palette.text.disabled,
+        color: theme.palette.divider,
         verticalAlign: 'text-top',
         position: 'relative',
-        top: '0.1ex',
+        top: '-0.1ex',
         marginRight: '0.2em',
     },
 }))
@@ -41,7 +41,7 @@ export const CPUList = ({ cpus, showIcon, noWrap, tooltip, className }: CPUListP
     return !!cpus && (
         <Tooltip title={tooltip}>
             <CPURangeList className={clsx('cpulist', className)}>
-                {!!showIcon && <CPUIcon fontSize="inherit" />}
+                {!!showIcon && <CPUIcon fontSize="small" />}
                 {
                     cpus.map((cpurange, index) => {
                         if (cpurange[0] === cpurange[1]) {
