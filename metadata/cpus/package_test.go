@@ -1,8 +1,8 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2024
 //
 // SPDX-License-Identifier: MIT
 
-package metadata
+package cpus
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestMetadata(t *testing.T) {
+func TestMetadataCPUs(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ghostwire/metadata package")
+	RunSpecs(t, "ghostwire/metadata/cpus package")
 }
