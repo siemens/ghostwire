@@ -11,11 +11,11 @@ import LanIcon from '@mui/icons-material/Lan'
 import { ContentCopy } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 
-const NifDialogTitle = styled(DialogTitle)(() => ({
-    '& .MuiSvgIcon-root': {
+const NifDialogTitle = styled(DialogTitle)(({theme}) => ({
+    '& .close': {
         position: 'relative',
-        verticalAlign: 'baseline',
-        top: '0.3ex',
+        right: theme.spacing(-1),
+        top: theme.spacing(-0.25),
     },
 }))
 
@@ -118,6 +118,7 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                 <NifDialogTitle>
                     <LanIcon fontSize="inherit" />&nbsp;Network Interface Information
                     <CloseButton
+                        className="close"
                         aria-label="close"
                         onClick={handleClose}
                         size="large">
