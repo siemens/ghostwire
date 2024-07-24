@@ -34,6 +34,7 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 		lxknsdiscover.WithContainerizer(cizer),
 		lxknsdiscover.WithPIDMapper(),
 		lxknsdiscover.WithLabels(labels),
+		lxknsdiscover.WithAffinityAndScheduling(),
 	)
 	// Second phase: create the Gostwire-specific information model based on the
 	// lxkns discovery and augment the model with additional network-related

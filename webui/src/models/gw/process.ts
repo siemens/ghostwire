@@ -17,4 +17,9 @@ export interface Process {
     pidnsid: number
     /** bounded capabilities bitset */
     capbnd: JSBI
+
+    affinity: number[][] | null
+    policy: number | null
+    priority: number | null
+    nice: number | null
 }

@@ -9,8 +9,9 @@ import { styled, Tooltip } from '@mui/material'
 import CPUIcon from 'icons/CPUAffinity'
 
 
-const CPURangeList = styled('span')(() => ({
+const CPURangeList = styled('span')(({ theme }) => ({
     '&.cpulist > .MuiSvgIcon-root': {
+        color: theme.palette.text.disabled,
         verticalAlign: 'text-top',
         position: 'relative',
         top: '0.1ex',

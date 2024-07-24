@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import { PaletteColor, SimplePaletteColorOptions } from '@mui/material'
-import { amber, blue, green, grey, indigo, orange, pink, purple, red, yellow } from '@mui/material/colors'
+import { amber, blue, green, grey, indigo, lightGreen, orange, pink, purple, red, yellow } from '@mui/material/colors'
 //import { PaletteColor, SimplePaletteColorOptions } from '@mui/material/styles/createPalette'
 
 import { cloneDeep, merge as mergeDeep } from 'lodash'
@@ -54,6 +54,13 @@ declare module '@mui/material/styles' {
             veth: string,
             vxlan: string,
         },
+        sched: {
+            nice: string // nice nice value color
+            notnice: string // not-nice value color
+            prio: string // non-0/non-1 prio value color
+            relaxed: string // scheduler NORMAL/BATCH/IDLE color
+            stressed: string // scheduler FIFO/RR/DEADLINE color
+        },
     }
     // allow configuration using `createMuiTheme`
     interface PaletteOptions {
@@ -90,6 +97,13 @@ declare module '@mui/material/styles' {
             maclvan?: string,
             veth?: string,
             vxlan?: string,
+        },
+        sched: {
+            nice?: string
+            notnice?: string
+            prio?: string
+            relaxedsched?: string
+            stressedsched?: string
         },
     }
 }
@@ -150,6 +164,13 @@ export const gwLightTheme = {
             veth: '#008800', // Profinepp green ;)
             vxlan: '#b8860b',
         },
+        sched: {
+            nice: lightGreen[700],
+            notnice: orange[900],
+            prio: red[400],
+            relaxedsched: lightGreen[400],
+            stressedsched: red[400],
+        },
     },
 }
 
@@ -181,6 +202,10 @@ export const gwDarkTheme = mergeDeep(
                 down: grey[700],
                 external: `${rgba(indigo[300], 0.5)}`,
                 pfvf: orange[700],
+            },
+            sched: {
+                nice: lightGreen[500],
+                notnice: orange[500],
             },
         },
     }

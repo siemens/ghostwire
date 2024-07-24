@@ -25,7 +25,6 @@ func init() {
 // Metadata returns metadata describing certain aspects of the host the
 // discovery was run on, such as its host name, OS version, ...
 func Metadata(r gostwire.DiscoveryResult) map[string]interface{} {
-	log.Infof("fetching cpus online")
 	onlinecpus, err := os.ReadFile("/sys/devices/system/cpu/online")
 	if err != nil {
 		log.Errorf("cannot retrieve list of online cpus, reason: %s", err.Error())

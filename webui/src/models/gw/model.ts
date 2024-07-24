@@ -100,6 +100,10 @@ export const fromjson = (jsondata: JSONObject) => {
                             capbnd: JSBI.BigInt(jcntr.capbnd || 0), // safety fallback
                             name: jcntr.name as string,
                             cmdline: (jcntr.cmdline as string).split(' '),
+                            affinity: jcntr.affinity as number[][] | null,
+                            policy: jcntr.policy as number | null,
+                            priority: jcntr.priority as number | null,
+                            nice: jcntr.nice as number | null,
                         }
                         bbox.ealdorman = proc
                         bbox.leaders = [proc]

@@ -197,6 +197,10 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					Status:   status,
 					Type:     typ,
 					TypeText: titler.String(typ),
+					Affinity: tenant.Process.Affinity,
+					Policy:   tenant.Process.Policy,
+					Priority: tenant.Process.Policy,
+					Nice:     tenant.Process.Nice,
 				})
 			} else {
 				// It's a stand-alone process
@@ -217,11 +221,15 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					Status:   status,
 					Type:     "proc",
 					TypeText: "Process",
+					Affinity: tenant.Process.Affinity,
+					Policy:   tenant.Process.Policy,
+					Priority: tenant.Process.Policy,
+					Nice:     tenant.Process.Nice,
 				})
 			}
 		}
 	} else {
-		// special case: either stand-alone processes nor containers, so
+		// special case: neither stand-alone processes nor containers, so
 		// Ghostwire v1 emits a bind-mount "container" instead.
 		cntrs = append(cntrs, container{
 			ID:       "bmnt-" + strconv.FormatUint(n.ID().Ino, 10),
@@ -285,6 +293,22 @@ type container struct {
 	Status   string        `json:"status"`
 	Type     string        `json:"type"`
 	TypeText string        `json:"type-text"`
+	Affinity model.CPUList `json:"affinity,omitempty"`
+	Policy   int           `json:"policy,omitempty"`
+	// priority value is considered by the following schedulers:
+	//   - SCHED_FIFO: prio 1..99.
+	//   - SCHED_RR: prio 1..99.
+	//   - SCHED_NORMAL (=SCHED_OTHER): not used/prio is 0.
+	//   - SCHED_IDLE: not used/prio is 0.
+	//   - SCHED_BATCH: not used/prio is 0.
+	//   - SCHED_DEADLINE: doesn't use prio.
+	Priority int `json:"priority,omitempty"`
+	// nice value in the range +19..-20 (very nice ... less nice) is considered
+	// by the following schedulers:
+	//   - SCHED_NORMAL (=SCHED_OTHER): nice is taken into account.
+	//   - SCHED_BATCH: nice is taken into account.
+	//   - SCHED_IDLE: nice is ignored (basically below a nic of +19).
+	Nice int `json:"nice,omitempty"`
 }
 
 type dns struct {
