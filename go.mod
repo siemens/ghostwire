@@ -7,7 +7,7 @@ replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.12
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/containernetworking/cni v1.2.3
-	github.com/docker/docker v27.1.0+incompatible
+	github.com/docker/docker v27.1.1+incompatible
 	github.com/dustinkirkland/golang-petname v0.0.0-20240428194347-eebcea082ee0
 	github.com/getkin/kin-openapi v0.126.0
 	github.com/google/nftables v0.2.1-0.20240422065334-aa8348f7904c
@@ -29,7 +29,7 @@ require (
 	github.com/thediveo/go-plugger/v3 v3.1.0
 	github.com/thediveo/ioctl v0.9.3
 	github.com/thediveo/lxkns v0.36.0
-	github.com/thediveo/morbyd v0.13.0
+	github.com/thediveo/morbyd v0.13.1
 	github.com/thediveo/namspill v0.1.6
 	github.com/thediveo/netdb v1.1.2
 	github.com/thediveo/notwork v1.6.2

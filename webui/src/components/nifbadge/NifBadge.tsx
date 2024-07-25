@@ -9,7 +9,6 @@ import { Button, styled, SvgIconProps } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
 import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
-import { BridgeIcon, BridgeInternalIcon, DummyIcon, HardwareNicIcon, HardwareNicPFIcon, HardwareNicVFIcon, MacvlanIcon, MacvlanMasterIcon, NicIcon, OverlayIcon, TapIcon, TunIcon, VethIcon } from 'icons/nifs'
 
 import { AddressFamily, AddressFamilySet, GHOSTWIRE_LABEL_ROOT, NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
 import { OperationalState } from 'models/gw'
@@ -19,6 +18,7 @@ import { relationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 import { TargetCapture } from 'components/targetcapture'
 import { NifCheckbox } from 'components/nifcheckbox'
+import { NifIcon } from 'components/nificon'
 
 
 // The outer span holding together an optional "hardware" NIC icon as well
@@ -174,33 +174,6 @@ const OperstateIndicator = styled('span')(({ theme }) => ({
     [`&.${OperationalState.Dormant.toLowerCase()}`]: { color: theme.palette.operstate.dormant },
 }))
 
-const nifSRIOVIcons = {
-    [SRIOVRole.None]: HardwareNicIcon,
-    [SRIOVRole.PF]: HardwareNicPFIcon,
-    [SRIOVRole.VF]: HardwareNicVFIcon,
-}
-
-// Known network interface type icons, indexed by the kind property of network
-// interface objects (and directly taken from what Linux' RTNETLINK tells us).
-const nifTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
-    'bridge': BridgeIcon,
-    'dummy': DummyIcon,
-    'macvlan': MacvlanIcon,
-    'tap': TapIcon,
-    'tun': TunIcon,
-    'veth': VethIcon,
-    'vxlan': OverlayIcon,
-}
-
-const nifIcon = (nif: NetworkInterface) => {
-    if (GHOSTWIRE_LABEL_ROOT + 'bridge/internal' in nif.labels) {
-        return BridgeInternalIcon
-    }
-    return (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) ||
-        (nif.macvlans && MacvlanMasterIcon) ||
-        nifTypeIcons[nif.kind] || NicIcon
-}
-
 const operStateIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     [OperationalState.Unknown]: UpIcon,
     [OperationalState.Dormant]: DormantIcon,
@@ -343,11 +316,10 @@ export const NifBadge = ({
     const alias = (nif.alias && nif.alias !== "") && <> (~<span className="alias">{nif.alias}</span>)</>
     const vid = (nif.vlanDetails) && <> VID&nbsp;{nif.vlanDetails.vid}</>
 
-    const NifIcon = nifIcon(nif)
     const OperstateIcon = operStateIcons[nif.operstate]
 
     const content = <>
-        <NifIcon />
+        <NifIcon nif={nif} />
         <OperstateIndicator
             as={OperstateIcon}
             className={nif.operstate.toLowerCase()}
@@ -434,8 +406,6 @@ export const NifBadge = ({
         }
     }
 
-    const HWIcon = nifSRIOVIcons[nif.sriovrole || SRIOVRole.None]
-
     // With lots of information prepared we can finally render the badge,
     // optionally wrapped into a tooltip with some detail information about
     // the network interface.
@@ -451,7 +421,7 @@ export const NifBadge = ({
                     : <Capture className="nifcaptureicon alignright" target={nif} />)}
             {nif.isPhysical &&
                 <HWNif className="nifbagdeicon">
-                    <HWIcon />
+                    <NifIcon nif={nif} considerPhysical />
                 </HWNif>
             }
             {nif.isPromiscuous &&

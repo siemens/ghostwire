@@ -7,15 +7,20 @@ import { styled } from '@mui/material'
 import { NetworkInterface } from 'models/gw'
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Snackbar, Tooltip } from '@mui/material'
 import ClearIcon from '@mui/icons-material/Clear'
-import LanIcon from '@mui/icons-material/Lan'
 import { ContentCopy } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 
-const NifDialogTitle = styled(DialogTitle)(({theme}) => ({
+import { NifIcon } from 'components/nificon'
+
+const NifDialogTitle = styled(DialogTitle)(({ theme }) => ({
     '& .close': {
         position: 'relative',
         right: theme.spacing(-1),
-        top: theme.spacing(-0.25),
+        top: theme.spacing(-0.5),
+    },
+    '& .nificon.MuiSvgIcon-root': {
+        position: 'relative',
+        top: theme.spacing(0.5),
     },
 }))
 
@@ -116,7 +121,12 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                 onClose={handleClose}
             >
                 <NifDialogTitle>
-                    <LanIcon fontSize="inherit" />&nbsp;Network Interface Information
+                    <NifIcon
+                        nif={nif}
+                        considerPhysical
+                        fontSize="medium"
+                        className="nificon"
+                    />&nbsp;Network Interface Information
                     <CloseButton
                         className="close"
                         aria-label="close"
@@ -128,7 +138,7 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                 <Contents dividers>
                     <Details>
                         {prop('interface name', nif.name)}
-                        {prop('type/kind', nif.kind || '(virtual) hardware')}
+                        {prop('type/kind', nif.kind ? `virtual ${nif.kind}` : '(virtualized) hardware')}
                         {prop('driver', nif.driverinfo.driver)}
                         {prop('firmware version', nif.driverinfo.fwversion !== 'N/A' && nif.driverinfo.fwversion)}
                         {prop('ext ROM version', nif.driverinfo.eromversion)}

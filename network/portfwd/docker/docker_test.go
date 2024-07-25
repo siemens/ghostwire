@@ -18,19 +18,11 @@ import (
 	"github.com/thediveo/morbyd/session"
 	"github.com/thediveo/notwork/netns"
 	"github.com/thediveo/nufftables"
-	"github.com/thediveo/nufftables/portfinder"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/thediveo/success"
 )
-
-func fwports(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
-	forwardedPorts := forwardedPortsMk1(nattable)
-	forwardedPorts = append(forwardedPorts, forwardedPortsMk2(nattable)...)
-	forwardedPorts = append(forwardedPorts, forwardedPortsMk3(nattable)...)
-	return forwardedPorts
-}
 
 var _ = Describe("Docker port forwarding", Ordered, func() {
 
@@ -76,7 +68,7 @@ var _ = Describe("Docker port forwarding", Ordered, func() {
 		nattable := tables.Table("nat", nufftables.TableFamilyIPv4)
 		Expect(nattable).NotTo(BeNil())
 		Expect(nattable.ChainsByName).NotTo(BeEmpty())
-		forwardedPorts := fwports(nattable)
+		forwardedPorts := grabPortForwardings(nattable)
 		Expect(forwardedPorts).To(ContainElement(And(
 			HaveField("Protocol", "tcp"),
 			HaveField("IP", net.ParseIP("127.0.0.1").To4()),
@@ -103,8 +95,11 @@ var _ = Describe("Docker port forwarding", Ordered, func() {
 		nattable := tables.Table("nat", nufftables.TableFamilyIPv4)
 		Expect(nattable).NotTo(BeNil())
 		Expect(nattable.ChainsByName).NotTo(BeEmpty())
-		forwardedPorts := fwports(nattable)
-		Expect(forwardedPorts).To(ContainElements(
+		forwardedPorts := grabPortForwardings(nattable)
+		// Ensure to exactly match in order to catch any false positives; this
+		// is possible in this case because we're looking at the nft inside the
+		// container and thus know what should be there and what shouldn't.
+		Expect(forwardedPorts).To(ConsistOf(
 			And(
 				HaveField("Protocol", "tcp"),
 				HaveField("IP", net.ParseIP("127.0.0.11").To4()),
