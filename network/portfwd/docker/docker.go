@@ -36,6 +36,13 @@ func PortForwardings(tables nufftables.TableMap, family nufftables.TableFamily) 
 	if nattable == nil {
 		return nil
 	}
+	return grabPortForwardings(nattable)
+}
+
+// grabPortForwardings is a convenience helper to wire up the individual port
+// forwarding detectors in a single place, making maintenance easier for both
+// PROD and TEST.
+func grabPortForwardings(nattable *nufftables.Table) []*portfinder.ForwardedPortRange {
 	forwardedPorts := forwardedPortsMk1(nattable)
 	forwardedPorts = append(forwardedPorts, forwardedPortsMk2(nattable)...)
 	forwardedPorts = append(forwardedPorts, forwardedPortsMk3(nattable)...)
@@ -69,7 +76,7 @@ func forwardedPortsInChainMk2(chain *nufftables.Chain) []*portfinder.ForwardedPo
 	family := chain.Table.Family
 	forwardedPorts := []*portfinder.ForwardedPortRange{}
 	for _, rule := range chain.Rules {
-		exprs, proto := nftget.L4ProtoTcpUdp(rule.Exprs)
+		exprs, proto := nftget.MetaL4ProtoTcpUdp(rule.Exprs)
 		exprs, origIP := nftget.OptionalIPv46(exprs, family)
 		exprs, port := nufftables.OfTypeTransformed(exprs, nftget.Port)
 		exprs, dnat := dsl.TargetDNAT(exprs)
@@ -112,7 +119,7 @@ func forwardedPortsInChainMk3(chain *nufftables.Chain) []*portfinder.ForwardedPo
 	forwardedPorts := []*portfinder.ForwardedPortRange{}
 	for _, rule := range chain.Rules {
 		exprs, origIP := nftget.OptionalDestIPv46(rule.Exprs, family)
-		exprs, proto := nftget.L4ProtoTcpUdp(exprs)
+		exprs, proto := nftget.PayloadL4ProtoTcpUdp(exprs)
 		exprs, port := nftget.PayloadPort(exprs)
 		exprs, dnat := dsl.TargetDNAT(exprs)
 		if exprs == nil || dnat.Flags&dnatWithIPsAndPorts != dnatWithIPsAndPorts || port == 0 {

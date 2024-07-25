@@ -56,7 +56,7 @@ var _ = Describe("nftables L4 proto getter", func() {
 			if cmp != nil {
 				exprs = append(exprs, cmp)
 			}
-			exprs, protoname := L4ProtoTcpUdp(exprs)
+			exprs, protoname := MetaL4ProtoTcpUdp(exprs)
 			if expectedName == "" {
 				Expect(exprs).To(BeNil())
 			} else {

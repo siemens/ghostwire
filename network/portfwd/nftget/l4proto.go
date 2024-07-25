@@ -10,13 +10,17 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// L4ProtoTcpUdp returns the transport layer protocol name checked for from
-// either a Meta/Cmp twin-expression or a Payload/Cmp twin-expression, together
-// with the remaining expressions; otherwise, it returns nil.
-func L4ProtoTcpUdp(exprs nufftables.Expressions) (nufftables.Expressions, string) {
-	if exprs, proto := nufftables.PrefixedOfTypeTransformed(exprs, isMetaL4Proto, TcpUdp); exprs != nil {
-		return exprs, proto
-	}
+// MetaL4ProtoTcpUdp returns the transport layer protocol name checked for from
+// a Meta/Cmp twin-expression, together with the remaining expressions;
+// otherwise, it returns nil.
+func MetaL4ProtoTcpUdp(exprs nufftables.Expressions) (nufftables.Expressions, string) {
+	return nufftables.PrefixedOfTypeTransformed(exprs, isMetaL4Proto, TcpUdp)
+}
+
+// PayloadL4ProtoTcpUdp returns the transport layer protocol name checked for
+// from a Payload/Cmp twin-expression, together with the remaining expressions;
+// otherwise, it returns nil.
+func PayloadL4ProtoTcpUdp(exprs nufftables.Expressions) (nufftables.Expressions, string) {
 	return nufftables.PrefixedOfTypeTransformed(exprs, isPayloadIPv4L4Proto, TcpUdp)
 }
 
