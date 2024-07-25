@@ -10,13 +10,17 @@ import ClearIcon from '@mui/icons-material/Clear'
 import { ContentCopy } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 
-import HwNicIcon from 'icons/nifs/HardwareNic'
+import { NifIcon } from 'components/nificon'
 
-const NifDialogTitle = styled(DialogTitle)(({theme}) => ({
+const NifDialogTitle = styled(DialogTitle)(({ theme }) => ({
     '& .close': {
         position: 'relative',
         right: theme.spacing(-1),
-        top: theme.spacing(-0.25),
+        top: theme.spacing(-0.5),
+    },
+    '& .nificon.MuiSvgIcon-root': {
+        position: 'relative',
+        top: theme.spacing(0.5),
     },
 }))
 
@@ -117,7 +121,12 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                 onClose={handleClose}
             >
                 <NifDialogTitle>
-                    <HwNicIcon fontSize="inherit" />&nbsp;Network Interface Information
+                    <NifIcon
+                        nif={nif}
+                        considerPhysical
+                        fontSize="medium"
+                        className="nificon"
+                    />&nbsp;Network Interface Information
                     <CloseButton
                         className="close"
                         aria-label="close"

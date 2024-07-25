@@ -1,0 +1,1 @@
+export { NifIcon } from './NifIcon'
