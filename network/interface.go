@@ -279,10 +279,12 @@ func (n *NifAttrs) ResolveRelations(allns NetworkNamespaces) {
 	// Could this be a bridge "port" interface? Its bridge can only be in the
 	// same network namespace.
 	idx := n.Link.Attrs().MasterIndex
-	if idx != 0 {
-		if bridge := n.Netns.Nifs[idx]; bridge != nil && bridge.Nif().Kind == "bridge" {
+	if idx > 0 {
+		nif := n.Netns.Nifs[idx]
+		if nif == nil {
+			log.Warnf("missing bridge network interface with idx %d", idx)
+		} else if bridge, _ := nif.(*BridgeAttrs); bridge != nil {
 			n.Bridge = bridge
-			brattrs := bridge.(*BridgeAttrs)
 			// Go AWAY, that's flawed object-oriented design! Because we're here
 			// *NifAttrs, we're thus not network.Interface anymore. And
 			// therefore we can't simply "cast" back from *NifAttrs to
@@ -290,11 +292,14 @@ func (n *NifAttrs) ResolveRelations(allns NetworkNamespaces) {
 			// now says: "I'm a *NifAttrs satisfying network.Interface". It has
 			// forgotten what ever original type it was that embedded the
 			// NifAttrs. Oh, bummer.
-			brattrs.Ports = append(brattrs.Ports, n.Interface())
-		} else if bridge == nil {
-			log.Warnf("missing bridge network interface idx %d", idx)
-		} else {
-			log.Warnf("master network interface is not a bridge, but of type '%s'", bridge.Nif().Kind)
+			bridge.Ports = append(bridge.Ports, n.Interface())
+		} else if nif.Nif().Kind != "openvswitch" {
+			// Skip warning in case of openvswitch that uses the master-slave
+			// relationships in a creative way not related to how Linux kernel
+			// standard bridges use them; it appears as if openvswitch uses the
+			// master-slave relationship for general tracking of any
+			// netdev-based openvswitch port attachment.
+			log.Warnf("master network interface is not a bridge, but of type '%s'", nif.Nif().Kind)
 		}
 	}
 }
