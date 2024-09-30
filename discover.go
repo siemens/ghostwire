@@ -7,13 +7,14 @@ package gostwire
 import (
 	"context"
 
-	_ "github.com/siemens/ghostwire/v2/decorator/all" // activate all Gostwire-specific decorators.
-	"github.com/siemens/ghostwire/v2/internal/discover"
-	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
+
+	_ "github.com/siemens/ghostwire/v2/decorator/all" // activate all Gostwire-specific decorators.
+	"github.com/siemens/ghostwire/v2/internal/discover"
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // DiscoveryResult contains the network topology and configuration discovery
@@ -32,6 +33,8 @@ type DiscoveryResult struct {
 func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map[string]string) DiscoveryResult {
 	// break the vicious import cycle which otherwise happens for some unit test
 	// needing discovery.
+	opts := discover.DiscoverOpts{}
+	discover.WithStandardDiscovery()(&opts)
 	allnetns, nsdisco := discover.Discover(ctx, cizer, labels)
 	var engines []*model.ContainerEngine
 	if overseer, ok := cizer.(turtlefinder.Overseer); ok {

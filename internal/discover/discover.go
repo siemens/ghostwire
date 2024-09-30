@@ -23,6 +23,10 @@ import (
 // "decorating" (that is, enriching) the discovery results for some decorator
 // plugins supporting labels (such as the ieappicon decorator plugin).
 func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map[string]string) (network.NetworkNamespaces, *lxknsdiscover.Result) {
+	return DiscoverWithOpts(ctx, cizer, labels, nil)
+}
+
+func DiscoverWithOpts(ctx context.Context, cizer containerizer.Containerizer, labels map[string]string, opts *DiscoverOpts) (network.NetworkNamespaces, *lxknsdiscover.Result) {
 	// First phase: run a Linux-kernel namespace (+container) discovery,
 	// courtesy of lxkns.
 	discoverednetns := lxknsdiscover.Namespaces(

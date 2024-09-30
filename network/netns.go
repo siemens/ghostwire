@@ -10,9 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/siemens/ghostwire/v2/internal/dur"
 	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
@@ -486,6 +489,11 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 	}
 }
 
+type NetnsOpts struct {
+	ScanSockets         bool
+	ScanPortforwardings bool
+}
+
 // NewNetworkNamespaces takes a set of discovered network namespaces and creates
 // the Gostwire-specific NetworkNamespace objects wrapping them and supplying
 // network layer-related information not discovered by lxkns.
@@ -493,6 +501,18 @@ func NewNetworkNamespaces(
 	allnetns model.NamespaceMap,
 	allprocs model.ProcessTable,
 	containers model.Containers,
+) NetworkNamespaces {
+	return NewNetworkNamespacesWithOpts(allnetns, allprocs, containers, &NetnsOpts{
+		ScanSockets:         true,
+		ScanPortforwardings: true,
+	})
+}
+
+func NewNetworkNamespacesWithOpts(
+	allnetns model.NamespaceMap,
+	allprocs model.ProcessTable,
+	containers model.Containers,
+	opts *NetnsOpts,
 ) NetworkNamespaces {
 	// In order to later figure out the tenants of a network namespace, we need
 	// not only to take network namespace leader processes into account but also
@@ -508,12 +528,29 @@ func NewNetworkNamespaces(
 			netspaces[netnsid] = netwns
 		}
 	}
-	soxProcsMap := discoverAllSockInodes("/proc")
+	var soxProcsMap socketToProcessMap
+	if opts.ScanSockets {
+		start := time.Now()
+		soxProcsMap = discoverAllSockInodes("/proc")
+		dur.Log("discovered all socket inodes", time.Since(start))
+	}
 	for nsid, netns := range netspaces {
-		log.Debugf("discovering details of net:[%d]...", nsid.Ino)
+		netnsStr := "net:[" + strconv.FormatUint(nsid.Ino, 10) + "]"
+		log.Debugf("discovering details of %s...", netnsStr)
+		start := time.Now()
 		netns.discoverNSIDs(netspaces)
-		netns.discoverTransportPorts(soxProcsMap, allprocs)
-		netns.discoverForwardedPorts()
+		dur.Log("discovered NSIDs in "+netnsStr, time.Since(start))
+		if opts.ScanSockets {
+			start := time.Now()
+			netns.discoverTransportPorts(soxProcsMap, allprocs)
+			dur.Log("discovered transport ports in "+netnsStr, time.Since(start))
+		}
+		if opts.ScanPortforwardings {
+			start := time.Now()
+			netns.discoverForwardedPorts()
+			dur.Log("discovered port forwardings in "+netnsStr, time.Since(start))
+		}
+
 		log.Debugfn(func() string {
 			nifNames := make([]string, 0, len(netns.Nifs))
 			for _, nif := range netns.Nifs {
@@ -531,9 +568,12 @@ func NewNetworkNamespaces(
 	// VFs. This map indexes bus addresses to their corresponding interface
 	// objects.
 	for _, netns := range netspaces {
+		netnsStr := "net:[" + strconv.FormatUint(netns.ID().Ino, 10) + "]"
+		start := time.Now()
 		for _, nif := range netns.Nifs {
 			nif.(resolver).ResolveRelations(netspaces)
 		}
+		dur.Log("resolved relations in "+netnsStr, time.Since(start))
 	}
 	// Finally resolve the SR-IOV PF/VF topology, based on the bus addresses
 	// seen. Unfortunately, RTNETLINK doesn't give any netdev topology
