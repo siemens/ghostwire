@@ -199,7 +199,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					TypeText: titler.String(typ),
 					Affinity: tenant.Process.Affinity,
 					Policy:   tenant.Process.Policy,
-					Priority: tenant.Process.Policy,
+					Priority: tenant.Process.Priority,
 					Nice:     tenant.Process.Nice,
 				})
 			} else {
@@ -223,7 +223,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					TypeText: "Process",
 					Affinity: tenant.Process.Affinity,
 					Policy:   tenant.Process.Policy,
-					Priority: tenant.Process.Policy,
+					Priority: tenant.Process.Priority,
 					Nice:     tenant.Process.Nice,
 				})
 			}
