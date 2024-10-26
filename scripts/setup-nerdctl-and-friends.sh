@@ -7,8 +7,8 @@ set -e
 # On purpose, we're not going to install from often totally outdated or "sparse"
 # distro repositories, but from the Github projects directly.
 
-CNI_PLUGINS_VERSION=v1.3.0
-NERDCTL_VERSION=v1.6.2
+CNI_PLUGINS_VERSION=v1.6.0
+NERDCTL_VERSION=v1.7.7
 
 WGET_PREX="/tmp/nerdctl-and-friends"
 
