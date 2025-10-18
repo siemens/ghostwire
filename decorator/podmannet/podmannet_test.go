@@ -6,16 +6,20 @@ package podmannet
 
 import (
 	"context"
-	"io"
+	"log/slog"
 	"os"
 	"time"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
+	"github.com/siemens/turtlefinder/v2"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/build"
+	"github.com/thediveo/morbyd/v2/exec"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
+
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
-	"github.com/thediveo/lxkns/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,23 +29,20 @@ import (
 )
 
 const (
-	fedoraTag = "39"
-
-	pindName      = "ghostwire-pind"
-	pindImageName = "siemens/ghostwire-pind"
+	fedoraTag = "44"
 
 	nifDiscoveryTimeout = 5 * time.Second
 	nifDiscoveryPolling = 250 * time.Millisecond
 
-	goroutinesUnwindTimeout = 2 * time.Second
+	goroutinesUnwindTimeout = 5 * time.Second
 	goroutinesUnwindPolling = 250 * time.Millisecond
 )
 
 var _ = Describe("turtle finder", Ordered, Serial, func() {
 
-	var pindCntr *dockertest.Resource
+	var pindPID model.PIDType
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
@@ -55,8 +56,10 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 		})
 
 		By("spinning up a Docker container with a podman system service")
-		pool := Successful(dockertest.NewPool("unix:///run/docker.sock"))
-		_ = pool.RemoveContainerByName(pindName)
+		sess := Successful(morbyd.NewSession(ctx,
+			session.WithAutoCleaning("test.decorator.podmannet=")))
+		DeferCleanup(func(ctx context.Context) { sess.Close(ctx) })
+
 		// The necessary container start arguments loosely base on
 		// https://www.redhat.com/sysadmin/podman-inside-container but had to be
 		// heavily modified because they didn't work out as is, for whatever
@@ -78,34 +81,19 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 		//
 		// Please note that the initial build of the podman-in-Docker image is
 		// really slow, as fedora installs lots of things.
-		Expect(pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:       pindImageName,
-			ContextDir: "./_test/pind",
-			Dockerfile: "Dockerfile",
-			BuildArgs: []docker.BuildArg{
-				{Name: "FEDORA_TAG", Value: fedoraTag},
-			},
-			OutputStream: io.Discard,
-		})).To(Succeed())
-		pindCntr = Successful(pool.RunWithOptions(
-			&dockertest.RunOptions{
-				Name:       pindName,
-				Repository: pindImageName,
-				Privileged: true,
-				Mounts: []string{
-					"/var/lib/containers", // well, this actually is an unnamed volume
-				},
-				Tty: false,
-			}, func(hc *docker.HostConfig) {
-				hc.Init = false
-				hc.Tmpfs = map[string]string{
-					"/tmp": "",
-					"/run": "",
-				}
-				hc.Devices = []docker.Device{
-					{PathOnHost: "/dev/fuse"},
-				}
-			}))
+		imgid := Successful(sess.BuildImage(ctx, "./_test/pind",
+			build.WithOutput(GinkgoWriter),
+			build.WithBuildArg("FEDORA_TAG="+fedoraTag),
+		))
+		pindCntr := Successful(sess.Run(ctx, imgid,
+			run.WithCombinedOutput(GinkgoWriter),
+			run.WithPrivileged(),
+			run.WithVolume("/var/lib/containers"),
+			run.WithTmpfs("/tmp"),
+			run.WithTmpfs("/run"),
+			run.WithDevice("/dev/fuse"),
+		))
+		pindPID = model.PIDType(Successful(pindCntr.PID(ctx)))
 
 		By("waiting for systemd default target to be reached")
 		// We need to wait for the container "contents" to have fully "booted",
@@ -116,43 +104,36 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 		// systemctl fail. We thus first wait for the system dbus socket to
 		// appear and only then use systemctl for the container contents to
 		// fully boot up...
-		Expect(pindCntr.Exec([]string{
-			"/bin/bash", "-c",
-			"while [ ! -S \"/var/run/dbus/system_bus_socket\" ]; do sleep 1; done" +
-				" && systemctl is-system-running --wait",
-		}, dockertest.ExecOptions{
-			StdOut: GinkgoWriter,
-			StdErr: GinkgoWriter,
-		})).Error().To(Succeed())
+		cmd := Successful(pindCntr.Exec(ctx,
+			exec.Command("/bin/bash", "-c",
+				"while [ ! -S \"/var/run/dbus/system_bus_socket\" ]; do sleep 1; done && systemctl is-system-running --wait"),
+			exec.WithCombinedOutput(GinkgoWriter)))
+		waitctx, waitcancel := context.WithTimeout(ctx, 10*time.Second)
+		defer waitcancel()
+		Expect(Successful(cmd.Wait(waitctx))).To(BeZero())
 
 		By("creating a podman MACVLAN network")
-		Expect(pindCntr.Exec([]string{
-			"podman",
-			"network", "create",
-			"-d", "macvlan",
-			"mcwielahm",
-			"-o", "parent=eth0",
-		}, dockertest.ExecOptions{
-			StdOut: GinkgoWriter,
-			StdErr: GinkgoWriter,
-		})).Error().To(Succeed())
+		cmd = Successful(pindCntr.Exec(ctx,
+			exec.Command(
+				"podman",
+				"network", "create",
+				"-d", "macvlan",
+				"mcwielahm",
+				"-o", "parent=eth0"),
+			exec.WithCombinedOutput(GinkgoWriter),
+		))
+		Expect(Successful(cmd.Wait(waitctx))).To(BeZero())
 
 		By("running a canary container connected to the default 'podman' network")
-		Expect(pindCntr.Exec([]string{
-			"podman", "run", "-d", "--rm",
-			"--name", "canary",
-			"--net", "podman", /* WHAT?? otherwise doesn't connect the container??? */
-			"busybox",
-			"/bin/sh", "-c", "while true; do sleep 1; done",
-		}, dockertest.ExecOptions{
-			StdOut: GinkgoWriter,
-			StdErr: GinkgoWriter,
-		})).Error().To(Succeed())
-
-		DeferCleanup(func() {
-			By("removing the podman-in-Docker container")
-			Expect(pool.Purge(pindCntr)).To(Succeed())
-		})
+		backgoundcmd := Successful(pindCntr.Exec(ctx,
+			exec.Command("podman", "run", "-d", "--rm",
+				"--name", "canary",
+				"--net", "podman", /* WHAT?? otherwise doesn't connect the container??? */
+				"busybox",
+				"/bin/sh", "-c", "while true; do sleep 1; done"),
+			exec.WithCombinedOutput(GinkgoWriter),
+		))
+		_ = Successful(backgoundcmd.PID(ctx))
 	})
 
 	BeforeEach(func() {
@@ -163,6 +144,11 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	})
 
 	It("decorates podman-managed network interfaces", func(ctx context.Context) {
@@ -179,10 +165,10 @@ var _ = Describe("turtle finder", Ordered, Serial, func() {
 		By("running a full Ghostwire discovery that should pick up the podman networks")
 		Eventually(ctx, func() map[int]network.Interface {
 			allnetns, lxknsdisco := discover.Discover(ctx, cizer, nil)
-			pindNetnsID := lxknsdisco.Processes[model.PIDType(pindCntr.Container.State.Pid)].
+			pindNetnsID := lxknsdisco.Processes[pindPID].
 				Namespaces[model.NetNS].ID()
 			return allnetns[pindNetnsID].Nifs
-		}).Within(nifDiscoveryPolling).ProbeEvery(nifDiscoveryPolling).Should(ContainElements(
+		}).Within(nifDiscoveryTimeout).ProbeEvery(nifDiscoveryPolling).Should(ContainElements(
 			HaveField("Nif()", And(
 				HaveField("Name", "eth0"),
 				HaveField("Alias", "mcwielahm"))),

@@ -7,16 +7,17 @@ package podmannet
 import (
 	"context"
 	"fmt"
+	"log/slog"
+
+	"github.com/siemens/turtlefinder/v2/activator/podman"
+	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/ops"
+	"github.com/thediveo/nonstd/xslog"
 
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder/activator/podman"
-
-	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/ops"
 )
 
 // GostwireNetworkNameKey defines the label key for storing the Docker network
@@ -49,8 +50,9 @@ func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 ) {
 	libpodclient, err := newLibpodClient(engine.API)
 	if err != nil {
-		log.Warnf("cannot discover podman-managed networks from API %s, reason: %s",
-			engine.API, err.Error())
+		slog.Warn("cannot discover podman-managed networks",
+			slog.String("api", engine.API),
+			xslog.Error(err))
 		return
 	}
 	libpodclient.libpodVersion = libpodclient.ping(ctx)
@@ -60,8 +62,9 @@ func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	podmannets.networks = networks
 	podmannets.engine = engine
 	podmannets.engineNetns = allnetns[netnsid]
-	log.Infof("found %d podman networks related to net:[%d] %s",
-		len(networks), podmannets.engineNetns.ID().Ino, podmannets.engineNetns.DisplayName())
+	slog.Info("found podman custom networks",
+		slog.Int("count", len(networks)),
+		slog.Uint64("netns", podmannets.engineNetns.ID().Ino))
 	return
 }
 
@@ -75,7 +78,7 @@ func Decorate(
 	allprocs model.ProcessTable,
 	engines []*model.ContainerEngine,
 ) {
-	log.Debugf("discovering podman-managed networks")
+	slog.Debug("discovering podman-managed networks")
 	// As some container engines currently might not manage any container
 	// workload, we will prime the container engine networks cache with the
 	// networks discovered from then engines we're told are under supervision.

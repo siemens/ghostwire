@@ -340,11 +340,6 @@ components:
                     type: string
                 dns:
                     $ref: '#/components/schemas/DNS-Configuration'
-                    description: |-
-                        The optional DNS configuration-related details; empty in
-                        case of bind-mounts, as there is no associated process with
-                        a mount namespace and thus no DNS client-level
-                        configuration.
                 group:
                     description: The JSON document-internal identifier of a container group.
                     type: string
@@ -467,7 +462,6 @@ components:
                     type: string
                 address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: The IP address associated with the (host) name.
         Network-Interface:
             description: |-
                 A network interface with its assigned IP addresses as well as
@@ -734,7 +728,6 @@ components:
             properties:
                 address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: Either an IPv4 or an IPv6 address.
                 family:
                     description: The IP address family.
                     type: integer
@@ -777,7 +770,6 @@ components:
                     type: integer
                 destination:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: The destination prefix in form of an IP address.
                 destination-prefixlen:
                     description: The length of the destination prefix.
                     type: integer
@@ -795,10 +787,6 @@ components:
                     type: string
                 nexthop:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: |-
-                        An optional IPv4/IPv6 address of the next hop, if there
-                        is any; otherwise missing in case of direct subnet
-                        routes.
                 preference:
                     description: 'The preference of this route, in two digit binary form, such as "00", et cetera.'
                     enum:
@@ -852,8 +840,6 @@ components:
                     type: integer
                 local-address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: |
-                        Local IP address.
                 local-port:
                     description: Local transport port number.
                     maximum: 65535
@@ -864,8 +850,6 @@ components:
                     type: string
                 remote-address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: |
-                        Remote IP address.
                 remote-port:
                     description: |-
                         Remote transport port number. For an unconnected

@@ -6,22 +6,24 @@ package main
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
+
+	"github.com/spf13/cobra"
+	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/lxkns/containerizer"
+	"github.com/thediveo/nonstd/xslog"
 
 	gostwire "github.com/siemens/ghostwire/v2"
 	apiv1 "github.com/siemens/ghostwire/v2/api/v1"
 	"github.com/siemens/ghostwire/v2/decorator/ieappicon"
-
-	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/containerizer"
-	"github.com/thediveo/lxkns/log"
 )
 
-// registerDiscovery registers the /json discovery route and handler with the
-// route handler plugin mechanism.
-func registerDiscovery(cizer containerizer.Containerizer) {
+// registerDiscovery registers the /json and /mobyshark discovery routes and
+// handlers with the route handler plugin mechanism.
+func init() {
 	plugger.Group[RouteHandler]().Register(
-		func() (string, string, http.HandlerFunc) {
+		func(cmd *cobra.Command, cizer containerizer.Containerizer) (string, string, http.HandlerFunc) {
 			return "GET",
 				"/json",
 				func(w http.ResponseWriter, req *http.Request) {
@@ -36,12 +38,13 @@ func registerDiscovery(cizer containerizer.Containerizer) {
 					w.WriteHeader(http.StatusOK)
 					err := json.NewEncoder(w).Encode(&result)
 					if err != nil {
-						log.Errorf("discovery result marshalling error: %s", err.Error())
+						slog.Error("discovery result marshalling failure",
+							xslog.Error(err))
 					}
 				}
 		}, plugger.WithPlugin("json"))
 	plugger.Group[RouteHandler]().Register(
-		func() (string, string, http.HandlerFunc) {
+		func(cmd *cobra.Command, cizer containerizer.Containerizer) (string, string, http.HandlerFunc) {
 			return "GET",
 				"/mobyshark",
 				func(w http.ResponseWriter, req *http.Request) {
@@ -51,7 +54,8 @@ func registerDiscovery(cizer containerizer.Containerizer) {
 					w.WriteHeader(http.StatusOK)
 					err := json.NewEncoder(w).Encode(&result)
 					if err != nil {
-						log.Errorf("capture target discovery result marshalling error: %s", err.Error())
+						slog.Error("capture target discovery result marshalling failure",
+							xslog.Error(err))
 					}
 				}
 		}, plugger.WithPlugin("mobyshark"))

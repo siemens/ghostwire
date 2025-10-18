@@ -21,13 +21,13 @@
   <link rel="stylesheet" href="_css/300.css">
   <link rel="stylesheet" href="_css/300-italic.css">
   <style>
-  .gwmascot {
-    float: right;
-    height: 20ex;
-  }
+    .gwmascot {
+      float: right;
+      height: 20ex;
+    }
 
     :root {
-      --theme-color: rgb(94, 123, 211);
+      --theme-color: #009999;
 
       --base-font-family: Roboto;
       --base-font-weight: 300;
@@ -39,7 +39,7 @@
 
       --sidebar-nav-link-font-weight: var(--base-font-weight);
 
-      --code-inline-background: var(--mono-tint3);
+      --code-inline-background: var(--mono-tint1);
 
       --heading-color: var(--theme-color);
       --link-text-decoration-color: var(--theme-color);
@@ -63,8 +63,13 @@
       * icons-to-be-themed. So we need to select either on the dark or light
       * theme, and then use the subsequence-sibling combinator. Ugly.
       */
-    #docsify-darklight-theme[data-link-title="dark"]~* .mdicon {
+    #docsify-darklight-theme[data-link-title="dark"]~* .mdicon, 
+    #docsify-darklight-theme[data-link-title="dark"]~* .mdiconbutton {
       filter: invert(1) brightness(0.82);
+    }
+
+    #docsify-darklight-theme[data-link-title="light"]~* {
+      --code-inline-background: var(--mono-tint2);
     }
 
     .mdicon {

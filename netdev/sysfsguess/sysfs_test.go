@@ -6,21 +6,20 @@ package sysfsguess
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"path"
 
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/morbyd"
-	"github.com/thediveo/morbyd/run"
-	"github.com/thediveo/morbyd/session"
-	"github.com/thediveo/morbyd/timestamper"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
+	"github.com/thediveo/morbyd/v2/timestamper"
 	"github.com/thediveo/notwork/dummy"
-	"github.com/thediveo/notwork/netns"
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/spacetest/netns"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -34,6 +33,11 @@ var _ = Describe("network namespace-tagged sysfs", func() {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	})
 
 	It("rejects a nil network namespace", func() {
@@ -52,20 +56,8 @@ var _ = Describe("network namespace-tagged sysfs", func() {
 
 	// Admittedly, this is a slightly hardcore test...
 	It("rejects a network namespace without a matching mount namespace", func() {
-		scripts := testbasher.Basher{}
-		defer scripts.Done()
-
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Script("main", `
-unshare -n $stage2
-`)
-		scripts.Script("stage2", `
-process_namespaceid net # prints the "current" net namespace ID.
-read # wait for test to proceed()
-`)
-		cmd := scripts.Start("main")
-		defer cmd.Close()
-		netnsid := nstest.CmdDecodeNSId(cmd)
+		netnsfd := netns.NewTransient()
+		netnsid := species.NamespaceIDfromInode(netns.Ino(netnsfd))
 
 		allns := discover.Namespaces(discover.WithStandardDiscovery())
 		emptynetns := allns.Namespaces[model.NetNS][netnsid]

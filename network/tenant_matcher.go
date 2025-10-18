@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build matchers
-// +build matchers
 
 package network
 

@@ -6,6 +6,7 @@ package innetns
 
 import (
 	"errors"
+	"log/slog"
 	"os"
 	"runtime"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/notwork/dummy"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 
@@ -33,6 +34,13 @@ func (m *mockedNamespace) Type() species.NamespaceType { return m.typ }
 func (m *mockedNamespace) Ref() model.NamespaceRef     { return m.ref }
 
 var _ = Describe("in a netns", func() {
+
+	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
+	})
 
 	It("reports a visitation error when powerless", func() {
 		if os.Getuid() != 0 {

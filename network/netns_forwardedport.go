@@ -5,17 +5,20 @@
 package network
 
 import (
+	"log/slog"
 	"net"
 	"syscall"
 
 	"github.com/google/nftables"
-	"github.com/siemens/ghostwire/v2/network/portfwd"
-	_ "github.com/siemens/ghostwire/v2/network/portfwd/all" // activate all port forwarding detectors.
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/thediveo/nufftables"
 	"github.com/thediveo/nufftables/portfinder"
+
+	"github.com/siemens/ghostwire/v2/network/portfwd"
+	_ "github.com/siemens/ghostwire/v2/network/portfwd/all" // activate all port forwarding detectors.
+	"github.com/siemens/ghostwire/v2/network/portfwd/slogpfwd"
 )
 
 // ForwardedPort is Gostwire's view on forwarded ports (actually port ranges)
@@ -59,7 +62,7 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 		if conn != nil {
 			conn.CloseLasting()
 		}
-		log.Errorf("cannot connect to netfilters, reason: %s", err.Error())
+		slog.Error("cannot connect to netfilters", xslog.Error(err))
 		return
 	}
 	defer conn.CloseLasting()
@@ -74,15 +77,16 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, family nufftables.TableFamily) []ForwardedPort {
 	iptables, err := nufftables.GetFamilyTables(conn, family)
 	if err != nil {
-		log.Errorf("cannot retrieve %s netfilter tables, reason: %s",
-			family, err.Error())
+		slog.Error("cannot retrieve %netfilter tables",
+			slog.String("family", family.String()),
+			xslog.Error(err))
 		return nil
 	}
 	forwardedPorts := []ForwardedPort{}
 	for _, portForwardings := range plugger.Group[portfwd.PortForwardings]().Symbols() {
 		fwdports := portForwardings(iptables, family)
 		for _, fwdp := range fwdports {
-			log.Debugf("discovered %s", fwdp)
+			slog.Debug("discovered port forwarding", slogpfwd.ForwardedPortAttrs(fwdp)...)
 			var proto Protocol
 			switch fwdp.Protocol {
 			case "tcp":
@@ -104,7 +108,8 @@ func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, f
 // Relate the destinations ports are forwarded to to their network
 // namespaces and matching sockets, if any.
 func completeForwardedPortInformation(netspaces NetworkNamespaces) {
-	log.Debugf("resolving forwarded port destinations...")
+	slog.Debug("resolving forwarded port destinations")
+	defer slog.Debug("finished resolving forwarded port destinations")
 	for _, netns := range netspaces {
 		for idx := range netns.ForwardedPortsv4 {
 			ResolveForwardedPort(&netns.ForwardedPortsv4[idx], netns)

@@ -7,9 +7,10 @@ package ieappicon
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,10 +19,10 @@ import (
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/industrialedge"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/thediveo/procfsroot"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 )
 
 // IconLabel is the name of a label storing a container's icon in form of a
@@ -75,7 +76,7 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 	// Skip this (plugin) decorator if it either has been disabled globally or
 	// not requested explicitly.
 	if label, ok := labels[IEAppDiscoveryLabel]; !ok || label == IEAppDiscoveryOff || !EnablePlugin {
-		log.Debugf("skipping ieappicon decorator because it hasn't been requested in this discovery")
+		slog.Debug("skipping ieappicon decorator because it hasn't been requested in this discovery")
 		return
 	}
 	appIconsMu.Lock()
@@ -115,7 +116,7 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 // needs the engines information in order to locate the IED core runtime
 // container in order to access its installed applications database.
 func loadProjectIcons(engines []*model.ContainerEngine, projects []ieAppProject) {
-	log.Debugf("discovering IE App icons")
+	slog.Debug("discovering IE App icons")
 	// First, locate the Edge Core and fetch its platformbox database, as that
 	// tells us more details about the currently installed IE Apps.
 	edgeCorePID := edgeCoreContainerPID(engines)
@@ -124,13 +125,13 @@ func loadProjectIcons(engines []*model.ContainerEngine, projects []ieAppProject)
 	}
 	db, err := ieddata.OpenInPID(platformboxdbName, edgeCorePID)
 	if err != nil {
-		log.Errorf("cannot access IED IE App data base: %s", err.Error())
+		slog.Error("cannot access IED IE App data base", xslog.Error(err))
 		return
 	}
 	defer db.Close()
 	apps, err := db.Apps()
 	if err != nil {
-		log.Errorf("cannot discover installed IE Apps: %s", err.Error())
+		slog.Error("cannot discover installed IE Apps: %s", xslog.Error(err))
 		return
 	}
 	// Next, build an index that maps (composer) project names to IE App
@@ -156,7 +157,8 @@ func loadProjectIcons(engines []*model.ContainerEngine, projects []ieAppProject)
 		iconData := loadAppIcon(app, edgeCorePID)
 		projects[idx].IconData = iconData
 		if iconData != "" {
-			log.Debugf("found icon for IE App project '%s'", projects[idx].Name)
+			slog.Debug("found icon for IE App",
+				slog.String("project", projects[idx].Name))
 		}
 		projects[idx].Title = app.Title
 		projects[idx].Debuggable = strconv.Itoa(app.IsDebuggingEnabled)
@@ -170,12 +172,15 @@ func loadAppIcon(app *ieddata.App, edgeCorePID model.PIDType) string {
 	// file://.../device/edge/BoxCache/app/<ID>/<truncatedname>
 	iconUrl, err := url.Parse(app.IconPath)
 	if err != nil {
-		log.Errorf("IE App with invalid icon path '%s': %s", app.IconPath, err.Error())
+		slog.Error("IE App with invalid icon path",
+			slog.String("path", app.IconPath),
+			xslog.Error(err))
 		return ""
 	}
 	fields := strings.Split(iconUrl.Path, "/")
 	if len(fields) < 4 {
-		log.Errorf("IE App with not enough segments in icon path '%s'", app.IconPath)
+		slog.Error("IE App with not enough segments in icon path",
+			slog.String("path", app.IconPath))
 		return ""
 	}
 	// Regenerate the icon path in a way that we can access it inside the
@@ -184,12 +189,16 @@ func loadAppIcon(app *ieddata.App, edgeCorePID model.PIDType) string {
 	root := fmt.Sprintf("/proc/%d/root/", edgeCorePID)
 	path, err := procfsroot.EvalSymlinks(iconPath, root, procfsroot.EvalFullPath)
 	if err != nil {
-		log.Errorf("IE App with core-relative icon path '%s': %s", iconPath, err.Error())
+		slog.Error("IE App with core-relative icon path",
+			slog.String("path", iconPath),
+			xslog.Error(err))
 		return ""
 	}
-	iconBytes, err := ioutil.ReadFile(root + path)
+	iconBytes, err := os.ReadFile(root + path)
 	if err != nil {
-		log.Errorf("cannot read IE App icon file '%s': %s", root+path, err.Error())
+		slog.Error("cannot read IE App icon file",
+			slog.String("path", root+path),
+			xslog.Error(err))
 		return ""
 	}
 	mimetype := http.DetectContentType(iconBytes)
@@ -197,11 +206,14 @@ func loadAppIcon(app *ieddata.App, edgeCorePID model.PIDType) string {
 	case "image/png":
 		break
 	default:
-		log.Errorf("invalid mime type '%s' for IE App icon '%s'",
-			mimetype, root+path)
+		slog.Error("invalid mime type for IE App icon ",
+			slog.String("mimetype", mimetype),
+			slog.String("path", root+path))
 		return ""
 	}
-	log.Debugf("loaded IE APP icon (type '%s') from '%s'", mimetype, root+path)
+	slog.Debug("successfully loaded IE APP icon",
+		slog.String("mimetype", mimetype),
+		slog.String("path", root+path))
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(iconBytes)
 }
 

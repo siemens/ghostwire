@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
@@ -15,29 +16,24 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/siemens/turtlefinder"
-
-	gostwire "github.com/siemens/ghostwire/v2"
-
 	"github.com/spf13/cobra"
-	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/clippy"
+	_ "github.com/thediveo/clippy/debug"
+	_ "github.com/thediveo/lxkns/cmd/cli/silent"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/nonstd/xslog"
 	"golang.org/x/sys/unix"
+
+	gostwire "github.com/siemens/ghostwire/v2"
 )
 
 // gostwireservice is the "root command" to be run after successfully parsing
 // the CLI flags. We then here kick off the Gostwire service itself.
 func gostwireservice(cmd *cobra.Command, _ []string) error {
-	if silent, _ := cmd.PersistentFlags().GetBool("silent"); silent {
-		log.SetLevel(log.ErrorLevel)
-	}
-	if debug, _ := cmd.PersistentFlags().GetBool("debug"); debug {
-		log.SetLevel(log.DebugLevel)
-		log.Debugf("gostwire service debug logging enabled")
-	}
 	// initial cgroup hack around docker-compose not allowing for setting
 	// "cgroupns: host" during deployment. This is not necessary for newer
 	// docker compose v2 plugins that implement the "cgroup: host" service
@@ -52,7 +48,7 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 		initialcgroupnsid, ierr := initialcgroupns.ID()
 		currentcgroupnsid, cerr := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
 		if ierr != nil || cerr != nil {
-			log.Errorf("cannot determine initial and own cgroup namespaces, not switching cgroup namespace")
+			slog.Error("cannot determine initial and own cgroup namespaces, not switching cgroup namespace")
 		} else if currentcgroupnsid != initialcgroupnsid {
 			// In order to safely switch the cgroup namespace in a Golang app
 			// with potentially several OS threads bouncing around by now we can
@@ -64,10 +60,11 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 			// just use the few and simple primitives, namely
 			// runtime.LockOSThread() and ops.Execute(). Everything else is
 			// debug logging and error handling.
-			log.Infof("switching from current cgroup:[%d] into initial cgroup:[%d] and re-executing...",
-				currentcgroupnsid.Ino, initialcgroupnsid.Ino)
+			slog.Info("switching into initial cgroup and re-executing...",
+				slog.Uint64("current.cgroup", currentcgroupnsid.Ino),
+				slog.Uint64("initial.cgroup", initialcgroupnsid.Ino))
 			runtime.LockOSThread()
-			if res, err := ops.Execute(func() interface{} {
+			if res, err := ops.Execute(func() error {
 				// tee hee, while the process might still be in its original,
 				// but not initial, cgroup namespace, this particular OS-level
 				// task/thread should now be in the initial cgroup namespace. So
@@ -79,20 +76,22 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 				currentcgroupnsid, _ := ops.NewTypedNamespacePath(
 					fmt.Sprintf("/proc/%d/ns/cgroup", syscall.Gettid()),
 					species.CLONE_NEWCGROUP).ID()
-				success := ""
 				if currentcgroupnsid == initialcgroupnsid {
-					success = "successfully "
+					slog.Debug("current OS thread successfully switched cgroup namespace",
+						slog.Uint64("cgroup", currentcgroupnsid.Ino))
+				} else {
+					slog.Debug("current OS thread cgroup namespace",
+						slog.Uint64("cgroup", currentcgroupnsid.Ino))
 				}
-				log.Debugf("current OS thread %sswitched to cgroup:[%d]", success, currentcgroupnsid.Ino)
 				return unix.Exec(
 					"/proc/self/exe",
 					append([]string{os.Args[0], "--cgroupswitched"}, os.Args[1:]...),
 					os.Environ(),
 				)
 			}, initialcgroupns); err != nil {
-				log.Errorf("failed to switch to initial cgroup, err: %s", err.Error())
+				slog.Error("failed to switch to initial cgroup", xslog.Error(err))
 			} else {
-				log.Errorf("failed to re-execute, err: %s", res)
+				slog.Error("failed to re-execute", xslog.Error(res))
 				os.Exit(1)
 			}
 		}
@@ -101,11 +100,9 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 		// namespace, which hopefully will be the initial cgroup namespace...
 		initialcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/1/ns/cgroup", species.CLONE_NEWCGROUP).ID()
 		currentcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
-		isInitial := ""
-		if currentcgroupnsid == initialcgroupnsid {
-			isInitial = "initial "
-		}
-		log.Infof("re-executed in %scgroup:[%d]", isInitial, currentcgroupnsid.Ino)
+		slog.Info("re-executed",
+			slog.Bool("initial", currentcgroupnsid == initialcgroupnsid),
+			slog.Uint64("cgroup", currentcgroupnsid.Ino))
 		// Unfortunately, we end up here with /proc/self/stat stating our
 		// process name as "exe", because we executed our own executable. This
 		// is not terribly useful and user/admin friendly, so we try to set our
@@ -118,17 +115,17 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 		// deemed too long, see also:
 		// https://man7.org/linux/man-pages/man2/prctl.2.html
 		if _, _, errno := syscall.RawSyscall6(syscall.SYS_PRCTL, syscall.PR_SET_NAME, uintptr(ptr), 0, 0, 0, 0); errno != 0 {
-			log.Errorf("cannot fix process name: %s", syscall.Errno(errno).Error())
+			slog.Error("cannot fix process name", xslog.Error(syscall.Errno(errno)))
 		} else {
-			log.Debugf("fixed re-executed process name to %q", proc.Basename())
+			slog.Debug("fixed re-executed process name", slog.String("name", proc.Basename()))
 		}
 		runtime.UnlockOSThread()
 	}
 
 	// And now for the real meat.
-	log.Infof("Gostwire \"The Sequel\" virtual network topology and configuration discovery service, version %s",
-		gostwire.SemVersion)
-	log.Infof("Copyright (c) Siemens AG 2018-2023")
+	slog.Info("Gostwire \"The Sequel\" virtual network topology and configuration discovery service",
+		slog.String("version", gostwire.SemVersion))
+	slog.Info("Copyright (c) Siemens AG 2018-2026")
 
 	// De-base64 the brand icon in case it had been base-64 encoded. The web UI
 	// expects the brand icon to be SVG that then gets used in some places in
@@ -140,24 +137,24 @@ func gostwireservice(cmd *cobra.Command, _ []string) error {
 	}
 
 	if pausebin := mountineer.StandaloneSandboxBinary(); pausebin != "" {
-		log.Infof("using optimized pandora's sandbox binary %s", pausebin)
+		slog.Info("using optimized pandora's sandbox binary", slog.String("path", pausebin))
 	}
 
-	enginectx, enginecancel := context.WithCancel(context.Background())
-	log.Debugf("using container engine \"Turtles Anywhere\" technology")
-	cizer := turtlefinder.New(func() context.Context { return enginectx })
-	defer enginecancel()
+	slog.Debug("using container engine \"Turtles Anywhere\" technology")
+	turtlesctx, turtlescancel := context.WithCancel(context.Background())
+	defer turtlescancel()
+	cizer := turtles.Containerizer(turtlesctx, cmd)
 
 	// prime the list of discovered engines in the background...
-	log.Debugf("priming list of discovered container engines in background")
+	slog.Debug("priming list of discovered container engines in background")
 	go func() {
-		_ = gostwire.Discover(enginectx, cizer, nil)
+		_ = gostwire.Discover(turtlesctx, cizer, nil)
 	}()
 
 	// Fire up the service
 	addr, _ := cmd.PersistentFlags().GetString("http")
-	if _, err := startServer(addr, cizer); err != nil {
-		log.Errorf("cannot start service, error: %s", err.Error())
+	if _, err := startServer(addr, cmd, cizer); err != nil {
+		slog.Error("cannot start service", xslog.Error(err))
 		os.Exit(1)
 	}
 	stopit := make(chan os.Signal, 1)
@@ -176,13 +173,14 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short:   "gostwire virtual network topology and configuration discovery service",
 		Version: gostwire.SemVersion,
 		Args:    cobra.NoArgs,
-		RunE:    gostwireservice,
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return clippy.BeforeCommand(cmd)
+		},
+		RunE: gostwireservice,
 	}
 
 	// Sets up the flags.
 	pf := rootCmd.PersistentFlags()
-	pf.Bool("debug", false, "enables debugging output")
-	pf.Bool("silent", false, "silences everything below the error level")
 	pf.String("http", "[::]:5000", "HTTP service address")
 	pf.Duration("shutdown", 15*time.Second, "graceful shutdown duration limit")
 
@@ -196,6 +194,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	// G(h)ostwire-specific CLI flags
 	brandName = pf.StringP("brand", "", "Ghostwire", "brand name to show in the UI")
 	brandIcon = pf.StringP("brandicon", "", "", "brand icon SVG markup (optionally base64 encoded)")
+
+	clippy.AddFlags(rootCmd)
 
 	return
 }

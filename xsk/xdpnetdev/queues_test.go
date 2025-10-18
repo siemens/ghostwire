@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/thediveo/notwork/dummy"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

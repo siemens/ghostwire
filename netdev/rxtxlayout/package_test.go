@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TesGostwireRxtxlayout(t *testing.T) {
+func TestGostwireRxtxlayout(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "ghostwire/netdev/rxtxlayout package")
 }

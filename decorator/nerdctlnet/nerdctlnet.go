@@ -8,19 +8,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"path/filepath"
-
-	"github.com/siemens/ghostwire/v2/decorator"
-	"github.com/siemens/ghostwire/v2/decorator/dockernet"
-	"github.com/siemens/ghostwire/v2/network"
 
 	"github.com/containernetworking/cni/libcni"
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
+	"github.com/thediveo/nonstd/xslog"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
+
+	"github.com/siemens/ghostwire/v2/decorator"
+	"github.com/siemens/ghostwire/v2/decorator/dockernet"
+	"github.com/siemens/ghostwire/v2/internal/xfs"
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // NetworkConfigurationsGlob specifies the location only of the CNI network
@@ -29,7 +31,7 @@ const NetworkConfigurationsDir = "/etc/cni/net.d"
 
 // NetworkConfigurationsGlob specifies the pattern of the CNI network
 // configuration list files.
-const NetworkConfigurationsGlob = "nerdctl-*.conflist"
+const NetworkConfigurationsGlob = "**/nerdctl-*.conflist"
 
 // GostwireNetworkNameKey defines the label key for storing the nerdctl "Docker"
 // network name of bridge networks.
@@ -103,7 +105,7 @@ func (n *nerdctlNetwork) PluginField(typ string, field string) string {
 
 // newNerdctlNetworks returns configuration information about the
 // nerdctl-managed networks for the specified containerd engine.
-func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, allnetns network.NetworkNamespaces) nerdctlNetworks {
+func newNerdctlNetworks(_ context.Context, engine *model.ContainerEngine, allnetns network.NetworkNamespaces) nerdctlNetworks {
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
 	nerdynets := nerdctlNetworks{
 		engineNetns: allnetns[netnsid],
@@ -111,27 +113,25 @@ func newNerdctlNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	}
 	mntneer, err := mountineer.New(model.NamespaceRef{fmt.Sprintf("/proc/%d/ns/mnt", engine.PID)}, nil)
 	if err != nil {
-		log.Errorf("cannot access mount namespace of nerdctl engine, reason: %s",
-			err.Error())
+		slog.Error("cannot access mount namespace of nerdctl engine",
+			xslog.Error(err))
 		return nerdynets
 	}
 	defer mntneer.Close()
 	netwConfigsDir, err := mntneer.Resolve(NetworkConfigurationsDir)
 	if err != nil {
-		log.Infof("cannot resolve CNI plugins configuration path, reason: %s",
-			err.Error())
+		slog.Info("cannot resolve CNI plugins configuration path",
+			xslog.Error(err))
 		return nerdynets
 	}
-	configFilenames, err := filepath.Glob(filepath.Join(netwConfigsDir, NetworkConfigurationsGlob))
-	if err != nil {
-		return nerdynets
-	}
-	for _, configFilename := range configFilenames {
-		log.Debugf("found CNI configuration file %q", configFilename)
+	for configFilename := range xfs.Glob(filepath.Join(netwConfigsDir, NetworkConfigurationsGlob)) {
+		slog.Debug("found CNI configuration file",
+			slog.String("path", configFilename))
 		nerdynetworkconf, err := libcni.ConfListFromFile(configFilename)
 		if err != nil {
-			log.Errorf("invalid CNI configuration file %q, reason: %s",
-				configFilename, err.Error())
+			slog.Error("invalid CNI configuration file %q",
+				slog.String("path", configFilename),
+				xslog.Error(err))
 			continue
 		}
 		// Oh well ... libcni puts the original raw JSON into the "Bytes"
@@ -163,7 +163,7 @@ func Decorate(
 	allprocs model.ProcessTable,
 	engines []*model.ContainerEngine,
 ) {
-	log.Debugf("discovering nerdctl-managed CNI networks")
+	slog.Debug("discovering nerdctl-managed CNI networks")
 	// As some container engines currently might not manage any container
 	// workload, we will prime the container engine networks cache with the
 	// networks discovered from then engines we're told are under supervision.
@@ -187,8 +187,11 @@ func Decorate(
 				// silently ignore if this ain't a bridge-based network.
 				continue
 			}
-			log.Debugf("nerdctl bridge network %q (ID %q) uses netdev %q",
-				netw.Name, netw.ID, nifname)
+			slog.Debug("nerdctl bridge network",
+				slog.String("network", netw.Name),
+				slog.String("id", netw.ID),
+				slog.String("interface", nifname),
+				slog.Uint64("netns", nerdynets.engineNetns.ID().Ino))
 			netif, ok := nerdynets.engineNetns.NamedNifs[nifname]
 			if !ok {
 				// hmm, no such Linux bridge (yet), so skip it as it won't show

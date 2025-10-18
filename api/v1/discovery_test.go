@@ -9,11 +9,13 @@ import (
 	"os"
 
 	"github.com/ohler55/ojg/oj"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/format"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
+
+	"github.com/onsi/gomega/format"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("v1 discovery API", func() {

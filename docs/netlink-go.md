@@ -1,13 +1,14 @@
 # netlink Go Module
 
-This part of the documentation sheds some more information on using
-[@vishvananda/netlink](https://github.com/vishvananda/netlink) in Gostwire,
-especially when it comes to idiosyncrasies rooted either in the Go `netlink`
-module or Linux' netlink implementation.
+This part of the documentation sheds some more information on using the
+incredibly helpful
+[@vishvananda/netlink](https://github.com/vishvananda/netlink) package in
+Gostwire, especially when it comes to idiosyncrasies rooted either in the Go
+`netlink` module or Linux' netlink implementation.
 
 On a side note, @vishvananda/netlink inherits quite some ideas from the famous
 Python [pyroute2](https://github.com/svinota/pyroute2) package (albeit it does
-not attempt to be or become the Go twin to pyroute2).
+not attempt to be or become the Go sibling to pyroute2).
 
 ## Link Type
 

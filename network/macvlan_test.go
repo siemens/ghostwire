@@ -5,26 +5,22 @@
 package network
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
-	"github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/lxkns/nstest"
-	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/notwork/dummy"
+	"github.com/thediveo/notwork/macvlan"
+	"github.com/thediveo/spacetest/netns"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
-
-const testMacvlanNetnsName = "gostwire-testmcvlan"
-const testMacvlanNifName = "gwtestmcvlan"
 
 var _ = Describe("MACVAN network interfaces", func() {
 
@@ -32,11 +28,16 @@ var _ = Describe("MACVAN network interfaces", func() {
 		goodfds := Filedescriptors()
 		goodgos := Goroutines() // avoid other failed goroutine tests to spill over
 		DeferCleanup(func() {
-			Eventually(Goroutines).Within(2 * time.Second).ProbeEvery(250 * time.Millisecond).
+			Eventually(Goroutines).Within(5 * time.Second).ProbeEvery(250 * time.Millisecond).
 				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 			Expect(Tasks()).To(BeUniformlyNamespaced())
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	})
 
 	It("discovers MACVLAN correctly", func() {
@@ -44,80 +45,49 @@ var _ = Describe("MACVAN network interfaces", func() {
 			Skip("needs root")
 		}
 
-		var allnetns NetworkNamespaces
-		var disco *discover.Result
-		var masternif Interface
+		By("creating a dummy netdev in a transient network namespace")
+		masterNetns := netns.NewTransient()
+		masterNetnsID := species.NamespaceIDfromInode(netns.Ino(masterNetns))
+		dummy := dummy.NewTransient(dummy.InNamespace(masterNetns))
 
-		By("finding a suitable hardware network interface for new MACVLAN")
-		allnetns, disco = discoverRedux()
-		initialnetns := disco.Processes[model.PIDType(1)].Namespaces[model.NetNS]
-		for _, nif := range allnetns[initialnetns.ID()].Nifs {
-			if nif.Nif().Physical && nif.Nif().State == Up {
-				masternif = nif
-				break
-			}
-		}
-		Expect(masternif).NotTo(BeNil())
-
-		var scripts testbasher.Basher
-		var realnetnsid species.NamespaceID
-
-		By(fmt.Sprintf("creating a bind-mounted network namespace with MACVLAN connected to initial netns nif %s", masternif.Nif().Name))
-		scripts = testbasher.Basher{}
-		defer scripts.Done()
-
-		scripts.Common(nstest.NamespaceUtilsScript)
-		scripts.Common("masternif=" + masternif.Nif().Name)
-		scripts.Common("netnsname=" + testMacvlanNetnsName)
-		scripts.Common("testmacvlannif=" + testMacvlanNifName)
-		scripts.Script("main", `
-ip netns del ${netnsname} || true
-ip netns add ${netnsname}
-ip link add ${testmacvlannif} link ${masternif} type macvlan mode bridge
-ip link set ${testmacvlannif} netns ${netnsname}
-namespaceid /run/netns/${netnsname}
-read # wait for test to proceed
-ip netns del ${netnsname}
-`)
-		cmd := scripts.Start("main")
-		defer cmd.Close()
-
-		realnetnsid = nstest.CmdDecodeNSId(cmd)
-		testnetnsid, err := ops.NamespacePath("/proc/1/root/run/netns/" + testMacvlanNetnsName).ID()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(testnetnsid).To(Equal(realnetnsid))
+		By("creating a MACVLAN netdev in a different transient network namespace")
+		macvlanNetns := netns.NewTransient()
+		macvlanNetnsID := species.NamespaceIDfromInode(netns.Ino(macvlanNetns))
+		mcvlan := macvlan.NewTransient(dummy,
+			macvlan.InNamespace(macvlanNetns),
+			macvlan.WithLinkNamespace(masterNetns), // ouch.
+		)
 
 		By("running a discovery")
-		allnetns, _ = discoverRedux()
-		Expect(allnetns).To(HaveKey(realnetnsid),
-			"did not discover %s netns in %s", testMacvlanNetnsName, allnetns.String())
-
-		var master *NifAttrs
+		allnetns, _ := discoverRedux()
+		Expect(allnetns).To(HaveKey(masterNetnsID))
+		Expect(allnetns).To(HaveKey(macvlanNetnsID))
 
 		By("ensuring MACVLAN attributes and master relation")
-		testnetns := allnetns[realnetnsid]
+		testnetns := allnetns[macvlanNetnsID]
 		Expect(testnetns.Nifs).To(HaveLen(2), testnetns.NifsString())
 		Expect(testnetns.Nifs).To(ContainElements(
-			HaveInterfaceOfKindWithName("", "lo"),
-			HaveInterfaceOfKindWithName("macvlan", testMacvlanNifName),
+			HaveInterfaceKindAndName("", "lo"),
+			HaveInterfaceKindAndName("macvlan", mcvlan.Attrs().Name),
 		), testnetns.NifsString())
-		macvlannif := testnetns.NamedNifs[testMacvlanNifName]
+		macvlannif := testnetns.NamedNifs[mcvlan.Attrs().Name]
 		macvlan := macvlannif.(Macvlan).Macvlan()
 
 		Expect(macvlan.Macvlan().Mode.String()).To(Equal("bridge"))
 
 		Expect(macvlan.Master).NotTo(BeNil())
-		master = macvlan.Master.Nif()
-		Expect(master.Name).To(Equal(masternif.Nif().Name))
-		Expect(master.Netns).NotTo(BeIdenticalTo(masternif.Nif().Netns))
+		master := macvlan.Master.Nif()
+		Expect(master).NotTo(BeNil())
+		Expect(master.Name).To(Equal(dummy.Attrs().Name))
+		Expect(master.Netns).NotTo(BeIdenticalTo(macvlan.Netns))
 
 		By("ensuring castability")
 		macvlans := master.Nif().Slaves.OfKind("macvlan")
 		Expect(macvlans).NotTo(BeEmpty())
 		Expect(func() {
 			for _, slave := range macvlans {
-				_ = slave.(Macvlan)
-				_ = slave.(*MacvlanAttrs)
+				_ = AssignableTo[Macvlan](slave)
+				_ = AssignableTo[*MacvlanAttrs](slave)
 			}
 		}).NotTo(Panic())
 	})

@@ -3,18 +3,19 @@
 // SPDX-License-Identifier: MIT
 
 //go:build matchers
-// +build matchers
 
 package util
 
 import (
 	"fmt"
 
+	"github.com/thediveo/lxkns/model"
+
 	"github.com/siemens/ghostwire/v2/network"
 
-	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/model"
+
+	. "github.com/onsi/gomega"
 )
 
 // ContainContainer succeeds if ACTUAL is a slice, array or map of

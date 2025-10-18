@@ -6,16 +6,17 @@ package discover
 
 import (
 	"context"
+	"log/slog"
 
-	"github.com/siemens/ghostwire/v2/decorator"
-	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
+	"github.com/siemens/turtlefinder/v2"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+
+	"github.com/siemens/ghostwire/v2/decorator"
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // Discover returns the discovered network stacks, virtual network topology, and
@@ -40,7 +41,7 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 	// lxkns discovery and augment the model with additional network-related
 	// details, such as tenant DNS resolver configuration, Docker network names,
 	// et cetera.
-	log.Debugf("discovering network namespace details (interfaces, address, routes, ...)")
+	slog.Debug("discovering network namespace details (interfaces, address, routes, ...)")
 	allnetns := network.NewNetworkNamespaces(
 		discoverednetns.Namespaces[model.NetNS],
 		discoverednetns.Processes,
@@ -49,10 +50,10 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 	if overseer, ok := cizer.(turtlefinder.Overseer); ok {
 		engines = overseer.Engines()
 	}
-	log.Debugf("running gostwire decorators")
+	slog.Debug("running gostwire decorators")
 	for _, decorateur := range plugger.Group[decorator.Decorate]().Symbols() {
 		decorateur(ctx, allnetns, discoverednetns.Processes, engines)
 	}
-	log.Debugf("gostwire discovery finished")
+	slog.Debug("gostwire discovery finished")
 	return allnetns, discoverednetns
 }

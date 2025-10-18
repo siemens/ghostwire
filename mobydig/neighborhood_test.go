@@ -7,21 +7,24 @@ package mobydig
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"time"
+
+	"github.com/siemens/mobydig/messymoby"
+	"github.com/siemens/turtlefinder/v2"
+	lxknsdiscover "github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
 
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/mobydig/messymoby"
-	"github.com/siemens/turtlefinder"
-	lxknsdiscover "github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
+
+	"github.com/onsi/gomega/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
-	"github.com/onsi/gomega/types"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
 )
@@ -52,6 +55,11 @@ var _ = Describe("docker network neighborhood services", Ordered, func() {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 
 		By("Cleaning up test containers and networks")
 		messymoby.Cleanup(ctx)

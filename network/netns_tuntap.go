@@ -6,12 +6,12 @@ package network
 
 import (
 	"bufio"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/thediveo/ioctl"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
@@ -28,8 +28,10 @@ func resolveTapTunProcessors(netspaces NetworkNamespaces, allprocs model.Process
 	for _, processor := range processors {
 		netns := netspaces[processor.NetnsID]
 		if netns == nil {
-			log.Warnf("TAP/TUN serving process %s(%d) related to unknown netns:[%d]",
-				processor.Process.Name, processor.Process.PID, processor.NetnsID.Ino)
+			slog.Warn("TAP/TUN serving process related to unknown netns",
+				slog.String("name", processor.Process.Name),
+				slog.Int("pid", int(processor.Process.PID)),
+				slog.Uint64("netns", processor.NetnsID.Ino))
 			continue
 		}
 		nif := netns.NamedNifs[processor.NifName]
@@ -37,8 +39,9 @@ func resolveTapTunProcessors(netspaces NetworkNamespaces, allprocs model.Process
 			continue
 		}
 		if nif.Nif().Kind != "tuntap" {
-			log.Errorf("mixed-up netdev %s in netns:[%d]",
-				nif.Nif().Name, netns.ID().Ino)
+			slog.Error("mixed-up netdev in netns",
+				slog.String("interface", nif.Nif().Name),
+				slog.Uint64("netns", netns.ID().Ino))
 			continue
 		}
 		tuntap := nif.(TunTap).TunTap()

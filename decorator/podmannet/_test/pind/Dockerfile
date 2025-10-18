@@ -1,13 +1,14 @@
 # Based on https://www.redhat.com/sysadmin/podman-inside-container
 ARG FEDORA_TAG
 
-FROM fedora:${FEDORA_TAG}
+FROM fedora:${FEDORA_TAG:-MUST_PASS_THE_ARG}
 RUN dnf -y install \
                 procps systemd podman fuse-overlayfs \
                 --exclude container-selinux && \
         dnf clean all && \
         rm -rf /var/cache /var/log/dnf* /var/log/yum.* && \
-        systemctl mask systemd-logind.service getty.service getty.target && \
+        systemctl mask systemd-logind.service getty.service getty.target console-getty.service && \
+        systemctl mask systemd-udevd.service systemd-udevd-control.socket systemd-udevd-kernel.socket && \
         systemctl enable podman.socket
 RUN echo $'[containers]\n\
 netns="host"\n\

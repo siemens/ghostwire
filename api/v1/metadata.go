@@ -7,8 +7,8 @@ package v1
 import (
 	"time"
 
-	"github.com/siemens/ghostwire/v2/metadata"
-	_ "github.com/siemens/ghostwire/v2/metadata/all"
+	"github.com/siemens/ghostwire/v2/meta"
+	_ "github.com/siemens/ghostwire/v2/meta/all"
 
 	gostwire "github.com/siemens/ghostwire/v2"
 )
@@ -30,7 +30,7 @@ func NewMetadata(result gostwire.DiscoveryResult) Metadata {
 		"creator-version":    gostwire.SemVersion,
 		"creation-timestamp": time.Now().UTC(),
 	}
-	md, err := metadata.Augment(result, basemd)
+	md, err := meta.Augment(result, basemd)
 	if err != nil {
 		return basemd
 	}

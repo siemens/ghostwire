@@ -14,13 +14,14 @@ import (
 	"time"
 
 	"github.com/kr/pretty"
-	"github.com/siemens/ghostwire/v2/xsk/umem"
 	"github.com/thediveo/caps"
 	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/notwork/macvlan"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/xsk/umem"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

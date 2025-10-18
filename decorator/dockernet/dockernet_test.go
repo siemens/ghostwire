@@ -7,27 +7,40 @@ package dockernet
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
-	"github.com/ory/dockertest/v3"
-	dtclient "github.com/ory/dockertest/v3/docker"
+	"github.com/siemens/turtlefinder/v2"
+	"github.com/thediveo/go-plugger/v3"
+	lxkns "github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/ipam"
+	"github.com/thediveo/morbyd/v2/net"
+	"github.com/thediveo/morbyd/v2/net/macvlan"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
+	"github.com/thediveo/notwork/dummy"
+
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
-	"github.com/thediveo/go-plugger/v3"
-	lxknsdiscover "github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
-const testNetworkName = "gostwire-test-dockernet"
-const testWorkloadName = "gostwire-test-dockernet-workload"
+const (
+	testNetworkBaseName    = "gostwire-decorator-dockernet-test"
+	testBridgeNetworkName  = testNetworkBaseName + "-bridge"
+	testMACVLANNetworkName = testNetworkBaseName + "-macvlan"
+
+	testWorkloadName = "gostwire-decorator-docketnet-test-workload"
+)
 
 var _ = Describe("dockernet decorator", func() {
 
@@ -38,53 +51,41 @@ var _ = Describe("dockernet decorator", func() {
 
 	Context("when looking for Docker-managed networks", func() {
 
-		// We make the test more resilient against left-over created containers by
-		// dockertest by first cleaning up before each test. Kind of brute force
-		// method, me ponders.
 		BeforeEach(func() {
 			goodfds := Filedescriptors()
 			goodgos := Goroutines()
-			pool, err := dockertest.NewPool("")
-			if err == nil {
-				_ = pool.RemoveContainerByName(testWorkloadName)
-			}
 			DeferCleanup(func() {
-				// dockertest has the slightly annoying behavior of leaving us with created
-				// containers when it fails to connect them to a network. So we simply clean
-				// up here, kind of brute force.
-				_ = pool.RemoveContainerByName(testWorkloadName)
-				pool.Client.HTTPClient.CloseIdleConnections()
-				Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(250 * time.Millisecond).
+				Eventually(Goroutines).WithTimeout(5 * time.Second).WithPolling(250 * time.Millisecond).
 					ShouldNot(HaveLeaked(goodgos))
 				Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 			})
+
+			DeferCleanup(slog.SetDefault, slog.Default())
+			slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+				Level: slog.LevelDebug,
+			})))
 		})
 
-		It("discovers the name of a bridge network and decorates its Linux-kernel bridge network interface", NodeTimeout(30*time.Second), func(ctx context.Context) {
+		It("discovers the name of a bridge network and decorates its Linux-kernel bridge network interface", func(ctx context.Context) {
 			if os.Getuid() != 0 {
 				Skip("needs root")
 			}
 
-			By(fmt.Sprintf("creating a test bridge network %q", testNetworkName))
-			pool, err := dockertest.NewPool("")
-			Expect(err).NotTo(HaveOccurred())
-			testnet, err := pool.CreateNetwork(testNetworkName, func(config *dtclient.CreateNetworkOptions) {
-				config.Internal = true
-				config.Labels = map[string]string{"foo": "bar"}
-			})
-			Expect(err).NotTo(HaveOccurred(), "bridge network %s", testNetworkName)
-			defer testnet.Close()
+			By(fmt.Sprintf("creating a test Docker custom bridge network %q", testBridgeNetworkName))
+			sess := Successful(morbyd.NewSession(ctx,
+				session.WithAutoCleaning("test.decorator.dockernet=")))
+			DeferCleanup(func(ctx context.Context) { sess.Close(ctx) })
+			testnet := Successful(sess.CreateNetwork(ctx, testBridgeNetworkName,
+				net.WithInternal(),
+				net.WithLabel("foo=bar")))
 
 			By("creating a test workload and connecting it to the test network")
-			testwl, err := pool.RunWithOptions(&dockertest.RunOptions{
-				Repository: "busybox",
-				Tag:        "latest",
-				Name:       testWorkloadName,
-				Cmd:        []string{"/bin/sleep", "120s"},
-				Networks:   []*dockertest.Network{testnet},
-			})
-			Expect(err).NotTo(HaveOccurred(), "container %", testWorkloadName)
-			defer testwl.Close()
+			testwl := Successful(sess.Run(ctx, "busybox:latest",
+				run.WithName(testWorkloadName),
+				run.WithCommand("/bin/sh", "-c", "while true; do sleep 1; done"),
+				run.WithNetwork(testnet.ID),
+			))
+			testwlPID := model.PIDType(Successful(testwl.PID(ctx)))
 
 			By("running a discovery")
 			ctx, cancel := context.WithCancel(ctx)
@@ -94,9 +95,8 @@ var _ = Describe("dockernet decorator", func() {
 			allnetns, lxknsdisco := discover.Discover(ctx, cizer, nil)
 			Expect(allnetns).NotTo(BeEmpty())
 
-			testwlpid := model.PIDType(testwl.Container.State.Pid)
-			Expect(lxknsdisco.Processes).To(HaveKey(testwlpid))
-			testwlc := lxknsdisco.Processes[testwlpid].Container
+			Expect(lxknsdisco.Processes).To(HaveKey(testwlPID))
+			testwlc := lxknsdisco.Processes[testwlPID].Container
 
 			// Expect eth0 inside container to have a veth peer.
 			wlnetnsid := testwlc.Process.Namespaces[model.NetNS].ID()
@@ -112,79 +112,35 @@ var _ = Describe("dockernet decorator", func() {
 			// Expect a bridge with the alias and label of the test network.
 			bridge := veth.Veth().Peer.Nif().Bridge
 			Expect(bridge).NotTo(BeNil())
-			Expect(bridge).To(network.HaveInterfaceAlias(testNetworkName))
-			Expect(bridge.Nif().Labels).To(HaveKeyWithValue(GostwireNetworkNameKey, testNetworkName))
+			Expect(bridge).To(network.HaveInterfaceAlias(testBridgeNetworkName))
+			Expect(bridge.Nif().Labels).To(HaveKeyWithValue(GostwireNetworkNameKey, testBridgeNetworkName))
 			Expect(bridge.Nif().Labels).To(HaveKey(network.GostwireInternalBridgeKey))
 			Expect(bridge.Nif().Labels).To(HaveKeyWithValue("foo", "bar"))
 		})
 
-		It("discovers the name of a MACVLAN network and decorates its Linkx-kernel master network interface", NodeTimeout(30*time.Second), func(ctx context.Context) {
+		It("discovers the name of a MACVLAN network and decorates its Linkx-kernel master network interface", func(ctx context.Context) {
 			if os.Getuid() != 0 {
 				Skip("needs root")
 			}
 
-			By("looking for any existing MACVLAN network")
-			pool, err := dockertest.NewPool("")
-			Expect(err).NotTo(HaveOccurred())
-			dockernets, err := pool.Client.ListNetworks()
-			Expect(err).NotTo(HaveOccurred())
-			var macvlanNetworkName string
-			var masterName string
-			for _, dcnet := range dockernets {
-				if dcnet.Driver == "macvlan" {
-					macvlanNetworkName = dcnet.Name
-					masterName = dcnet.Options["parent"]
-					break
-				}
-			}
-			if macvlanNetworkName == "" {
-				By("looking for a suitable master", func() {
-					ctx, cancel := context.WithCancel(ctx)
-					cizer := turtlefinder.New(func() context.Context { return ctx })
-					defer cancel()
-					defer cizer.Close()
-					allnetns, lxknsdisco := discover.Discover(ctx, cizer, nil)
-					Expect(allnetns).NotTo(BeEmpty())
-					initialnetns := lxknsdisco.Processes[model.PIDType(1)].Namespaces[model.NetNS]
-					Expect(allnetns).To(HaveKey(initialnetns.ID()))
-					inetns := allnetns[initialnetns.ID()]
-					for _, nif := range inetns.Nifs {
-						if nif.Nif().Physical && nif.Nif().Name != "lo" {
-							masterName = nif.Nif().Name
-							break
-						}
-					}
-					Expect(masterName).NotTo(BeEmpty(), "found no physical network interface in initial network namespace")
-				})
+			By("setting up our own isolated MACVLAN network")
+			dmymaster := dummy.NewTransient()
 
-				By(fmt.Sprintf("creating a test macvlan network %q with parent %q", testNetworkName, masterName))
-				testnet, err := pool.CreateNetwork(testNetworkName, func(config *dtclient.CreateNetworkOptions) {
-					config.Driver = "macvlan"
-					config.Options = map[string]interface{}{
-						"parent": masterName,
-					}
-					config.IPAM = &dtclient.IPAMOptions{
-						Config: []dtclient.IPAMConfig{
-							{Subnet: "192.168.253.0/24"},
-						},
-					}
-					config.Labels = map[string]string{"foo": "bar"}
-				})
-				Expect(err).NotTo(HaveOccurred(), "MACVLAN network %s", testNetworkName)
-				defer testnet.Close()
-				macvlanNetworkName = testNetworkName
-			}
+			sess := Successful(morbyd.NewSession(ctx, session.WithAutoCleaning("test.decorator.dockernet=")))
+			DeferCleanup(func(ctx context.Context) { sess.Close(ctx) })
+			testnet := Successful(sess.CreateNetwork(ctx, testMACVLANNetworkName,
+				net.WithDriver("macvlan"),
+				macvlan.WithParent(dmymaster.Attrs().Name),
+				net.WithIPAM(ipam.WithPool("192.168.253.0/24")),
+				net.WithLabel("foo=bar")))
 
-			By(fmt.Sprintf("creating a test workload and connecting it to the test network %q", macvlanNetworkName))
-			testwl, err := pool.RunWithOptions(&dockertest.RunOptions{
-				Repository: "busybox",
-				Tag:        "latest",
-				Name:       testWorkloadName,
-				Cmd:        []string{"/bin/sleep", "120s"},
-				NetworkID:  macvlanNetworkName,
-			})
-			Expect(err).NotTo(HaveOccurred(), "container %s", testWorkloadName)
-			defer testwl.Close()
+			By(fmt.Sprintf("creating a test workload and connecting it to the test network %q", testMACVLANNetworkName))
+			testwl := Successful(sess.Run(ctx, "busybox:latest",
+				run.WithName(testWorkloadName),
+				run.WithCommand("/bin/sh", "-c", "while true; do sleep 1; done"),
+				run.WithNetwork(testnet.ID),
+				run.WithAutoRemove()))
+			testwlPID := model.PIDType(Successful(testwl.PID(ctx)))
 
 			By("running a discovery and waiting things to settle")
 			ctx, cancel := context.WithCancel(ctx)
@@ -193,13 +149,12 @@ var _ = Describe("dockernet decorator", func() {
 			defer cizer.Close()
 
 			var allnetns network.NetworkNamespaces
-			var lxknsdisco *lxknsdiscover.Result
+			var lxknsdisco *lxkns.Result
 			var testwlc *model.Container
 			Eventually(func() model.Namespace {
 				allnetns, lxknsdisco = discover.Discover(ctx, cizer, nil)
-				testwlpid := model.PIDType(testwl.Container.State.Pid)
-				Expect(lxknsdisco.Processes).To(HaveKey(testwlpid))
-				testwlc = lxknsdisco.Processes[testwlpid].Container
+				Expect(lxknsdisco.Processes).To(HaveKey(testwlPID))
+				testwlc = lxknsdisco.Processes[testwlPID].Container
 				return testwlc.Process.Namespaces[model.NetNS]
 			}, "5s", "0.25s").ShouldNot(BeNil())
 
@@ -216,12 +171,10 @@ var _ = Describe("dockernet decorator", func() {
 
 			// Expect a physical network interface with the alias and label of the test network.
 			master := macvlan.Macvlan().Master
-			Expect(master).To(network.HaveInterfaceName(masterName))
-			Expect(master).To(network.HaveInterfaceAlias(macvlanNetworkName))
-			Expect(master.Nif().Labels).To(HaveKeyWithValue(GostwireNetworkNameKey, macvlanNetworkName))
-			if macvlanNetworkName == testNetworkName {
-				Expect(master.Nif().Labels).To(HaveKeyWithValue("foo", "bar"))
-			}
+			Expect(master).To(network.HaveInterfaceName(dmymaster.Attrs().Name))
+			Expect(master).To(network.HaveInterfaceAlias(testMACVLANNetworkName))
+			Expect(master.Nif().Labels).To(HaveKeyWithValue(GostwireNetworkNameKey, testMACVLANNetworkName))
+			Expect(master.Nif().Labels).To(HaveKeyWithValue("foo", "bar"))
 		})
 
 	})

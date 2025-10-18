@@ -5,23 +5,25 @@
 package network
 
 import (
+	"log/slog"
+	"maps"
 	"os"
 	"time"
 
-	"github.com/thediveo/deferrer"
-	"github.com/thediveo/lxkns/nstest"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
-	"github.com/thediveo/testbasher"
+	"github.com/thediveo/nonstd/xiter"
+	"github.com/thediveo/notwork/veth"
+	"github.com/thediveo/spacetest/netns"
+	"github.com/vishvananda/netlink"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
-
-const testNsidNetnsName = "gostwire-testnsid"
 
 var _ = Describe("network namespace", func() {
 
@@ -34,56 +36,37 @@ var _ = Describe("network namespace", func() {
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 			Expect(Tasks()).To(BeUniformlyNamespaced())
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	})
 
 	Context("with an almost lonely network namespace", func() {
 
-		var outer deferrer.Deferrer
 		var allnetns NetworkNamespaces
-		var scripts testbasher.Basher
-		var realnetnsid species.NamespaceID
 		var testNetns *NetworkNamespace
+		var gromit netlink.Link
 
 		BeforeEach(func() {
 			if os.Getuid() != 0 {
 				Skip("needs root")
 			}
-			outer = deferrer.Deferrer{}
 
-			scripts = testbasher.Basher{}
-			outer.Defer(scripts.Done)
-
-			scripts.Common(nstest.NamespaceUtilsScript)
-			scripts.Common("netnsname=" + testNsidNetnsName)
-			scripts.Script("main", `
-ip netns del ${netnsname} || true
-ip link del wallace || true
-ip netns add ${netnsname}
-ip link add wallace type veth peer gromit
-ip link set gromit netns ${netnsname}
-namespaceid /run/netns/${netnsname}
-read # wait for test to proceed
-ip netns del ${netnsname}
-`)
-			cmd := scripts.Start("main")
-			outer.Defer(cmd.Close)
-
-			realnetnsid = nstest.CmdDecodeNSId(cmd)
-			testnetnsid, err := ops.NamespacePath("/proc/1/root/run/netns/" + testNsidNetnsName).ID()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(testnetnsid).To(Equal(realnetnsid))
+			By("creating a new transient network namespace and a VETH pair from here to there")
+			tmpNetns := netns.NewTransient()
+			_, gromit = veth.NewTransient(veth.WithPeerNamespace(tmpNetns))
 
 			allnetns, _ = discoverRedux()
-			Expect(allnetns).To(HaveKey(realnetnsid))
+			Expect(allnetns).To(HaveKey(species.NamespaceIDfromInode(netns.Ino(tmpNetns))))
 
-			testNetns = allnetns[realnetnsid]
+			testNetns = allnetns[species.NamespaceIDfromInode(netns.Ino(tmpNetns))]
 			Expect(testNetns).NotTo(BeNil())
 		})
 
-		AfterEach(outer.Cleanup)
-
-		It("founds the related NetworkNamespace's via their discovered NSIDs", func() {
-			initnetnsid, err := ops.NamespacePath("/proc/1/ns/net").ID()
+		It("found the related NetworkNamespace via their discovered NSIDs", func() {
+			initnetnsid, err := ops.NamespacePath("/proc/self/ns/net").ID()
 			Expect(err).NotTo(HaveOccurred())
 			initialNetns := allnetns[initnetnsid]
 			Expect(initialNetns).NotTo(BeNil())
@@ -95,7 +78,7 @@ ip netns del ${netnsname}
 		It("lists nifs in new network namespace", func() {
 			Expect(testNetns.NifList()).To(ConsistOf(
 				HaveInterfaceName("lo"),
-				HaveInterfaceName("gromit")))
+				HaveInterfaceName(gromit.Attrs().Name)))
 		})
 
 		When("sorting", func() {
@@ -106,14 +89,10 @@ ip netns del ${netnsname}
 				initialNetns := allnetns[initnetnsid]
 				Expect(initialNetns).NotTo(BeNil())
 
-				var anotherNetns *NetworkNamespace
-				for _, netns := range allnetns {
-					if netns == initialNetns {
-						continue
-					}
-					anotherNetns = netns
-					break
-				}
+				anotherNetns := Allright(
+					xiter.FirstOk(
+						xiter.Filter(maps.Values(allnetns),
+							func(n *NetworkNamespace) bool { return n != initialNetns })))
 				Expect(anotherNetns).NotTo(BeNil())
 				Expect(orderNetworkNamespaces([]*NetworkNamespace{initialNetns, anotherNetns})(0, 1)).To(BeTrue())
 				Expect(orderNetworkNamespaces([]*NetworkNamespace{anotherNetns, initialNetns})(0, 1)).To(BeFalse())

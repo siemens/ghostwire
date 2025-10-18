@@ -54,7 +54,7 @@ var _ = Describe("TAPs and TUNs", func() {
 		currentNetns := Successful(ops.NamespacePath("/proc/self/ns/net").ID())
 		Expect(allnetns).To(HaveKey(currentNetns))
 		Expect(allnetns[currentNetns].NamedNifs).To(HaveKey(tap.Attrs().Name))
-		gwtap := allnetns[currentNetns].NamedNifs[tap.Attrs().Name].(TunTap)
+		gwtap := AssignableTo[TunTap](allnetns[currentNetns].NamedNifs[tap.Attrs().Name])
 		Expect(gwtap.Nif().Kind).To(Equal("tuntap"))
 		Expect(gwtap.TunTap().Mode).To(Equal(TunTapModeTap))
 

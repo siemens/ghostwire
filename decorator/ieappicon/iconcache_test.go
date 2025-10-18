@@ -5,11 +5,12 @@
 package ieappicon
 
 import (
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/decorator/industrialedge"
 	"github.com/thediveo/lxkns/model"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("IE app icon cache", func() {

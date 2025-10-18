@@ -1,0 +1,10 @@
+{
+    "id": "ipnufftables",
+    "version": "0.0.1",
+    "name": "iptables-on-nft",
+    "description": "installs and enables iptables to use the nf tables backend.",
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/common-utils",
+        "ghcr.io/devcontainers/features/docker-in-docker"
+    ]
+}

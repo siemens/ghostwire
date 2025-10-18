@@ -5,19 +5,21 @@
 package discover
 
 import (
+	"log/slog"
 	"os"
 	"path"
 	"reflect"
 	"time"
 
-	"github.com/siemens/ghostwire/v2/xsk"
-	"github.com/siemens/ghostwire/v2/xsk/umem"
 	lxkns "github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/notwork/macvlan"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/xsk"
+	"github.com/siemens/ghostwire/v2/xsk/umem"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,7 +30,7 @@ import (
 
 var packageTestName = func() string {
 	type dummy struct{}
-	_, name := path.Split(reflect.TypeOf(dummy{}).PkgPath())
+	_, name := path.Split(reflect.TypeFor[dummy]().PkgPath())
 	name += ".test"
 	if len(name) > 15 {
 		return name[:15]
@@ -57,6 +59,11 @@ var _ = Describe("discovering umems", func() {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 
 		By("entering a temporary network namespace and creating two umems and three XSKs")
 		defer netns.EnterTransient()()

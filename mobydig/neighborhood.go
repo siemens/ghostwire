@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
 	"github.com/siemens/ghostwire/v2/network"

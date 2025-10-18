@@ -16,26 +16,13 @@ var _ = Describe("IRQ discovery", func() {
 
 	Context("queue IRQs", func() {
 
-		It("reports an error for invalid sysfs path", func() {
-			Expect(NetdevIRQs("./_test/süsfuss", &rxtxlayout.Netdev{
-				Name: "!foobarz",
-			})).To(MatchError(
-				MatchRegexp(`cannot determine IRQs of interface .*, reason: .* no such file or directory`)))
-		})
-
-		It("reports an error for invalid ifname", func() {
-			Expect(NetdevIRQs("./_test/twoflower", &rxtxlayout.Netdev{
-				Name: "!foobarz",
-			})).To(MatchError(
-				MatchRegexp(`cannot determine IRQs of interface .*, reason: .* no such file or directory`)))
-		})
-
 		It("discovers IRQs for queues and ignores nonsense in sys/kernel/irq/...", func() {
 			ndev := &rxtxlayout.Netdev{
 				Name: "twoflower",
 			}
 			Expect(NetdevQueues("./_test/twoflower", ndev)).To(Succeed())
-			Expect(NetdevIRQs("./_test/twoflower", ndev)).To(Succeed())
+			NetdevIRQs("./_test/twoflower", ndev)
+			Expect(ndev.IRQs).ToNot(BeEmpty())
 			Expect(ndev.Queues).To(ConsistOf(
 				And(
 					HaveField("ID", uint(0)),
@@ -62,7 +49,8 @@ var _ = Describe("IRQ discovery", func() {
 				Name: "twoflower",
 			}
 			Expect(NetdevQueues("./_test/twoflower", ndev)).To(Succeed())
-			Expect(NetdevIRQs("./_test/twoflower", ndev)).To(Succeed())
+			NetdevIRQs("./_test/twoflower", ndev)
+			Expect(ndev.IRQs).ToNot(BeEmpty())
 
 			procs := model.ProcessTable{
 				2: &model.Process{},

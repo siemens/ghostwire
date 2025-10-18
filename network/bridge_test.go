@@ -6,28 +6,32 @@ package network
 
 import (
 	"context"
+	"log/slog"
+	"maps"
 	"os"
+	"slices"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
-
-const testBridgeNetworkName = "gostwire-test-bridge"
-const testBridgeWorkloadName = "gostwire-test-bridge-workload"
 
 func discoverRedux() (NetworkNamespaces, *discover.Result) {
 	discoverednetns := discover.Namespaces(
 		discover.FromProcs(),
-		discover.FromBindmounts(),
+		discover.FromTasks(),
+		discover.FromFds(),
 		discover.WithNamespaceTypes(
 			species.CLONE_NEWNET|species.CLONE_NEWPID|species.CLONE_NEWNS|species.CLONE_NEWUTS),
 		discover.WithHierarchy(),
@@ -40,41 +44,46 @@ func discoverRedux() (NetworkNamespaces, *discover.Result) {
 	return allnetns, discoverednetns
 }
 
-var _ = Describe("bridge nif", func() {
+var _ = Describe("bridge network interfaces", func() {
 
 	BeforeEach(func() {
 		goodfds := Filedescriptors()
 		goodgos := Goroutines() // avoid other failed goroutine tests to spill over
 		DeferCleanup(func() {
-			Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(250 * time.Millisecond).
+			Eventually(Goroutines).WithTimeout(5 * time.Second).WithPolling(250 * time.Millisecond).
 				ShouldNot(HaveLeaked(goodgos))
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 			Expect(Tasks()).To(BeUniformlyNamespaced())
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	})
 
-	It("discovers bridge", NodeTimeout(30*time.Second), func(_ context.Context) {
+	It("discovers bridge", func(ctx context.Context) {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
 
+		sess := Successful(morbyd.NewSession(ctx,
+			session.WithAutoCleaning("test=ghostwire.network")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
+
 		By("creating a test bridge network")
-		pool, err := dockertest.NewPool("")
-		Expect(err).NotTo(HaveOccurred())
-		testnet, err := pool.CreateNetwork(testBridgeNetworkName)
-		Expect(err).NotTo(HaveOccurred(), "network %s", testBridgeNetworkName)
-		defer testnet.Close()
+		netw := Successful(sess.CreateNetwork(ctx,
+			"test-network-bridge"))
 
 		By("creating a test workload and connecting it to the test network")
-		testwl, err := pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       testBridgeWorkloadName,
-			Cmd:        []string{"/bin/sleep", "120s"},
-			Networks:   []*dockertest.Network{testnet},
-		})
-		Expect(err).NotTo(HaveOccurred(), "container %s", testBridgeWorkloadName)
-		defer testwl.Close()
+		cntr := Successful(sess.Run(ctx,
+			"busybox",
+			run.WithNetwork(netw.ID),
+			run.WithCommand("/bin/sh", "-c", "while true; do sleep 1; done"),
+		))
+		Expect(cntr.PID(ctx)).Error().NotTo(HaveOccurred())
 
 		By("running a discovery")
 		allnetns, lxknsdisco := discoverRedux()
@@ -82,11 +91,12 @@ var _ = Describe("bridge nif", func() {
 
 		// Expect a bridge to be present, with a nif name derived from the
 		// network ID.
-		brname := "br-" + testnet.Network.ID[0:12]
-		hostnetnsid := lxknsdisco.Processes[1].Namespaces[model.NetNS].ID()
+		brname := "br-" + netw.ID[0:12]
+		hostnetnsid := lxknsdisco.Processes[model.PIDType(os.Getpid())].Namespaces[model.NetNS].ID()
 		hostnetns := allnetns[hostnetnsid]
 		Expect(hostnetns).NotTo(BeNil())
-		Expect(hostnetns.NamedNifs).To(HaveKey(brname))
+		Expect(hostnetns.NamedNifs).To(HaveKey(brname),
+			"known nifs: %s", slices.Collect(maps.Keys(hostnetns.NamedNifs)))
 		nif := hostnetns.NamedNifs[brname]
 		Expect(nif.Nif().Kind).To(Equal("bridge"))
 

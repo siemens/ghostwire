@@ -6,21 +6,22 @@ package network
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"time"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/notwork/bridge"
+	"github.com/thediveo/notwork/veth"
+	"github.com/thediveo/spacetest/netns"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
-
-const testVethNetworkName = "gostwire-test-veth"
-const testVethWorkloadName = "gostwire-test-veth-workload"
 
 var _ = Describe("VETH nif", func() {
 
@@ -33,43 +34,38 @@ var _ = Describe("VETH nif", func() {
 			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 			Expect(Tasks()).To(BeUniformlyNamespaced())
 		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	})
 
-	It("discovers VETH pairs", NodeTimeout(30*time.Second), func(_ context.Context) {
+	It("discovers VETH pairs", func(ctx context.Context) {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
 
-		By("creating a test bridge network in order to get VETHs")
-		pool, err := dockertest.NewPool("")
-		Expect(err).NotTo(HaveOccurred())
-		testnet, err := pool.CreateNetwork(testVethNetworkName)
-		Expect(err).NotTo(HaveOccurred(), "network %s", testVethNetworkName)
-		defer testnet.Close()
-
-		By("creating a test workload and connecting it to the test network")
-		testwl, err := pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       testVethWorkloadName,
-			Cmd:        []string{"/bin/sleep", "120s"},
-			Networks:   []*dockertest.Network{testnet},
+		By("creating a test bridge and VETH pair")
+		dupondNetns := netns.NewTransient()
+		dupontNetns := netns.NewTransient()
+		br := bridge.NewTransient(bridge.InNamespace(dupondNetns))
+		dupond, dupont := veth.NewTransient(veth.InNamespace(dupondNetns), veth.WithPeerNamespace(dupontNetns))
+		netns.Execute(dupondNetns, func() {
+			bridge.AddPort(br, dupond)
 		})
-		Expect(err).NotTo(HaveOccurred(), "container %s", testVethWorkloadName)
-		defer testwl.Close()
 
 		By("running a discovery")
-		allnetns, lxknsdisco := discoverRedux()
+		allnetns, _ := discoverRedux()
 		Expect(allnetns).NotTo(BeEmpty())
 
 		// Expect a bridge to be present, with a nif name derived from the
 		// network ID.
-		brname := "br-" + testnet.Network.ID[0:12]
-		hostnetnsid := lxknsdisco.Processes[1].Namespaces[model.NetNS].ID()
-		hostnetns := allnetns[hostnetnsid]
-		Expect(hostnetns).NotTo(BeNil())
-		Expect(hostnetns.NamedNifs).To(HaveKey(brname))
-		nif := hostnetns.NamedNifs[brname]
+		brNetnsID := species.NamespaceIDfromInode(netns.Ino(dupondNetns))
+		brnetns := allnetns[brNetnsID]
+		Expect(brnetns).NotTo(BeNil())
+		Expect(brnetns.NamedNifs).To(HaveKey(br.Attrs().Name))
+		nif := brnetns.NamedNifs[br.Attrs().Name]
 		Expect(nif.Nif().Kind).To(Equal("bridge"))
 
 		// Expect a single port: an veth linked with another end in our test
@@ -80,15 +76,15 @@ var _ = Describe("VETH nif", func() {
 		// Now for the checks centrol to the VETH peer relation: do we correctly
 		// got two VETHs and do they refer to each other?
 		Expect(ports[0].Nif().Kind).To(Equal("veth"))
-		var veth Veth
-		Expect(func() { veth = ports[0].(Veth) }).NotTo(Panic())
+		Expect(ports[0].Nif().Name).To(Equal(dupond.Attrs().Name))
 
+		veth := AssignableTo[Veth](ports[0])
 		peer := veth.Veth().Peer
 		Expect(peer.Nif().Kind).To(Equal("veth"))
-		var vethpeer Veth
-		Expect(func() { vethpeer = peer.(Veth) }).NotTo(Panic())
+		Expect(peer.Nif().Name).To(Equal(dupont.Attrs().Name))
 
 		// Our peer's peer must be us.
+		vethpeer := AssignableTo[Veth](peer)
 		Expect(vethpeer.Veth().Peer).To(BeIdenticalTo(veth))
 	})
 

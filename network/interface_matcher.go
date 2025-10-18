@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build matchers
-// +build matchers
 
 package network
 
@@ -12,9 +11,9 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
-// HaveInterfaceOfKindWithName succeeds if ACTUAL is of type network.Interface
+// HaveInterfaceKindAndName succeeds if ACTUAL is of type network.Interface
 // and is of the specified kind, as well as has the specified name.
-func HaveInterfaceOfKindWithName(kind string, name string) types.GomegaMatcher {
+func HaveInterfaceKindAndName(kind string, name string) types.GomegaMatcher {
 	return g.SatisfyAll(
 		HaveInterfaceName(name),
 		g.WithTransform(

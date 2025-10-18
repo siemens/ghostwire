@@ -22,7 +22,7 @@ type Descriptor interface {
 	uint64 | unix.XDPDesc
 }
 
-// Ring represents a descriptor ring of a “single producer and single consumer”
+// ring represents a descriptor ring of a “single producer and single consumer”
 // design, where the descriptors “point” to chunks in the associated umem in
 // form of offsets. Rings are used for fill/completion and RX/TX.
 //
@@ -31,15 +31,15 @@ type Descriptor interface {
 // Please note that this implementation is not optimized in the way [libxdp]'s is
 // (the latter using clever caching and memory barriers).
 //
-// Ring objects can be copied after their creation and configuration, because the
-// ring memory as well as the producer and consumer indices are in memory provided
-// by the kernel and a Ring object points to these instead of storing them itself.
-// However, this does not allow for
+// Ring objects can be copied after their creation and configuration, because
+// the actual ring memory as well as the producer and consumer indices are in
+// memory provided by the kernel and a Go ring object points to these instead of
+// storing them itself.
 //
 // As kind of some consolation this implementation uses Go Generics. Take that,
 // boilerplate!
 //
-// As for the Ring inner workings, please head over to Juho Snellman's highly
+// As for the ring inner workings, please head over to Juho Snellman's highly
 // useful blog post “[I've been writing ring buffers wrong all these years]”. We
 // have to strictly follow the “array with two unmasked indices” as this is what
 // the kernel and libxdp do and what eventually the kernel-user space API
@@ -47,7 +47,7 @@ type Descriptor interface {
 //
 // [libxdp]: https://github.com/xdp-project/xdp-tools/tree/master/lib/libxdp
 // [I've been writing ring buffers wrong all these years]: https://www.snellman.net/blog/archive/2016-12-13-ring-buffers/
-type Ring[D Descriptor] struct {
+type ring[D Descriptor] struct {
 	// Index of the descriptor that is the current head of the queue (ring). To
 	// be more precise, this is the “unmasked” index that only wraps around the
 	// 32bit boundary, but never wraps at the end of the ring (size).
@@ -84,38 +84,38 @@ type Ring[D Descriptor] struct {
 	ringmem []byte
 }
 
-// ProducerRing implements adding (“producing”) descriptors to it, but not
+// producerRing implements adding (“producing”) descriptors to it, but not
 // removing any (as the latter is the job of the kernel).
-type ProducerRing[D Descriptor] struct{ Ring[D] }
+type producerRing[D Descriptor] struct{ ring[D] }
 
-// ConsumerRing implements removing (“consuming”) descriptors from it, but not
+// consumerRing implements removing (“consuming”) descriptors from it, but not
 // adding any (as the latter is the job of the kernel).
-type ConsumerRing[D Descriptor] struct{ Ring[D] }
+type consumerRing[D Descriptor] struct{ ring[D] }
 
 // Rx implements an XDP socket ring for received packets. This is a
-// [ConsumerRing] as it gets filled from kernel space and then the packets must
+// [consumerRing] as it gets filled from kernel space and then the packets must
 // be consumed in user space.
-type Rx struct{ ConsumerRing[unix.XDPDesc] }
+type Rx struct{ consumerRing[unix.XDPDesc] }
 
 // Tx implements an XDP socket ring for packet transmission. This is a
-// [ProducerRing] as it gets filled from user space with descriptors for packets
+// [producerRing] as it gets filled from user space with descriptors for packets
 // to be sent.
-type Tx struct{ ProducerRing[unix.XDPDesc] }
+type Tx struct{ producerRing[unix.XDPDesc] }
 
 // Fill implements a umem ring for chunks to be filled with received packets.
-// This is a [ProducerRing] as it gets filled from user space with descriptors
+// This is a [producerRing] as it gets filled from user space with descriptors
 // for packets to be received.
-type Fill struct{ ProducerRing[uint64] }
+type Fill struct{ producerRing[uint64] }
 
 // Completion implements a umem ring for packets that have been sent, so that
-// their chunks can now be reused for something else. This is a [ConsumerRing]
+// their chunks can now be reused for something else. This is a [consumerRing]
 // as it gets filled from kernel space and then the packets must be consumed in
 // user space.
-type Completion struct{ ConsumerRing[uint64] }
+type Completion struct{ consumerRing[uint64] }
 
 // NewFill returns a new Fill ring object for the umem attached to the XDP
 // socket referenced by xskfd. Otherwise, it returns an error. Make sure to call
-// [Ring.Close] to properly release the mmap'ed ring memory.
+// [ring.Close] to properly release the mmap'ed ring memory.
 func NewFill(xskfd int, offsets unix.XDPRingOffset, size uint32) (Fill, error) {
 	r := Fill{}
 	if err := r.setup(xskfd,
@@ -127,7 +127,7 @@ func NewFill(xskfd int, offsets unix.XDPRingOffset, size uint32) (Fill, error) {
 
 // NewCompletion returns a new Completion ring object for the umem attached to
 // the XDP socket referenced by xskfd. Otherwise, it returns an error. Make sure
-// to call [Ring.Close] to properly release the mmap'ed ring memory.
+// to call [ring.Close] to properly release the mmap'ed ring memory.
 func NewCompletion(xskfd int, offsets unix.XDPRingOffset, size uint32) (Completion, error) {
 	r := Completion{}
 	if err := r.setup(xskfd,
@@ -138,7 +138,7 @@ func NewCompletion(xskfd int, offsets unix.XDPRingOffset, size uint32) (Completi
 }
 
 // NewRx returns a new RX ring object for the XDP socket referenced by xskfd.
-// Otherwise, it returns an error. Make sure to call [Ring.Close] to properly
+// Otherwise, it returns an error. Make sure to call [ring.Close] to properly
 // release the mmap'ed ring memory.
 func NewRx(xskfd int, offsets unix.XDPRingOffset, size uint32) (Rx, error) {
 	r := Rx{}
@@ -150,7 +150,7 @@ func NewRx(xskfd int, offsets unix.XDPRingOffset, size uint32) (Rx, error) {
 }
 
 // NewTx returns a new TX ring object for the XDP socket referenced by xskfd.
-// Otherwise, it returns an error. Make sure to call [Ring.Close] to properly
+// Otherwise, it returns an error. Make sure to call [ring.Close] to properly
 // release the mmap'ed ring memory.
 func NewTx(xskfd int, offsets unix.XDPRingOffset, size uint32) (Tx, error) {
 	r := Tx{}
@@ -163,37 +163,37 @@ func NewTx(xskfd int, offsets unix.XDPRingOffset, size uint32) (Tx, error) {
 
 // String returns a textual representation of a ring, giving the current usage
 // gauge.
-func (r Ring[D]) String() string {
+func (r ring[D]) String() string {
 	return fmt.Sprintf("%T in use: %d", r, r.Used())
 }
 
 // Flags return this Ring's flags as of this very moment.
 //
 // For instance, unix.
-func (r Ring[D]) Flags() uint32 {
+func (r ring[D]) Flags() uint32 {
 	return atomic.LoadUint32(r.flags)
 }
 
 // Used returns the number of chunks that could be dequeued right at this moment
-// by calling [Ring.Next]. There might also be more just right now.
-func (r Ring[D]) Used() int {
+// by calling [ring.Next]. There might also be more just right now.
+func (r ring[D]) Used() int {
 	// Oh, the magic of unsigned integer subtraction with wrap-arounds.
 	return int(atomic.LoadUint32(r.producer) - atomic.LoadUint32(r.consumer))
 }
 
 // Free returns the number of currently unused descriptors in this ring.
-func (r *Ring[D]) Free() int {
+func (r *ring[D]) Free() int {
 	return int(r.size) - r.Used()
 }
 
 // Full becomes true when the ring is filled to its brim, so that no new
 // descriptors can be added.
-func (r Ring[D]) Full() bool {
+func (r ring[D]) Full() bool {
 	return r.Used() == int(r.size)
 }
 
 // Empty is true if the ring doesn't contain any descriptors.
-func (r Ring[D]) Empty() bool {
+func (r ring[D]) Empty() bool {
 	return atomic.LoadUint32(r.producer) == atomic.LoadUint32(r.consumer)
 }
 
@@ -207,7 +207,7 @@ func (r Ring[D]) Empty() bool {
 //   - offsets: of the ring elements as told us by the kernel via an getsockopt
 //     with SOL_XDP and XDP_MMAP_OFFSETS.
 //   - size: of the ring, must be a power of two.
-func (r *Ring[D]) setup(xskfd int, ring int64, offsets unix.XDPRingOffset, size uint32) (err error) {
+func (r *ring[D]) setup(xskfd int, ring int64, offsets unix.XDPRingOffset, size uint32) (err error) {
 	var zeroDescriptor D
 	r.size = size
 	r.mask = size - 1
@@ -261,14 +261,14 @@ func (r *Ring[D]) setup(xskfd int, ring int64, offsets unix.XDPRingOffset, size 
 
 // Close releases the virtual memory space once mapped into our user space when
 // setting up this ring.
-func (r *Ring[D]) Close() {
+func (r *ring[D]) Close() {
 	// We ignore any errors silently.
 	_ = unix.Munmap(r.ringmem)
 }
 
 // Add adds a descriptor to a (producer) ring, returning true, if the ring had
 // room for the descriptor. Otherwise, it returns false when the ring is full.
-func (p ProducerRing[D]) Add(d D) bool {
+func (p producerRing[D]) Add(d D) bool {
 	if p.Full() {
 		return false
 	}
@@ -301,7 +301,7 @@ func (t Tx) NeedsWakeup() bool {
 // Next removes and returns the next descriptor from the ring, if any, together
 // with a true value. If the ring is empty, then a zero descriptor together with
 // a false value is returned instead.
-func (p ConsumerRing[D]) Next() (d D, ok bool) {
+func (p consumerRing[D]) Next() (d D, ok bool) {
 	if p.Empty() {
 		return d, false
 	}

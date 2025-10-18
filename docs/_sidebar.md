@@ -13,5 +13,7 @@
   * [rtnetlink](rtnetlink)
   * [netlink (Go)](netlink-go)
   * [SR-IOV](sr-iov)
+  * [XDP/XSK](afxdp)
+  * [netdev Topologies](netdev)
   * [nerdctl](nerdctl)
   * [Terminology](terminology)

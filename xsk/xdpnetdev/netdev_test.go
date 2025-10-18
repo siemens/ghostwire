@@ -18,7 +18,7 @@ import (
 	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/notwork/link"
 	"github.com/thediveo/notwork/macvlan"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"github.com/vishvananda/netlink"
 
 	. "github.com/onsi/ginkgo/v2"

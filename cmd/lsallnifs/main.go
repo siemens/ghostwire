@@ -6,8 +6,6 @@ package main
 
 import (
 	"os"
-
-	_ "github.com/thediveo/lxkns/log/logrus"
 )
 
 func main() {

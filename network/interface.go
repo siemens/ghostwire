@@ -5,13 +5,14 @@
 package network
 
 import (
+	"log/slog"
 	"net"
 	"sort"
 	"strings"
 
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
@@ -142,8 +143,8 @@ func collectNifMakers() {
 	for _, nm := range plugger.Group[NifMaker]().PluginsSymbols() {
 		nifMakers[nm.Plugin] = nm.S
 	}
-	log.Infof("available specialized network interface plugins for kinds: %s",
-		strings.Join(plugger.Group[NifMaker]().Plugins(), ", "))
+	slog.Info("available specialized network interface plugins",
+		slog.String("plugins", strings.Join(plugger.Group[NifMaker]().Plugins(), ",")))
 }
 
 // nifMakers maps link type names to their "maker" (factories) functions.
@@ -249,7 +250,9 @@ func (n *NifAttrs) HasAddress(ip net.IP) bool {
 func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 	driverInfo, err := unix.IoctlGetEthtoolDrvinfo(ethtoolFd, n.Name)
 	if err != nil {
-		log.Errorf("cannot query ethtool API driver information for nif %q, reason: %s", n.Name, err.Error())
+		slog.Error("cannot query ethtool API driver information",
+			slog.String("interface", n.Name),
+			xslog.Error(err))
 		return
 	}
 	n.DriverInfo.Driver = strings.TrimRight(string(driverInfo.Driver[:]), "\x00")
@@ -260,7 +263,10 @@ func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 	// to use it on some kinds of virtual network interfaces, but on others it
 	// does return driver information :)
 	n.DriverInfo.BusInfo = strings.TrimRight(string(driverInfo.Bus_info[:]), "\x00")
-	log.Debugf("physical network interface %s has device bus address: %s", n.Name, n.DriverInfo.BusInfo)
+	slog.Debug("physical network interface",
+		slog.Uint64("netns", n.Netns.ID().Ino),
+		slog.String("interface", n.Name),
+		slog.String("bus-address", n.DriverInfo.BusInfo))
 }
 
 // SysfsBusPath returns a device directory path for the physical device of this
@@ -279,28 +285,35 @@ func (n *NifAttrs) ResolveRelations(allns NetworkNamespaces) {
 	// Could this be a bridge "port" interface? Its bridge can only be in the
 	// same network namespace.
 	idx := n.Link.Attrs().MasterIndex
-	if idx > 0 {
-		nif := n.Netns.Nifs[idx]
-		if nif == nil {
-			log.Warnf("missing bridge network interface with idx %d", idx)
-		} else if bridge, _ := nif.(*BridgeAttrs); bridge != nil {
-			n.Bridge = bridge
-			// Go AWAY, that's flawed object-oriented design! Because we're here
-			// *NifAttrs, we're thus not network.Interface anymore. And
-			// therefore we can't simply "cast" back from *NifAttrs to
-			// network.Interface, because a network.Interface pointer actually
-			// now says: "I'm a *NifAttrs satisfying network.Interface". It has
-			// forgotten what ever original type it was that embedded the
-			// NifAttrs. Oh, bummer.
-			bridge.Ports = append(bridge.Ports, n.Interface())
-		} else if nif.Nif().Kind != "openvswitch" {
-			// Skip warning in case of openvswitch that uses the master-slave
-			// relationships in a creative way not related to how Linux kernel
-			// standard bridges use them; it appears as if openvswitch uses the
-			// master-slave relationship for general tracking of any
-			// netdev-based openvswitch port attachment.
-			log.Warnf("master network interface is not a bridge, but of type '%s'", nif.Nif().Kind)
-		}
+	if idx <= 0 {
+		return
+	}
+	nif := n.Netns.Nifs[idx]
+	if nif == nil {
+		slog.Warn("missing bridge network interface", slog.Int("index", idx))
+		return
+	}
+	if bridge, _ := nif.(*BridgeAttrs); bridge != nil {
+		n.Bridge = bridge
+		// Go AWAY, that's flawed object-oriented design! Because we're here
+		// *NifAttrs, we're thus not network.Interface anymore. And
+		// therefore we can't simply "cast" back from *NifAttrs to
+		// network.Interface, because a network.Interface pointer actually
+		// now says: "I'm a *NifAttrs satisfying network.Interface". It has
+		// forgotten what ever original type it was that embedded the
+		// NifAttrs. Oh, bummer.
+		bridge.Ports = append(bridge.Ports, n.Interface())
+		return
+	}
+	if nif.Nif().Kind != "openvswitch" {
+		// Skip warning in case of openvswitch that uses the master-slave
+		// relationships in a creative way not related to how Linux kernel
+		// standard bridges use them; it appears as if openvswitch uses the
+		// master-slave relationship for general tracking of any
+		// netdev-based openvswitch port attachment.
+		slog.Warn("master network interface is not a bridge",
+			slog.String("interface", nif.Nif().Name),
+			slog.String("kind", nif.Nif().Kind))
 	}
 }
 

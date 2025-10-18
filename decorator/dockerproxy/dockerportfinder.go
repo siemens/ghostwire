@@ -6,18 +6,20 @@ package dockerproxy
 
 import (
 	"context"
+	"log/slog"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
 
+	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
+
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
-	"golang.org/x/exp/slices"
+	"github.com/siemens/ghostwire/v2/network/portfwd/slogpfwd"
 )
 
 const dockerProxy = "docker-proxy"
@@ -39,7 +41,7 @@ type forwardedPortKey struct {
 // processes, adding the found forwarded ports to the already known forwarded
 // ports in the network namespaces of their corresponding Docker engines.
 func Decorate(ctx context.Context, allnetns network.NetworkNamespaces, allprocs model.ProcessTable, engines []*model.ContainerEngine) {
-	log.Debugf("discovering user-space Docker forwarded ports")
+	slog.Debug("discovering user-space Docker forwarded ports")
 
 	for _, engine := range engines {
 		// If it ain't a Docker engine, we can skip it.
@@ -60,7 +62,8 @@ func Decorate(ctx context.Context, allnetns network.NetworkNamespaces, allprocs 
 			if !strings.HasSuffix(child.Name, dockerProxy) {
 				continue
 			}
-			fp := forwardedPort(child)
+			slog.Debug("found proxy process", slog.Any("PID", child.PID))
+			fp := extractForwardedPort(child)
 			if fp.IP == nil {
 				continue
 			}
@@ -96,15 +99,15 @@ func mergeForwardedPorts(IPvLen int, ports []network.ForwardedPort, moreports ma
 		if len(port.IP) != IPvLen {
 			continue
 		}
-		log.Debugf("docker proxy: %s", port)
+		slog.Debug("docker proxy", slogpfwd.ForwardedPortAttrs(&port.ForwardedPortRange)...)
 		ports = append(ports, port)
 	}
 	return ports
 }
 
-// forwardedPort decodes the port forwarding information passed to a Docker
-// proxy process on its command line and returns it.
-func forwardedPort(proxyproc *model.Process) (fp network.ForwardedPort) {
+// extractForwardedPort decodes the port forwarding information passed to a
+// Docker proxy process on its command line and returns it.
+func extractForwardedPort(proxyproc *model.Process) (fp network.ForwardedPort) {
 	cliarg := proxyproc.Cmdline
 	for idx := 1; idx < len(cliarg)-1; idx += 2 {
 		switch cliarg[idx] {

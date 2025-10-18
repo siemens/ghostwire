@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net"
 	"net/http"
 	"regexp"
@@ -14,10 +15,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns/containerizer"
-	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/thediveo/spaserve"
+
+	gostwire "github.com/siemens/ghostwire/v2"
 )
 
 // dynVarsRe matches the window.dynvars assignment, so we can rewrite (or
@@ -45,8 +48,8 @@ func AddDynamicVars(r *http.Request, index string) string {
 		BrandIcon:          *brandIcon,
 	})
 	if err != nil {
-		log.Errorf("cannot marshal dynamic variables into index.html, reason: %s",
-			err.Error())
+		slog.Error("cannot marshal dynamic variables into index.html",
+			xslog.Error(err))
 		return index
 	}
 	index = dynVarsRe.ReplaceAllString(string(index), "${1}"+string(dynvars)+"${2}")
@@ -57,12 +60,14 @@ func AddDynamicVars(r *http.Request, index string) string {
 // requests get logged at info level.
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Infof("http %s %s", req.Method, req.RequestURI)
+		slog.Info("http request",
+			slog.String("method", req.Method),
+			slog.String("path", req.URL.Path))
 		next.ServeHTTP(w, req)
 	})
 }
 
-func startServer(address string, cizer containerizer.Containerizer) (net.Addr, error) {
+func startServer(address string, cmd *cobra.Command, cizer containerizer.Containerizer) (net.Addr, error) {
 	// Create the HTTP server listening transport...
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -73,18 +78,17 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 	// handlers.
 	r := mux.NewRouter()
 	r.Use(requestLogger)
-	registerDiscovery(cizer)
-	registerMobyDigger(cizer)
-	registerRouteHandlers(r)
+	registerRouteHandlers(r, cmd, cizer)
 
 	r.PathPrefix("/").Handler(spaserve.NewSPAHandler(
 		uifs, "index.html", spaserve.WithIndexRewriter(AddDynamicVars)))
 
 	server = &http.Server{Handler: r}
 	go func() {
-		log.Infof("starting gostwire server to serve at %s", listener.Addr().String())
+		slog.Info("starting gostwire server",
+			slog.String("addr", listener.Addr().String()))
 		if err := server.Serve(listener); err != nil {
-			log.Errorf("gostwire server error: %s", err.Error())
+			slog.Error("gostwire server failure", xslog.Error(err))
 		}
 	}()
 	return listener.Addr(), nil
@@ -93,12 +97,12 @@ func startServer(address string, cizer containerizer.Containerizer) (net.Addr, e
 func stopServer(wait time.Duration) {
 	once.Do(func() {
 		if server != nil {
-			log.Infof("gracefully shutting down gostwire server, waiting up to %s...",
-				wait)
+			slog.Info("gracefully shutting down gostwire server, waiting...",
+				slog.String("maxwait", wait.String()))
 			ctx, cancel := context.WithTimeout(context.Background(), wait)
 			defer cancel()
 			_ = server.Shutdown(ctx)
-			log.Infof("gostwire server stopped.")
+			slog.Info("gostwire server stopped.")
 		}
 	})
 }

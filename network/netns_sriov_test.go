@@ -5,15 +5,36 @@
 package network
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gleak"
+	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/namspill"
 )
 
 var _ = Describe("SR-IOV", func() {
+
+	BeforeEach(func() {
+		goodfds := Filedescriptors()
+		goodgos := Goroutines() // avoid other failed goroutine tests to spill over
+		DeferCleanup(func() {
+			Eventually(Goroutines).Within(5 * time.Second).ProbeEvery(250 * time.Millisecond).
+				ShouldNot(HaveLeaked(goodgos))
+			Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+			Expect(Tasks()).To(BeUniformlyNamespaced())
+		})
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
+	})
 
 	It("discovers SR-IOV topology", func() {
 		By("running a network namespace discovery")

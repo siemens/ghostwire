@@ -1,0 +1,65 @@
+{
+    "name": "ghostwire (fully privileged, Docker-in-Docker)",
+    "portsAttributes": {
+        "6060": {
+            "label": "ghostwire Go package documentation",
+            "onAutoForward": "silent",
+            "protocol": "http"
+        }
+    },
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest",
+            "moby": false // go for the upstream Docker-CE
+        },
+        "ghcr.io/thediveo/devcontainer-features/nerdctl:0": {},
+        "./ipnufftables":{},
+        "ghcr.io/thediveo/devcontainer-features/docsify:0": {
+            "port": "3300",
+            "livereload-port": "3301"
+        },
+        "ghcr.io/thediveo/devcontainer-features/local-pkgsite:0": {},
+        "ghcr.io/thediveo/devcontainer-features/goreportcard:0": {},
+        "ghcr.io/thediveo/devcontainer-features/go-mod-upgrade:0": {},
+        "ghcr.io/thediveo/devcontainer-features/gocover:0": {
+            "root": true, // test both as ordinary user and root
+            "num-programs": "1", // do never run package-level tests in parallel
+            "race": true, // enable race detector
+            "verbose": true,
+            "html": true, // generate coverage.html
+            "tags": "matchers"
+        },
+        "ghcr.io/thediveo/devcontainer-features/pin-github-action:0": {},
+        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {}
+    },
+    "runArgs": [
+        "--pid=host",
+        "--cgroupns=host"
+    ],
+    "securityOpt": [
+        "apparmor=unconfined"
+    ],
+    "remoteEnv": {
+        "GOPATH": "/home/vscode/go",
+        "PATH": "/home/vscode/go/bin:/go/bin:/usr/local/go/bin:${localEnv:PATH}"
+    },
+    "postCreateCommand": {
+        "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
+        "yawn": ". ${NVM_DIR}/nvm.sh && cd webui && corepack enable && CI=1 yarn set version latest",
+        "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
+        "nft": "sudo bash -c 'nft add table ip4 && nft add table nat && nft add table filter && nft add chain nat POSTROUTING'"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "stkb.rewrap",
+                "brunnerh.insert-unicode",
+                "mhutchie.git-graph",
+                "ms-vscode.live-server",
+                "docker.docker",
+                "42Crunch.vscode-openapi"
+            ]
+        }
+    }
+}

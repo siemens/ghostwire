@@ -40,8 +40,8 @@ uint64 offsets of chunks inside an umem, or an offset together with packet
 length and packet flags information ([unix.XDPDesc]).
 
 The ring types offer receiver methods as necessary in user space, with the fill
-and TX rings embedding the [rings.ProducerRing] type. The completion and RX rings
-embedd the [rings.ConsumerRing] type correspondingly, providing only producer
+and TX rings embedding the [rings.producerRing] type. The completion and RX rings
+embedd the [rings.consumerRing] type correspondingly, providing only producer
 methods instead.
 
 Please note that rings only come in sizes that are powers of two.

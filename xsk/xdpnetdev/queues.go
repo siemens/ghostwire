@@ -5,7 +5,7 @@
 package xdpnetdev
 
 import (
-	"github.com/siemens/ghostwire/v2/nlnetdev"
+	"github.com/siemens/ghostwire/v2/netdev/nlnetdev"
 )
 
 // MaxRxQueueID returns the maximum allowed queue ID for the specified network

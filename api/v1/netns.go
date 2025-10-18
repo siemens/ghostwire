@@ -13,13 +13,14 @@ import (
 	"strings"
 
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
-	"github.com/siemens/turtlefinder/activator/podman"
+	"github.com/siemens/turtlefinder/v2"
+	"github.com/siemens/turtlefinder/v2/activator/podman"
+	"github.com/thediveo/cpus"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
-	"github.com/thediveo/whalewatcher/watcher/cri"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
+	"github.com/thediveo/whalewatcher/v2/watcher/cri"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -293,7 +294,7 @@ type container struct {
 	Status   string        `json:"status"`
 	Type     string        `json:"type"`
 	TypeText string        `json:"type-text"`
-	Affinity model.CPUList `json:"affinity,omitempty"`
+	Affinity cpus.List     `json:"affinity,omitempty"`
 	Policy   int           `json:"policy,omitempty"`
 	// priority value is considered by the following schedulers:
 	//   - SCHED_FIFO: prio 1..99.

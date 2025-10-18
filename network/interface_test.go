@@ -32,8 +32,8 @@ var _ = Describe("network interface", func() {
 			&VxlanAttrs{NifAttrs: NifAttrs{Name: "vxlan666", Kind: "vxlan"}},
 		}
 		Expect(nifs.OfKind("veth")).To(ContainElements(
-			HaveInterfaceOfKindWithName("veth", "vethdead"),
-			HaveInterfaceOfKindWithName("veth", "vethbeef"),
+			HaveInterfaceKindAndName("veth", "vethdead"),
+			HaveInterfaceKindAndName("veth", "vethbeef"),
 		))
 		Expect(nifs.OfKind("foobar")).To(BeEmpty())
 		Expect(Interfaces{}.OfKind("lo")).To(BeEmpty())

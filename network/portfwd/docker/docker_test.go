@@ -8,16 +8,17 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/google/nftables"
-	"github.com/thediveo/morbyd"
-	"github.com/thediveo/morbyd/run"
-	"github.com/thediveo/morbyd/session"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
 	"github.com/thediveo/nufftables"
+	"github.com/thediveo/spacetest/netns"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,7 +29,7 @@ var _ = Describe("Docker port forwarding", Ordered, func() {
 
 	var cntrPID int
 	var hostPort uint16
-	var cntrIP net.IP // 127.0.0.1 -> ?.?.?.?
+	var cntrIP netip.Addr // 127.0.0.1 -> ?.?.?.?
 
 	BeforeAll(func(ctx context.Context) {
 		if os.Getuid() != 0 {
@@ -40,9 +41,11 @@ var _ = Describe("Docker port forwarding", Ordered, func() {
 		DeferCleanup(func(ctx context.Context) {
 			sess.Close(ctx)
 		})
+
 		By("creating a temporary Docker custom test network")
 		netw := Successful(sess.CreateNetwork(ctx,
 			"test-portfwd-docker"))
+
 		By("spinning up a temporary test container, exposing a useless port on a random host port")
 		cntr := Successful(sess.Run(ctx,
 			"busybox",
@@ -51,11 +54,12 @@ var _ = Describe("Docker port forwarding", Ordered, func() {
 			run.WithCommand("/bin/sh", "-c", "while true; do sleep 1; done"),
 		))
 		cntrPID = Successful(cntr.PID(ctx))
+
 		By("picking up the random exposed host port number")
 		svcAddr := cntr.PublishedPort("1234/tcp").First().String() // there's only one
 		Expect(svcAddr).To(MatchRegexp(`127\.0\.0\.1:\d+`))
 		hostPort = uint16(Successful(strconv.ParseUint(strings.Split(svcAddr, ":")[1], 10, 16)))
-		cntrIP = cntr.IP(ctx).To4()
+		cntrIP = cntr.IP(ctx)
 		Expect(hostPort).To(BeNumerically(">", uint16(32767)))
 	})
 
@@ -74,14 +78,14 @@ var _ = Describe("Docker port forwarding", Ordered, func() {
 			HaveField("IP", net.ParseIP("127.0.0.1").To4()),
 			HaveField("PortMin", hostPort),
 			HaveField("PortMax", hostPort),
-			HaveField("ForwardIP", cntrIP),
+			HaveField("ForwardIP", net.IP(cntrIP.AsSlice())),
 			HaveField("ForwardPortMin", uint16(1234)),
 		)))
 	})
 
 	It("discovers container-local Docker embedded DNS port forwarding", func() {
 		cntrnetnsf := Successful(os.Open(fmt.Sprintf("/proc/%d/ns/net", cntrPID)))
-		DeferCleanup(func() { cntrnetnsf.Close() })
+		DeferCleanup(func() { _ = cntrnetnsf.Close() })
 		var conn *nftables.Conn
 		var err error
 		netns.Execute(int(cntrnetnsf.Fd()), func() {

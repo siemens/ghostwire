@@ -6,18 +6,22 @@ package network
 
 import (
 	"fmt"
+	"log/slog"
+	"maps"
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
@@ -76,8 +80,9 @@ func NewNetworkNamespace(netns model.Namespace, tenantProcs []*model.Process) *N
 	// Get an RTNETLINK socket wired up to this particular network namespace.
 	nlh, err := nns.OpenNetlink()
 	if err != nil {
-		log.Warnf("cannot discover inside net:[%d], reason: %s",
-			netns.ID().Ino, err.Error())
+		slog.Warn("cannot discover inside network namespace",
+			slog.Uint64("netns", netns.ID().Ino),
+			xslog.Error(err))
 		return nil
 	}
 	defer nlh.Close()
@@ -117,9 +122,9 @@ func (n *NetworkNamespace) DisplayName() string {
 	var name string
 	proc := tenants[0].Process
 	if c := proc.Container; c != nil {
-		name = fmt.Sprintf("📦 %s ◉ %.8s…", c.Name, c.Engine.ID)
+		name = fmt.Sprintf("%s (%.8s)…", c.Name, c.Engine.ID)
 	} else {
-		name = fmt.Sprintf("⚙️  %s(%d)", proc.Name, proc.PID)
+		name = fmt.Sprintf("%s(%d)", proc.Name, proc.PID)
 	}
 	if len(tenants) > 1 {
 		return name + ", …"
@@ -306,13 +311,13 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 	// single network namespace. Ouch.
 	nlh, err := n.OpenNetlink()
 	if err != nil {
-		log.Errorf("cannot discover NSIDs: %s", err.Error())
+		slog.Error("cannot discover NSIDs", xslog.Error(err))
 		return
 	}
 	defer nlh.Close()
 	for _, peerNetns := range allnetns {
-		if peerNetns == n.Namespace {
-			continue
+		if peerNetns == n {
+			continue // don't try to ask for an nsid to yourself
 		}
 		ref := peerNetns.Ref()
 		if len(ref) == 0 {
@@ -335,20 +340,33 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 			mntneer.Close()
 		}
 		if err != nil {
-			log.Errorf("cannot access peer netns %s", ref)
+			slog.Error("cannot access peer netns",
+				slog.String("ref", ref.String()),
+				xslog.Error(err))
 			continue
 		}
 		nsid, err := nlh.GetNetNsIdByFd(netnsfd)
 		if err != nil {
-			log.Errorf("cannot determine NSID of peer netns %s, error: %s", ref, err.Error())
+			slog.Error("cannot determine NSID of peer netns",
+				slog.String("ref", ref.String()),
+				xslog.Error(err))
 			continue
 		}
 		closer()
 		if NSID(nsid) == NSID_NONE {
+			// slog.Debug("no nsid mapping", slog.Uint64("peer.netns", peerNetns.ID().Ino))
 			continue
 		}
 		n.peerNetns[NSID(nsid)] = peerNetns
-		log.Debugf("net:[%d] NSID %d ↦ net:[%d] %s", n.ID().Ino, nsid, peerNetns.ID().Ino, peerNetns.DisplayName())
+		slog.Debug("nsid mapping",
+			slog.Group("self",
+				slog.Uint64("netns", n.ID().Ino),
+				slog.Uint64("nsid", uint64(nsid)),
+			),
+			slog.Group("peer",
+				slog.Uint64("netns", peerNetns.ID().Ino),
+				slog.String("tenant", peerNetns.DisplayName()),
+			))
 	}
 }
 
@@ -510,21 +528,36 @@ func NewNetworkNamespaces(
 	}
 	soxProcsMap := discoverAllSockInodes("/proc")
 	for nsid, netns := range netspaces {
-		log.Debugf("discovering details of net:[%d]...", nsid.Ino)
+		slog.Debug("discovering netns details",
+			slog.Uint64("netns", nsid.Ino),
+			xslog.Lazy("tenant", func() string { return netns.DisplayName() }))
 		netns.discoverNSIDs(netspaces)
 		netns.discoverTransportPorts(soxProcsMap, allprocs)
 		netns.discoverForwardedPorts()
-		log.Debugfn(func() string {
-			nifNames := make([]string, 0, len(netns.Nifs))
-			for _, nif := range netns.Nifs {
-				name := nif.Nif().Name
-				if alias := nif.Nif().Alias; alias != "" {
-					name += fmt.Sprintf("(~%s)", alias)
+
+		slog.Debug("network interfaces",
+			slog.Uint64("netns", nsid.Ino),
+			xslog.Lazy("interfaces", func() string {
+				var names strings.Builder
+				first := true
+				for _, nifIndex := range slices.Sorted(maps.Keys(netns.Nifs)) {
+					if !first {
+						names.WriteRune(',')
+					}
+					first = false
+					nif := netns.Nifs[nifIndex]
+					names.WriteString(nif.Nif().Name)
+					if alias := nif.Nif().Alias; alias != "" {
+						names.WriteString("(~")
+						names.WriteString(alias)
+						names.WriteRune(')')
+					}
+					names.WriteRune('(')
+					names.WriteString(strconv.FormatInt(int64(nif.Nif().Index), 10))
+					names.WriteRune(')')
 				}
-				nifNames = append(nifNames, name)
-			}
-			return "found nifs: " + strings.Join(nifNames, ", ")
-		})
+				return names.String()
+			}))
 	}
 	// Resolve the network interfaces topology, except for SR-IOV PFs/VFs. In
 	// the case of SR-IOV we first only build a map of the discovered PFs and
@@ -607,9 +640,16 @@ func resolveSRIOVTopology(netspaces NetworkNamespaces) {
 			}
 			nif.Nif().PF = pfnif
 			pfnif.Nif().Slaves = append(pfnif.Nif().Slaves, nif.Interface())
-			log.Debugf("PF %s net:[%d] ↔ VF %s net:[%d]",
-				pfnif.Nif().Name, pfnif.Nif().Netns.ID().Ino,
-				nif.Nif().Name, nif.Nif().Netns.ID().Ino)
+			slog.Debug("discovered pf-vf mapping",
+				slog.Group("pf",
+					slog.String("interface", pfnif.Nif().Name),
+					slog.Uint64("netns", pfnif.Nif().Netns.ID().Ino),
+				),
+				slog.Group("vf",
+					slog.String("interface", nif.Nif().Name),
+					slog.Uint64("netns", nif.Nif().Netns.ID().Ino),
+				))
+
 			continue
 		}
 		// Is this a PF? Then it has to have some PF-specific device nodes with

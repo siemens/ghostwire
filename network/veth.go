@@ -5,8 +5,9 @@
 package network
 
 import (
+	"log/slog"
+
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/vishvananda/netlink"
 )
 
@@ -64,24 +65,36 @@ func (n *VethAttrs) ResolveRelations(allns NetworkNamespaces) {
 			if netnsid != NSID_NONE {
 				netns = netns.related(netnsid)
 			}
-			if netns != nil {
-				if peer := netns.Nifs[idx]; peer != nil {
-					n.Peer = peer
-					self := n.Interface()
-					if peerpeer := peer.(Veth).Veth().Peer; peerpeer == nil || peerpeer == self {
-						peer.(*VethAttrs).Peer = self
-					} else {
-						// There's already a different peer set for our peer, so our
-						// peer's peer isn't us.
-						log.Warnf("VETH peer inconsistency for %s in net:[%d]: peer %s in net:[%d] has different peer %s in net:[%d] already set",
-							n.Name, n.Netns.Namespace.ID().Ino,
-							peer.Nif().Name, peer.Nif().Netns.Namespace.ID().Ino,
-							peerpeer.Nif().Name, peerpeer.Nif().Netns.Namespace.ID().Ino)
-					}
-				}
-			} else {
-				log.Warnf("unknown NSID %d in net:[%d]", netnsid, n.Netns.ID().Ino)
+			if netns == nil {
+				slog.Warn("unknown NSID in netns",
+					slog.Uint64("nsid", uint64(netnsid)),
+					slog.Uint64("netns", n.Netns.ID().Ino))
+				return
 			}
+			peer := netns.Nifs[idx]
+			if peer == nil {
+				return
+			}
+			n.Peer = peer
+			self := n.Interface()
+			peerpeer := peer.(Veth).Veth().Peer
+			if peerpeer == nil || peerpeer == self {
+				peer.(*VethAttrs).Peer = self
+				return
+			}
+			// There's already a different peer set for our peer, so our
+			// peer's peer isn't us.
+			slog.Warn("VETH peer inconsistency with different peer already set",
+				slog.String("interface", n.Name),
+				slog.Uint64("netns", n.Netns.Namespace.ID().Ino),
+				slog.Group("peer",
+					slog.String("interface", peer.Nif().Name),
+					slog.Uint64("netns", peer.Nif().Netns.Namespace.ID().Ino),
+				),
+				slog.Group("existing-peer",
+					slog.String("interface", peerpeer.Nif().Name),
+					slog.Uint64("netns", peerpeer.Nif().Netns.Namespace.ID().Ino),
+				))
 		}
 	}
 }

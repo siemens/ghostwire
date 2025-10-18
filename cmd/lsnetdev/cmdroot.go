@@ -9,18 +9,19 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/siemens/ghostwire/v2/cmd/internal/cli"
-	_ "github.com/siemens/ghostwire/v2/cmd/internal/debug"
-	"github.com/siemens/ghostwire/v2/cmd/internal/turtles"
-	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
-	"github.com/siemens/ghostwire/v2/netdev/sysfsguess"
-	"github.com/siemens/ghostwire/v2/nlnetdev"
-
 	"github.com/spf13/cobra"
+	"github.com/thediveo/clippy"
+	_ "github.com/thediveo/clippy/debug"
 	"github.com/thediveo/enumflag/v2"
+	_ "github.com/thediveo/lxkns/cmd/cli/silent"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"golang.org/x/exp/maps"
+
+	"github.com/siemens/ghostwire/v2/netdev/nlnetdev"
+	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
+	"github.com/siemens/ghostwire/v2/netdev/sysfsguess"
 )
 
 type Mode int
@@ -45,8 +46,9 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short: "list netdev queue and IRQ information",
 		Args:  cobra.NoArgs,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return cli.BeforeCommand(cmd)
-		}, RunE: discoverNetdevs,
+			return clippy.BeforeCommand(cmd)
+		},
+		RunE: discoverNetdevs,
 	}
 
 	// Sets up the flags.
@@ -54,7 +56,7 @@ func newRootCmd() (rootCmd *cobra.Command) {
 	pf.Var(enumflag.New(&DisoveryMode, "mode", ModeEnumMapping, enumflag.EnumCaseInsensitive),
 		"mode", "discovery mode; can be 'sysfs'/'sf', 'netlink'/'nl', or 'both'/'b'")
 
-	cli.AddFlags(rootCmd)
+	clippy.AddFlags(rootCmd)
 
 	return rootCmd
 }
@@ -104,6 +106,12 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 	first := true
 	for _, netnsid := range netnsids {
 		netns := allns.Namespaces[model.NetNS][netnsid.ID()]
+		// skip this network namespace if we haven't discovered any netdevs for
+		// some strange reason...
+		if netdevs, ok := netdevmap[netns]; !ok || len(netdevs) == 0 {
+			continue
+		}
+
 		if !first {
 			fmt.Println()
 		}
@@ -116,7 +124,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 			return int(lA.PID) - int(lB.PID)
 		})
 		for _, leader := range leaders {
-			s := "    🏃 "
+			s := "    ⚙ "
 			if container := leader.Container; container != nil {
 				s += fmt.Sprintf("%s (%s)", container.Name, container.Flavor)
 			}
@@ -126,9 +134,9 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 
 		fmt.Println("  netdev(s)")
 		ndevs := slices.Clone(netdevmap[netns])
-		slices.SortFunc(ndevs, rxtxlayout.SortNetdevsByName)
+		slices.SortFunc(ndevs, rxtxlayout.CompareNetdevsByName)
 		for _, ndev := range ndevs {
-			fmt.Printf("    🔌 %q (ifindex %d) source %s\n",
+			fmt.Printf("    🕳 %q (ifindex %d) source %s\n",
 				ndev.Name, ndev.Index, ndev.Source)
 
 			// list only IRQs that aren't referenced by queues/NAPIs
@@ -143,9 +151,9 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 				if irq.Kthread != nil {
 					fmt.Printf(" 🧵 kthread %q (PID %d)",
 						irq.Kthread.Name, irq.Kthread.PID)
-					_ = irq.Kthread.RetrieveAffinityScheduling()
+					_ = irq.Kthread.RetrieveAffinity()
 					if affinity := irq.Kthread.Affinity; affinity != nil {
-						fmt.Printf(" CPU ♥️ " + affinity.String())
+						fmt.Print(" CPU ♥️ " + affinity.String())
 					}
 				}
 				fmt.Printf(" source %s\n", irq.Source)
@@ -161,9 +169,9 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 				if napi.Kthread != nil {
 					fmt.Printf(" 🧵 kthread %q (PID %d)",
 						napi.Kthread.Name, napi.Kthread.PID)
-					_ = napi.Kthread.RetrieveAffinityScheduling()
+					_ = napi.Kthread.RetrieveAffinity()
 					if affinity := napi.Kthread.Affinity; affinity != nil {
-						fmt.Printf(" CPU♥️ " + affinity.String())
+						fmt.Print(" CPU♥️ " + affinity.String())
 					}
 				}
 				if irq := napi.IRQ; irq != nil {
@@ -174,15 +182,15 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 					if irq.Kthread != nil {
 						fmt.Printf(" 🧵 kthread %q (PID %d)",
 							irq.Kthread.Name, irq.Kthread.PID)
-						_ = irq.Kthread.RetrieveAffinityScheduling()
+						_ = irq.Kthread.RetrieveAffinity()
 						if affinity := irq.Kthread.Affinity; affinity != nil {
-							fmt.Printf(" CPU♥️ " + affinity.String())
+							fmt.Print(" CPU♥️ " + affinity.String())
 						}
 					}
 				} else {
-					fmt.Printf(" IRQ -")
+					fmt.Print(" IRQ -")
 				}
-				fmt.Printf("\n")
+				fmt.Print("\n")
 			}
 
 			queues := slices.Clone(ndev.Queues)

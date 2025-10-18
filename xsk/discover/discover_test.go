@@ -6,15 +6,17 @@ package discover
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/siemens/ghostwire/v2/xsk"
 	lxkns "github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/notwork/dummy"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
+
+	"github.com/siemens/ghostwire/v2/xsk"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -37,6 +39,11 @@ var _ = Describe("discovering XSKs", func() {
 		if os.Geteuid() != 0 {
 			Skip("needs root")
 		}
+
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 
 		By("creating a new network namespace and entering it for the rest of this test")
 		// nota bene: this also helps making systemd-networkd keeping its

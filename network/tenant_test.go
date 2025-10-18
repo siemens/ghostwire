@@ -6,21 +6,23 @@ package network
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"os"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/morbyd/v2"
+	"github.com/thediveo/morbyd/v2/run"
+	"github.com/thediveo/morbyd/v2/session"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
-
-const testTenantWorkloadName = "gostwire-test-tenant-workload"
 
 var _ = Describe("tenant", func() {
 
@@ -35,22 +37,27 @@ var _ = Describe("tenant", func() {
 		})
 	})
 
-	It("discovers tenant's DNS configuration", NodeTimeout(30*time.Second), func(_ context.Context) {
+	It("discovers tenant's DNS configuration", NodeTimeout(30*time.Second), func(ctx context.Context) {
 		if os.Getuid() != 0 {
 			Skip("needs root")
 		}
 
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{})))
+
+		sess := Successful(morbyd.NewSession(ctx,
+			session.WithAutoCleaning("test=ghostwire.network")))
+		DeferCleanup(func(ctx context.Context) {
+			sess.Close(ctx)
+		})
+
 		By("creating a test workload with specific DNS configuration")
-		pool, err := dockertest.NewPool("")
-		Expect(err).NotTo(HaveOccurred())
-		testwl, err := pool.RunWithOptions(&dockertest.RunOptions{
-			Privileged: true,
-			Repository: "busybox",
-			Tag:        "latest",
-			Name:       testTenantWorkloadName,
-			Cmd: []string{
-				"/bin/sh", "-c",
-				`
+		cntr := Successful(sess.Run(ctx,
+			"busybox",
+			run.WithCombinedOutput(GinkgoWriter),
+			run.WithCapAdd("CAP_SYS_ADMIN"),
+			run.WithCommand("/bin/sh", "-c",
+				`set -e &&
 umount /etc/hostname && echo "etchostname" > /etc/hostname &&
 echo "etcdomainname" > /etc/domainname &&
 umount /etc/hosts && echo "# comment
@@ -64,24 +71,21 @@ nameserver ::dead:beef
 domain abracadabra
 search foo.bar frotz.batz
 " > /etc/resolv.conf &&
-/bin/sleep 120s`,
-			},
-			Hostname: "foobar",
-		})
-		Expect(err).NotTo(HaveOccurred(), "container %s", testVethWorkloadName)
-		defer testwl.Close()
+while true; do sleep 1; done`),
+		))
+		cntrpid := Successful(cntr.PID(ctx))
 
 		By("running a discovery")
 		allnetns, lxknsdisco := discoverRedux()
 		Expect(allnetns).NotTo(BeEmpty())
 
-		netnsid := lxknsdisco.Processes[model.PIDType(testwl.Container.State.Pid)].Namespaces[model.NetNS].ID()
+		netnsid := lxknsdisco.Processes[model.PIDType(cntrpid)].Namespaces[model.NetNS].ID()
 		netns := allnetns[netnsid]
 		Expect(netns).NotTo(BeNil())
 		Expect(netns.Tenants).To(HaveLen(1))
 
 		tenant := netns.Tenants[0]
-		Expect(tenant.DNS.Hostname).To(Equal("foobar"))
+		Expect(tenant.DNS.Hostname).To(Equal(cntr.ID[:12]))
 		Expect(tenant.DNS.EtcHostname).To(Equal("etchostname"))
 		Expect(tenant.DNS.EtcDomainname).To(Equal("etcdomainname"))
 

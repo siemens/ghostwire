@@ -1,6 +1,6 @@
 /*
 Package rings provides XDP socket/umem single-producer/single-consumer RX, TX,
-fill and complete rings. The concrete user application-facing [Ring]-derived
+fill and complete rings. The concrete user application-facing [ring]-derived
 types are:
 
   - [Fill] ring associated with [umem].
@@ -15,11 +15,11 @@ pool manager, see [NewDescriptorPool]: this pool can store descriptor chunk
 # Usage
 
 User applications usually won't use the constructor functions for specific
-[Ring]-derived types directly, but instead retrieve ring objects from XDP Socket
+[ring]-derived types directly, but instead retrieve ring objects from XDP Socket
 objects instead. Thus, the most prevalent API elements are probably:
 
-  - [ProducerRing.Add] adds a descriptor to the ring.
-  - [ConsumerRing.Next] removes the next available descriptor from the ring and
+  - [producerRing.Add] adds a descriptor to the ring.
+  - [consumerRing.Next] removes the next available descriptor from the ring and
     returns it.
 
 Please note that there are two different types of descriptors, namely:
@@ -34,12 +34,12 @@ Please note that there are two different types of descriptors, namely:
 # Passing Rings Around
 
 As the actual ring state information is held in kernel-allocated memory mapped
-into user space, [Ring] objects can easily passed around by value rather than
+into user space, [ring] objects can easily passed around by value rather than
 reference.
 
 # Single Producer/Single Consumer Ring Architecture
 
-Did we mention that [Ring] objects are strictly single-producer/single-consumer,
+Did we mention that [ring] objects are strictly single-producer/single-consumer,
 so while you cannot use the same Ring (or a copy thereof) from different go
 routines concurrently without implementing your own synchronization?
 

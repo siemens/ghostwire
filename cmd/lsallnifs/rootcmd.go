@@ -9,13 +9,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/thediveo/clippy"
+	_ "github.com/thediveo/clippy/debug"
+	_ "github.com/thediveo/lxkns/cmd/cli/silent"
+	"github.com/thediveo/lxkns/cmd/cli/turtles"
+	"github.com/thediveo/netdb"
+
 	gostwire "github.com/siemens/ghostwire/v2"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
-
-	"github.com/spf13/cobra"
-	"github.com/thediveo/lxkns/log"
-	"github.com/thediveo/netdb"
 )
 
 // newRootCmd creates the root command with usage and version information, as
@@ -26,7 +28,10 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		Short:   "dumpns outputs discovered network namespaces with interfaces, containers, ...",
 		Version: "foobar",
 		Args:    cobra.NoArgs,
-		RunE:    lsallnifs,
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			return clippy.BeforeCommand(cmd)
+		},
+		RunE: lsallnifs,
 	}
 	// Sets up the flags.
 	rootCmd.PersistentFlags().BoolP(
@@ -49,6 +54,8 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		"routes", "r", false,
 		"show routes")
 
+	clippy.AddFlags(rootCmd)
+
 	return
 }
 
@@ -59,33 +66,29 @@ var lc = map[network.SocketSimplifiedState]string{
 }
 
 func lsallnifs(cmd *cobra.Command, _ []string) error {
-	log.Infof("Gostwire (The Sequel)")
+	out := cmd.OutOrStdout()
+	fmt.Fprint(out, "lsallnifs\n")
 
-	if debug, _ := cmd.PersistentFlags().GetBool("debug"); debug {
-		log.SetLevel(log.DebugLevel)
-		log.Debugf("debug logging enabled")
-	}
 	showAll, _ := cmd.PersistentFlags().GetBool("all")
 	showTenants, _ := cmd.PersistentFlags().GetBool("tenants")
 	showPorts, _ := cmd.PersistentFlags().GetBool("ports")
 	showAddrs, _ := cmd.PersistentFlags().GetBool("addresses")
 	//showRoutes, _ := cmd.PersistentFlags().GetBool("routes")
 
-	log.Debugf("using TurtleFinder")
-	enginectx, enginecancel := context.WithCancel(context.Background())
-	cizer := turtlefinder.New(func() context.Context { return enginectx })
-	defer enginecancel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cizer := turtles.Containerizer(ctx, cmd)
 	defer cizer.Close()
 
-	log.Debugf("discovering network namespaces and containers...")
+	fmt.Fprint(out, "discovering network namespaces and containers...\n")
 	allnetns := gostwire.Discover(context.Background(), cizer, nil)
 
 	for _, netns := range allnetns.Netns.Sorted() {
-		log.Infof("net:[%d] with %s:\n", netns.ID().Ino, netns.DisplayName())
+		fmt.Fprintf(out, "net:[%d] with %s:\n", netns.ID().Ino, netns.DisplayName())
 
 		// Section "Tenants"
 		if showAll || showTenants {
-			log.Infof("  tenants:")
+			fmt.Fprint(out, "  tenants:\n")
 			tenants := netns.Tenants[:]
 			tenants.Sort()
 			for _, tenant := range tenants {
@@ -93,25 +96,25 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				if tenant.Process.PID == 2 {
 					continue
 				}
-				log.Infof("    %s", tenant.Name())
-				log.Infof("      /etc/hostname: '%s', UTS hostname: '%s', /etc/domainname: '%s'",
+				fmt.Fprintf(out, "    %s\n", tenant.Name())
+				fmt.Fprintf(out, "      /etc/hostname: '%s', UTS hostname: '%s', /etc/domainname: '%s'\n",
 					tenant.DNS.EtcHostname, tenant.DNS.Hostname, tenant.DNS.EtcDomainname)
-				log.Infof("      search list: %s", strings.Join(tenant.DNS.Searchlist, ", "))
+				fmt.Fprintf(out, "      search list: %s\n", strings.Join(tenant.DNS.Searchlist, ", "))
 				addrs := []string{}
 				for _, addr := range tenant.DNS.Nameservers {
 					addrs = append(addrs, addr.String())
 				}
-				log.Infof("      name servers: %s", strings.Join(addrs, ", "))
-				log.Infof("      hosts:")
+				fmt.Fprintf(out, "      name servers: %s\n", strings.Join(addrs, ", "))
+				fmt.Fprintf(out, "      hosts:\n")
 				for name, ip := range tenant.DNS.Hosts {
-					log.Infof("        %s %s", name, ip.String())
+					fmt.Fprintf(out, "        %s %s\n", name, ip.String())
 				}
 			}
 		}
 
 		// Section "Transports"
 		if showAll || showPorts {
-			log.Infof("  transports:")
+			fmt.Fprint(out, "  transports:\n")
 			listPorts := func(ports network.ProcessSockets) {
 				ports.Sort()
 				for _, port := range ports {
@@ -129,7 +132,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 					}
 					localservice := netdb.ServiceByPort(int(port.LocalPort), strings.ToLower(port.Protocol.String()))
 					remoteservice := netdb.ServiceByPort(int(port.RemotePort), strings.ToLower(port.RemoteIP.String()))
-					log.Infof("    %s %s%s %s:%d%s %s:%d%s ↷ %s",
+					fmt.Fprintf(out, "    %s %s%s %s:%d%s %s:%d%s ↷ %s\n",
 						lc[port.SimplifiedState], port.Protocol.String(), viasock6,
 						network.IP(port.LocalIP).String(), port.LocalPort, serviceList(localservice),
 						network.IP(port.RemoteIP).String(), port.RemotePort, serviceList(remoteservice),
@@ -140,7 +143,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 		}
 
 		// Section "Network Interfaces"
-		log.Infof("  network interfaces:")
+		fmt.Fprint(out, "  network interfaces:\n")
 		allnifs := netns.NifList()
 		allnifs.Sort()
 		for _, netif := range allnifs {
@@ -149,7 +152,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 			if nif.Alias != "" {
 				alias = fmt.Sprintf(" ~'%s'", nif.Alias)
 			}
-			log.Infof("    %s %s(%d)%s: kind %s, address %s\n",
+			fmt.Fprintf(out, "    %s %s(%d)%s: kind %s, address %s\n",
 				nif.State.TerminalIcon(), nif.Name, nif.Index, alias, nif.Kind, nif.L2Addr.String())
 
 			// Addresses, addresses, addresses...
@@ -157,21 +160,21 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				nifaddrs := append(nif.Addrsv4, nif.Addrsv6...)
 				nifaddrs.Sort()
 				for _, addr := range nifaddrs {
-					log.Infof("        %s/%d", addr.Address.String(), addr.PrefixLength)
+					fmt.Fprintf(out, "        %s/%d\n", addr.Address.String(), addr.PrefixLength)
 				}
 			}
 
 			// Is this a bridge port? Then show its bridge...
 			if nif.Bridge != nil {
 				bridge := nif.Bridge.(network.Bridge).Bridge()
-				log.Infof("        ⌒ %s(%d)",
+				fmt.Fprintf(out, "        ⌒ %s(%d)\n",
 					bridge.Name, bridge.Index)
 			}
 			// Is this a MACVLAN master? Then list its MACVLANs...
 			if macvlans := nif.Slaves.OfKind("macvlan"); len(macvlans) != 0 {
 				for _, macvlan := range macvlans {
 					macvlan := macvlan.Nif()
-					log.Infof("       ↳ MACVLAN: %s(%d) in %s",
+					fmt.Fprintf(out, "       ↳ MACVLAN: %s(%d) in %s\n",
 						macvlan.Name, macvlan.Index, macvlan.Netns.DisplayName())
 				}
 			}
@@ -179,7 +182,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 			if vxlans := nif.Slaves.OfKind("vxlan"); len(vxlans) != 0 {
 				for _, vxlan := range vxlans {
 					vxlan := vxlan.(network.Vxlan).Vxlan()
-					log.Infof("       ↳ VXLAN overlay ID %d: %s(%d) in %s",
+					fmt.Fprintf(out, "       ↳ VXLAN overlay ID %d: %s(%d) in %s\n",
 						vxlan.VID, vxlan.Name, vxlan.Index, vxlan.Netns.DisplayName())
 				}
 			}
@@ -188,7 +191,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				bridge := bridge.Bridge()
 				for _, port := range bridge.Ports {
 					port := port.Nif()
-					log.Infof("        ◌ port: %s(%d)",
+					fmt.Fprintf(out, "        ◌ port: %s(%d)\n",
 						port.Name, port.Index)
 				}
 			}
@@ -196,23 +199,23 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 			if macvlan, ok := netif.(network.Macvlan); ok {
 				macvlan := macvlan.Macvlan()
 				master := macvlan.Master.Nif()
-				log.Infof("      %s mode", macvlan.Mode.String())
-				log.Infof("       ☝  master %s(%d) in %s",
+				fmt.Fprintf(out, "      %s mode\n", macvlan.Mode.String())
+				fmt.Fprintf(out, "       ☝  master %s(%d) in %s\n",
 					master.Name, master.Index, master.Netns.DisplayName())
 			}
 			// Is this a VETH? Then show its peer...
 			if veth, ok := netif.(network.Veth); ok {
 				veth := veth.Veth()
 				peer := veth.Peer.(network.Veth).Veth()
-				log.Infof("        ↔ %s(%d) in %s",
+				fmt.Fprintf(out, "        ↔ %s(%d) in %s\n",
 					peer.Name, peer.Index, peer.Netns.DisplayName())
 			}
 			// Is this a VXLAN? Then show its underlay master...
 			if vxlan, ok := netif.(network.Vxlan); ok {
 				vxlan := vxlan.Vxlan()
-				log.Infof("      VID %d, dest port %d", vxlan.VID, vxlan.DestinationPort)
+				fmt.Fprintf(out, "      VID %d, dest port %d\n", vxlan.VID, vxlan.DestinationPort)
 				master := vxlan.Master.Nif()
-				log.Infof("       👇  underlay %s(%d) in %s",
+				fmt.Fprintf(out, "       👇  underlay %s(%d) in %s\n",
 					master.Name, master.Index, master.Netns.DisplayName())
 			}
 		}

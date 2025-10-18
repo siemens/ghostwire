@@ -12,7 +12,7 @@ import (
 
 	"github.com/mdlayher/ethernet"
 	"github.com/thediveo/notwork/dummy"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -23,10 +23,10 @@ import (
 func newRing[D Descriptor](
 	size uint32,
 	producer, consumer uint32,
-) *Ring[D] {
+) *ring[D] {
 	GinkgoHelper()
 	Expect(size&(size-1)).To(BeZero(), "size must be a power of two")
-	return &Ring[D]{
+	return &ring[D]{
 		producer:    &producer,
 		consumer:    &consumer,
 		descriptors: make([]D, size),
@@ -55,10 +55,10 @@ var _ = Describe("Lord of the Rings", func() {
 		)
 
 		It("describes a ring", func() {
-			r := &ProducerRing[uint64]{
-				Ring: *newRing[uint64](16, 3, 0),
+			r := &producerRing[uint64]{
+				ring: *newRing[uint64](16, 3, 0),
 			}
-			Expect(r.String()).To(Equal("rings.Ring[uint64] in use: 3"))
+			Expect(r.String()).To(Equal("rings.ring[uint64] in use: 3"))
 		})
 
 		It("rejects unsettable rings", func() {
@@ -73,8 +73,8 @@ var _ = Describe("Lord of the Rings", func() {
 	Context("producer ring", func() {
 
 		It("adds descriptor when there is room", func() {
-			r := &ProducerRing[uint64]{
-				Ring: *newRing[uint64](4, 5, 5),
+			r := &producerRing[uint64]{
+				ring: *newRing[uint64](4, 5, 5),
 			}
 			Expect(r.Used()).To(Equal(0))
 			Expect(r.Add(42)).To(BeTrue())
@@ -83,8 +83,8 @@ var _ = Describe("Lord of the Rings", func() {
 		})
 
 		It("rejects adding a descriptor when full", func() {
-			r := &ProducerRing[uint64]{
-				Ring: *newRing[uint64](4, 5+4, 5),
+			r := &producerRing[uint64]{
+				ring: *newRing[uint64](4, 5+4, 5),
 			}
 			Expect(r.Add(666)).To(BeFalse())
 		})
@@ -94,22 +94,20 @@ var _ = Describe("Lord of the Rings", func() {
 	Context("consumer ring", func() {
 
 		It("returns a descriptor when there are some", func() {
-			c := &ConsumerRing[uint64]{
-				Ring: *newRing[uint64](4, 5, 4),
+			c := &consumerRing[uint64]{
+				ring: *newRing[uint64](4, 5, 4),
 			}
 			c.descriptors[4&(4-1)] = 666
 			Expect(c.Used()).To(Equal(1))
-			d, ok := c.Next()
-			Expect(ok).To(BeTrue())
-			Expect(d).To(Equal(uint64(666)))
+			Expect(Allright(c.Next())).To(Equal(uint64(666)))
 			Expect(c.Used()).To(Equal(0))
-			_, ok = c.Next()
+			_, ok := c.Next()
 			Expect(ok).To(BeFalse())
 		})
 
 		It("rejects returning a descriptor when empty", func() {
-			c := &ConsumerRing[uint64]{
-				Ring: *newRing[uint64](4, 5, 5),
+			c := &consumerRing[uint64]{
+				ring: *newRing[uint64](4, 5, 5),
 			}
 			Expect(c.Used()).To(BeZero())
 			d, ok := c.Next()
@@ -242,8 +240,7 @@ var _ = Describe("Lord of the Rings", func() {
 
 		By("scheduling packets for transmission and picking up completed descriptors")
 		for i := 0; i < 32; i++ {
-			txChunkAddr, ok := descpool.Get()
-			Expect(ok).To(BeTrue())
+			txChunkAddr := Allright(descpool.Get())
 
 			copy(umem[txChunkAddr:], frame)
 			Expect(tx.Add(unix.XDPDesc{
@@ -266,8 +263,7 @@ var _ = Describe("Lord of the Rings", func() {
 				Should(BeZero())
 			Eventually(completion.Used).Within(2 * time.Second).ProbeEvery(10 * time.Millisecond).
 				ShouldNot(BeZero())
-			complChunkAddr, ok := completion.Next()
-			Expect(ok).To(BeTrue())
+			complChunkAddr := Allright(completion.Next())
 			Expect(complChunkAddr).To(Equal(txChunkAddr))
 		}
 	})

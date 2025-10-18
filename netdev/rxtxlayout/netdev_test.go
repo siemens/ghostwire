@@ -66,49 +66,4 @@ var _ = Describe("rxtxstruct model", func() {
 		Expect(txid).To(Equal(uint(42)))
 	})
 
-	When("sorting", func() {
-
-		DescribeTable("Netdevs",
-			func(a, b *Netdev, expected int) {
-				Expect(SortNetdevsByName(a, b)).To(Equal(expected))
-			},
-			Entry(nil, &Netdev{Name: "bar"}, &Netdev{Name: "foo"}, -1),
-			Entry(nil, &Netdev{Name: "foo"}, &Netdev{Name: "bar"}, 1),
-			Entry(nil, &Netdev{Name: "foo"}, &Netdev{Name: "foo"}, 0),
-			Entry(nil, &Netdev{Name: "lo"}, &Netdev{Name: "lo"}, 0),
-			Entry(nil, &Netdev{Name: "lo"}, &Netdev{Name: "foo"}, -1),
-			Entry(nil, &Netdev{Name: "foo"}, &Netdev{Name: "lo"}, 1),
-		)
-
-		DescribeTable("Queues",
-			func(a, b *Queue, expected int) {
-				Expect(SortQueuesByIndexAndType(a, b)).To(Equal(expected))
-			},
-			Entry(nil, &Queue{ID: 0}, &Queue{ID: 42}, -1),
-			Entry(nil, &Queue{ID: 42}, &Queue{ID: 0}, 1),
-			Entry(nil, &Queue{ID: 42, Type: NETDEV_QUEUE_TYPE_RX}, &Queue{ID: 42, Type: NETDEV_QUEUE_TYPE_TX}, -1),
-			Entry(nil, &Queue{ID: 42, Type: NETDEV_QUEUE_TYPE_TX}, &Queue{ID: 42, Type: NETDEV_QUEUE_TYPE_RX}, 1),
-			Entry(nil, &Queue{ID: 42, Type: NETDEV_QUEUE_TYPE_TX}, &Queue{ID: 42, Type: NETDEV_QUEUE_TYPE_TX}, 0),
-		)
-
-		DescribeTable("IRQs",
-			func(a, b *IRQ, expected int) {
-				Expect(SortIRQsByID(a, b)).To(Equal(expected))
-			},
-			Entry(nil, &IRQ{ID: 0}, &IRQ{ID: 42}, -1),
-			Entry(nil, &IRQ{ID: 42}, &IRQ{ID: 0}, 1),
-			Entry(nil, &IRQ{ID: 42}, &IRQ{ID: 42}, 0),
-		)
-
-		DescribeTable("NAPIs",
-			func(a, b *NAPI, expected int) {
-				Expect(SortNAPIsByID(a, b)).To(Equal(expected))
-			},
-			Entry(nil, &NAPI{ID: 0}, &NAPI{ID: 42}, -1),
-			Entry(nil, &NAPI{ID: 42}, &NAPI{ID: 0}, 1),
-			Entry(nil, &NAPI{ID: 42}, &NAPI{ID: 42}, 0),
-		)
-
-	})
-
 })

@@ -55,7 +55,6 @@ func (n *BridgeAttrs) ResolveRelations(allns NetworkNamespaces) {
 // Register our NifMaker for the "bridge" kind.
 func init() {
 	plugger.Group[NifMaker]().Register(
-		func() Interface {
-			return &BridgeAttrs{}
-		}, plugger.WithPlugin("bridge"))
+		func() Interface { return &BridgeAttrs{} },
+		plugger.WithPlugin("bridge"))
 }

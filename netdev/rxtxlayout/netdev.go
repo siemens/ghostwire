@@ -5,7 +5,6 @@
 package rxtxlayout
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -43,19 +42,6 @@ const (
 	NETDEV_A_QUEUE_NAPI_ID
 )
 
-// QueueType indicates whether a given netdev queue is for RX (receiving) or TX
-// (transmitting).
-type QueueType uint32
-
-// Netdev queues can be either RX or TX. Please see also the Linux kernel
-// source: [netdev.h].
-//
-// [netdev.h]: https://elixir.bootlin.com/linux/v6.9.5/source/include/uapi/linux/netdev.h#L68
-const (
-	NETDEV_QUEUE_TYPE_RX QueueType = iota
-	NETDEV_QUEUE_TYPE_TX
-)
-
 // Netdev NAPI attribute identifiers. Please see also the Linux kernel source:
 // [netdev.h].
 //
@@ -67,17 +53,6 @@ const (
 	NETDEV_A_NAPI_IRQ
 	NETDEV_A_NAPI_PID
 )
-
-// String returns either “RX” or “TX”, depending on the QueueType.
-func (qt QueueType) String() string {
-	switch qt {
-	case NETDEV_QUEUE_TYPE_RX:
-		return "RX"
-	case NETDEV_QUEUE_TYPE_TX:
-		return "TX"
-	}
-	return fmt.Sprintf("QueueType(%d)", qt)
-}
 
 // NetdevsByNetns maps (network) namespaces to the Netdev objects they contain.
 type NetdevsByNetns map[model.Namespace][]*Netdev
@@ -198,57 +173,4 @@ func (qs Queues) MaxQueueIDs() (rxid, txid uint) {
 		}
 	}
 	return
-}
-
-// SortNetdevsByName sorts Netdev objects by their names, with the exception of
-// putting “lo” always first (so it sticks out like a sore toe).
-func SortNetdevsByName(a, b *Netdev) int {
-	isLoA := a.Name == "lo"
-	isLoB := b.Name == "lo"
-	if isLoA != isLoB {
-		switch {
-		case isLoA:
-			return -1
-		default:
-			return 1
-		}
-	}
-	return strings.Compare(a.Name, b.Name)
-}
-
-// SortQueuesByIndexAndType sorts Queue objects by their ID in increasing order,
-// and then RX before TX.
-func SortQueuesByIndexAndType(a, b *Queue) int {
-	switch {
-	case a.ID < b.ID:
-		return -1
-	case a.ID > b.ID:
-		return 1
-	default:
-		return int(a.Type) - int(b.Type)
-	}
-}
-
-// SortIRQsByID sorts IRQ objects by their IDs in increasing order.
-func SortIRQsByID(a, b *IRQ) int {
-	switch {
-	case a.ID < b.ID:
-		return -1
-	case a.ID > b.ID:
-		return 1
-	default:
-		return 0
-	}
-}
-
-// SortNAPIsByID sorts NAPI objects by their IDs in increasing order.
-func SortNAPIsByID(a, b *NAPI) int {
-	switch {
-	case a.ID < b.ID:
-		return -1
-	case a.ID > b.ID:
-		return 1
-	default:
-		return 0
-	}
 }

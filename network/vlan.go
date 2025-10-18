@@ -5,8 +5,9 @@
 package network
 
 import (
+	"log/slog"
+
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/vishvananda/netlink"
 )
 
@@ -70,7 +71,9 @@ func (n *VlanAttrs) ResolveRelations(allns NetworkNamespaces) {
 				master.Nif().Slaves = append(master.Nif().Slaves, n.Interface())
 			}
 		} else {
-			log.Warnf("unknown NSID %d in net:[%d]", netnsid, n.Netns.ID().Ino)
+			slog.Warn("unknown NSID %d in net:[%d]",
+				slog.Uint64("nsid", uint64(netnsid)),
+				slog.Uint64("netns", n.Netns.ID().Ino))
 		}
 	}
 }
@@ -78,7 +81,6 @@ func (n *VlanAttrs) ResolveRelations(allns NetworkNamespaces) {
 // Register our NifMaker for the "vlan" kind.
 func init() {
 	plugger.Group[NifMaker]().Register(
-		func() Interface {
-			return &VlanAttrs{}
-		}, plugger.WithPlugin("vlan"))
+		func() Interface { return &VlanAttrs{} },
+		plugger.WithPlugin("vlan"))
 }

@@ -10,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("descriptor pools", func() {
@@ -18,9 +19,7 @@ var _ = Describe("descriptor pools", func() {
 		p := NewDescriptorPool(10, 2, 5)
 		ds := []uint64{}
 		for i := 2; i < 5; i++ {
-			d, ok := p.Get()
-			Expect(ok).To(BeTrue())
-			ds = append(ds, d)
+			ds = append(ds, Allright(p.Get()))
 		}
 		Expect(ds).To(ConsistOf(
 			uint64(20),
@@ -54,9 +53,7 @@ var _ = Describe("descriptor pools", func() {
 			}
 		}
 		p.Put(42)
-		d, ok := p.Get()
-		Expect(ok).To(BeTrue())
-		Expect(d).To(Equal(uint64(42)))
+		Expect(Allright(p.Get())).To(Equal(uint64(42)))
 	})
 
 	It("panics when overflowing", func() {

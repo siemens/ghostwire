@@ -49,7 +49,7 @@ func FillInIRQKthreads(irqkthreads IRQKthreadMap, netdevs []*Netdev) {
 const irqKthreadnamePrefix = "irq/"
 
 // kvOfIRQKthread returns its verdict whether a kernel thread is an IRQ kthread,
-// and in case it is, the IRQ number as the key to use for mapping this
+// and in case it is, the IRQ number as the key to use for indexing this
 // particular kthread.
 func kvOfIRQKthread(kthread *model.Process) (irq uint, kt *model.Process, ok bool) {
 	if !strings.HasPrefix(kthread.Name, irqKthreadnamePrefix) {

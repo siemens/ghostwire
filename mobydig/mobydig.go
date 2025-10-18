@@ -8,14 +8,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sync"
 
-	"github.com/thediveo/lxkns/log"
+	"github.com/siemens/mobydig/dig"
+	"github.com/siemens/mobydig/verifier"
 	"github.com/thediveo/lxkns/model"
 
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/mobydig/dig"
-	"github.com/siemens/mobydig/verifier"
 )
 
 // JSONTextualRepresentation is JSON data in its textual string "storage"
@@ -58,8 +58,9 @@ func DigNeighborhoodServices(
 	}
 	netnsref := startContainer.Process.Namespaces[model.NetNS].Ref()
 	if len(netnsref) != 1 {
-		log.Errorf("invalid network namespace reference for Docker container %q: %v",
-			startContainer.Name, netnsref)
+		slog.Error("invalid network namespace reference for Docker container",
+			slog.String("container", startContainer.Name),
+			slog.String("netns", fmt.Sprint(netnsref)))
 		return nil, fmt.Errorf("invalid network namespace reference for Docker container %q",
 			startContainer.Name)
 	}
@@ -106,8 +107,11 @@ func DigNeighborhoodServices(
 				if err := namedAddr.Err(); err != nil {
 					errstr = err.Error()
 				}
-				log.Debugf("fqdn: %q, IP: %s, quality: %s, err: %q",
-					namedAddr.Name(), qa.Address, qa.Quality.String(), errstr)
+				slog.Debug("mobydig verdict",
+					slog.String("fqdn", namedAddr.Name()),
+					slog.String("ip", qa.Address),
+					slog.String("quality", qa.Quality.String()),
+					slog.String("err", errstr))
 				jtext, _ := json.Marshal(FQDNAddressVerdict{
 					FQDN:    namedAddr.Name(),
 					Address: qa.Address,

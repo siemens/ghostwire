@@ -97,9 +97,7 @@ func discoverLayouts(
 		if err := NetdevQueues(sysfspath, ndev); err != nil {
 			continue
 		}
-		if err := NetdevIRQs(sysfspath, ndev); err != nil {
-			continue
-		}
+		NetdevIRQs(sysfspath, ndev) // fire-and-forget
 	}
 	rxtxlayout.FillInIRQKthreads(irqkthreads, ndevs)
 	rxtxlayout.FillInNAPIKthreads(napikthreads, ndevs)
