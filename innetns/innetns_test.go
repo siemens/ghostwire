@@ -10,7 +10,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/thediveo/caps"
+	"github.com/thediveo/caps/v2"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
@@ -48,17 +48,15 @@ var _ = Describe("in a netns", func() {
 		}
 
 		netnsfd := netns.NewTransient()
-		defer unix.Close(netnsfd)
+		DeferCleanup(unix.Close, netnsfd)
 
 		allns := discover.Namespaces(discover.WithStandardDiscovery())
 		newnetns := allns.Namespaces[model.NetNS][species.NamespaceIDfromInode(netns.Ino(netnsfd))]
 		Expect(newnetns).NotTo(BeNil())
 
 		runtime.LockOSThread() // never unlock; throw-away OS-level thread
-		origcaps := Successful(caps.OfThisTask())
-		dropped := origcaps.Clone()
-		dropped.Effective.Clear()
-		Expect(caps.SetForThisTask(dropped)).To(Succeed())
+		Expect(Successful(caps.OfCurrentTask()).Effective().Clear().ApplyToCurrentTask()).
+			Error().NotTo(HaveOccurred())
 
 		Expect(Run(newnetns, func() error { return nil })).To(MatchError(
 			ContainSubstring("cannot enter namespace, operation not permitted")))

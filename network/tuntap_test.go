@@ -6,6 +6,7 @@ package network
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -42,12 +43,15 @@ var _ = Describe("TAPs and TUNs", func() {
 			Skip("needs root")
 		}
 
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
 		By("creating a TAP")
 		tap := link.NewTransient(&netlink.Tuntap{
 			Mode:   netlink.TUNTAP_MODE_TAP,
 			Queues: 1,
 		}, tapNamePrefix).(*netlink.Tuntap)
-		defer tap.Fds[0].Close()
+		DeferCleanup(tap.Fds[0].Close)
 
 		By("discovering the TAP")
 		allnetns, result := discoverRedux()

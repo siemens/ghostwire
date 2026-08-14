@@ -226,16 +226,10 @@ func (r *ring[D]) setup(xskfd int, ring int64, offsets unix.XDPRingOffset, size 
 	}
 	// Second step: locate where the head/tail (producer/consumer) indices of
 	// this ring are to be found in shared memory.
-	r.producer = (*uint32)(unsafe.Pointer(
-		uintptr(unsafe.Pointer(&r.ringmem[0])) +
-			uintptr(offsets.Producer)))
-	r.consumer = (*uint32)(unsafe.Pointer(
-		uintptr(unsafe.Pointer(&r.ringmem[0])) +
-			uintptr(offsets.Consumer)))
+	r.producer = (*uint32)(unsafe.Add(unsafe.Pointer(&r.ringmem[0]), offsets.Producer))
+	r.consumer = (*uint32)(unsafe.Add(unsafe.Pointer(&r.ringmem[0]), offsets.Consumer))
 	// Two and a half: locate the ring flags, which are also highly dynamic.
-	r.flags = (*uint32)(unsafe.Pointer(
-		uintptr(unsafe.Pointer(&r.ringmem[0])) +
-			uintptr(offsets.Flags)))
+	r.flags = (*uint32)(unsafe.Add(unsafe.Pointer(&r.ringmem[0]), offsets.Flags))
 	// Third step: let the ring memory appear to the Go runtime (gc) as a
 	// correctly typed and sized slice.
 	//

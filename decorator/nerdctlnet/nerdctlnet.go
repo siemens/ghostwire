@@ -25,7 +25,7 @@ import (
 	"github.com/siemens/ghostwire/v2/network"
 )
 
-// NetworkConfigurationsGlob specifies the location only of the CNI network
+// NetworkConfigurationsDir specifies the location only of the CNI network
 // configuration list files.
 const NetworkConfigurationsDir = "/etc/cni/net.d"
 
@@ -91,7 +91,7 @@ func (n *nerdctlNetwork) PluginField(typ string, field string) string {
 	if plugin == nil {
 		return "" // no such type of plugin.
 	}
-	rawFields := map[string]interface{}{}
+	rawFields := map[string]any{}
 	if json.Unmarshal(plugin.Bytes, &rawFields) != nil {
 		return "" // something's rotten here.
 	}

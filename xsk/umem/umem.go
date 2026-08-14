@@ -31,8 +31,8 @@ const ShmPath = "/dev/shm/"
 // though.
 //
 // Please make sure to check for any error returned, as in this case the
-// returned fd number will be zero – which happens to be a valid file
-// descriptor.
+// returned fd number will be zero – which happens most of the time to be a
+// valid file descriptor.
 func New(length int64) (int, error) {
 	return newShumem(length, ShmPath)
 }
@@ -43,7 +43,7 @@ func newShumem(length int64, shmpath string) (int, error) {
 		return 0, err
 	}
 	if err := unix.Ftruncate(fd, length); err != nil {
-		unix.Close(fd)
+		_ = unix.Close(fd)
 		return 0, err
 	}
 	return fd, nil
@@ -81,7 +81,7 @@ func Unmap(b []byte) error {
 // has its close-on-exec mode flag set in order to not leak it into child
 // processes.
 func createTemp(fs tempFS, prefix string) (int, error) {
-	for attempt := 0; attempt < 10; attempt++ {
+	for range 10 {
 		path := prefix + strconv.FormatUint(uint64(rand.Int31()), 10)
 		fd, err := fs.Open(
 			path,

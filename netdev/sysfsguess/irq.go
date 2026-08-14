@@ -9,8 +9,9 @@ import (
 	"math"
 	"path"
 
-	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
 	"github.com/thediveo/faf"
+
+	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
 )
 
 // Definitions for queue-related text elements in /sys/kernel/irq/$IRQ/actions;
@@ -70,7 +71,7 @@ func NetdevIRQs(sysfspath string, netdev *rxtxlayout.Netdev) {
 		if !ok {
 			continue
 		}
-		for _, action := range bytes.Split(
+		for action := range bytes.SplitSeq(
 			bytes.TrimSuffix(actions, []byte("\n")), []byte(",")) {
 			// action format:
 			//   $IFNAME-$QUEUETYPE-$QUEUEID

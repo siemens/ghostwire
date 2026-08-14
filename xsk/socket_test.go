@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/kr/pretty"
-	"github.com/thediveo/caps"
+	"github.com/thediveo/caps/v2"
 	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/notwork/macvlan"
 	"github.com/thediveo/spacetest/netns"
@@ -82,9 +82,8 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 		Expect(unix.Setns(netnsfd, unix.CLONE_NEWNET)).To(Succeed())
 		dmy := dummy.NewTransient()
 
-		taskcaps := Successful(caps.OfThisTask())
-		taskcaps.Effective.Clear()
-		caps.SetForThisTask(taskcaps)
+		Expect(Successful(caps.OfCurrentTask()).Effective().Clear().ApplyToCurrentTask()).
+			Error().NotTo(HaveOccurred())
 		Expect(New(dmy.Attrs().Index, 0)).Error().To(HaveOccurred())
 	})
 
@@ -119,7 +118,9 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 			txSize      = 32
 		)
 		umemfd := Successful(umem.New(int64(chunkAmount) * int64(chunkSize)))
-		umemClose := sync.OnceFunc(func() { unix.Close(umemfd) })
+		umemClose := sync.OnceFunc(func() {
+			Expect(unix.Close(umemfd)).To(Succeed())
+		})
 		defer umemClose()
 
 		defer netns.EnterTransient()()
@@ -134,7 +135,9 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 			WithFillRingSize(frSize),
 			WithRxRingSize(rxSize),
 			WithTxRingSize(txSize))
-		xskClose := sync.OnceFunc(func() { xsk.Close() })
+		xskClose := sync.OnceFunc(func() {
+			Expect(xsk.Close()).To(Succeed())
+		})
 		defer xskClose()
 
 		cookie := Successful(unix.GetsockoptUint64(xsk.fd, unix.SOL_SOCKET, unix.SO_COOKIE))
@@ -161,7 +164,9 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 		)
 
 		umemfd := Successful(umem.New(int64(chunkAmount) * int64(chunkSize)))
-		umemClose := sync.OnceFunc(func() { unix.Close(umemfd) })
+		umemClose := sync.OnceFunc(func() {
+			Expect(unix.Close(umemfd)).To(Succeed())
+		})
 		defer umemClose()
 
 		defer netns.EnterTransient()()
@@ -176,7 +181,9 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 			WithFillRingSize(frSize),
 			WithRxRingSize(rxSize),
 			WithTxRingSize(txSize))
-		xskClose := sync.OnceFunc(func() { xsk.Close() })
+		xskClose := sync.OnceFunc(func() {
+			Expect(xsk.Close()).To(Succeed())
+		})
 		defer xskClose()
 
 		procinfo := Successful(os.Stat(fmt.Sprintf("/proc/self/fd/%d", xsk.fd)))
@@ -223,7 +230,7 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 
 		By("creating first XSK")
 		umemfd1 := Successful(umem.New(int64(chunkAmount) * int64(chunkSize)))
-		defer unix.Close(umemfd1)
+		DeferCleanup(unix.Close, umemfd1)
 
 		defer netns.EnterTransient()()
 		testlink1 := macvlan.NewTransient(dummy.NewTransient())
@@ -237,13 +244,13 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 			WithFillRingSize(frSize),
 			WithRxRingSize(rxSize),
 			WithTxRingSize(txSize))
-		defer xsk1.Close()
+		DeferCleanup(xsk1.Close)
 
 		By("creating second XSK")
 		testlink2 := macvlan.NewTransient(dummy.NewTransient())
 
 		umemfd2 := Successful(umem.New(int64(chunkAmount) * int64(chunkSize)))
-		defer unix.Close(umemfd2)
+		DeferCleanup(unix.Close, umemfd2)
 
 		xsk2 := EventuallyNew(testlink2.Attrs().Index, macvlanQueueID,
 			WithChunkAmount(chunkAmount),
@@ -255,7 +262,7 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 			WithRxRingSize(rxSize),
 			WithTxRingSize(txSize))
 
-		defer xsk2.Close()
+		DeferCleanup(xsk2.Close)
 
 		By("querying NETLINK for all XSKs")
 		xsks := Successful(netlink.SocketDiagXDP())
@@ -285,7 +292,7 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 
 		By("creating a bound XSK")
 		unboundxsk := Successful(unix.Socket(unix.AF_XDP, unix.SOCK_RAW, 0))
-		defer unix.Close(unboundxsk)
+		DeferCleanup(unix.Close, unboundxsk)
 
 		By("leaving the transient network namespace")
 		leaveNetns()

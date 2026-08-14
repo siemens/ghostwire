@@ -10,8 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/onsi/gomega/gexec"
 	"golang.org/x/sys/unix"
+
+	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -130,12 +131,10 @@ var _ = Describe("fd-referenced umem", Ordered, func() {
 	It("allocates a umem and maps it", func() {
 		const length = 2048 * 64
 		umemfd := Successful(New(length))
-		defer unix.Close(umemfd)
+		DeferCleanup(unix.Close, umemfd)
 
 		umem := Successful(Map(umemfd))
-		defer func() {
-			Expect(Unmap(umem))
-		}()
+		DeferCleanup(Unmap, umem)
 		Expect(umem).NotTo(BeNil())
 		Expect(len(umem)).To(BeNumerically(">=", length))
 	})
@@ -144,15 +143,13 @@ var _ = Describe("fd-referenced umem", Ordered, func() {
 		const length = 128
 		umemfd := Successful(New(length))
 		closeUmemFd := sync.OnceFunc(func() {
-			unix.Close(umemfd)
+			Expect(unix.Close(umemfd)).To(Succeed())
 		})
 		defer closeUmemFd()
 
 		umem := Successful(Map(umemfd))
 		Expect(umem).NotTo(BeNil())
-		defer func() {
-			Expect(Unmap(umem))
-		}()
+		DeferCleanup(Unmap, umem)
 
 		pong := exec.Command(pongPath)
 		pong.ExtraFiles = []*os.File{os.NewFile(uintptr(umemfd), "umem")}

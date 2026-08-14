@@ -27,7 +27,7 @@ func init() {
 }
 
 var once = &sync.Once{} // We need to query this only once; no hot core update (yet)
-var coreMeta = map[string]interface{}{}
+var coreMeta = map[string]any{}
 
 // Metadata returns metadata describing certain aspects of the host the
 // discovery was run on.
@@ -75,7 +75,7 @@ func deviceInfo(cc *model.Container) map[string]string {
 	if err != nil {
 		return nil
 	}
-	defer db.Close() // three cheers to fdooze!
+	defer func() { _ = db.Close() }() // three cheers to fdooze!
 	kv, _ := db.DeviceInfo()
 	return kv
 }

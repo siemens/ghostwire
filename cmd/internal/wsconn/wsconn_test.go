@@ -85,9 +85,9 @@ var _ = Describe("web socket connections", func() {
 	It("rejects and logs an invalid connection attempt", func() {
 		By("connecting")
 		resp := Successful(http.Get(url))
-		defer resp.Body.Close()
+		DeferCleanup(resp.Body.Close)
 		Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-		Eventually(log.String()).To(MatchRegexp(
+		Eventually(log.String).To(MatchRegexp(
 			`level=ERROR msg="websocket upgrade process failed" connection=[a-z]+-[a-z]+`))
 	})
 
@@ -95,8 +95,8 @@ var _ = Describe("web socket connections", func() {
 		By("connecting")
 		conn, resp := Successful2R(
 			websocket.DefaultDialer.DialContext(ctx, wsurl(url), nil))
-		defer resp.Body.Close()
-		defer conn.Close()
+		DeferCleanup(resp.Body.Close)
+		DeferCleanup(conn.Close)
 
 		By("checking the WSConn")
 		var res Pair[*WSConn, error]
@@ -112,8 +112,8 @@ var _ = Describe("web socket connections", func() {
 		By("connecting")
 		clntconn, resp := Successful2R(
 			websocket.DefaultDialer.DialContext(ctx, wsurl(url), nil))
-		defer resp.Body.Close()
-		defer clntconn.Close()
+		DeferCleanup(resp.Body.Close)
+		DeferCleanup(clntconn.Close)
 
 		By("checking the WSConn")
 		var res Pair[*WSConn, error]
@@ -122,7 +122,7 @@ var _ = Describe("web socket connections", func() {
 
 		By("watching the connection on the server side")
 		done := CloseWhenGone(wsconn.Watch)
-		defer wsconn.Close()
+		DeferCleanup(wsconn.Close)
 		Eventually(log.String).Within(5 * time.Second).ProbeEvery(10 * time.Millisecond).
 			Should(MatchRegexp(`level=DEBUG msg="monitoring.*started"`))
 
@@ -157,8 +157,8 @@ var _ = Describe("web socket connections", func() {
 		By("connecting")
 		clntconn, resp := Successful2R(
 			websocket.DefaultDialer.DialContext(ctx, wsurl(url), nil))
-		defer resp.Body.Close()
-		defer clntconn.Close()
+		DeferCleanup(resp.Body.Close)
+		DeferCleanup(clntconn.Close)
 
 		By("checking the WSConn")
 		var res Pair[*WSConn, error]
@@ -191,8 +191,8 @@ var _ = Describe("web socket connections", func() {
 		By("connecting")
 		clntconn, resp := Successful2R(
 			websocket.DefaultDialer.DialContext(ctx, wsurl(url), nil))
-		defer resp.Body.Close()
-		defer clntconn.Close()
+		DeferCleanup(resp.Body.Close)
+		DeferCleanup(clntconn.Close)
 
 		By("checking the WSConn")
 		var res Pair[*WSConn, error]
@@ -200,7 +200,7 @@ var _ = Describe("web socket connections", func() {
 		wsconn := Successful(res.Unpack())
 
 		By("dropping the connection on the client side")
-		clntconn.Close()
+		Expect(clntconn.Close()).To(Succeed())
 
 		By("attempting to close the closed connection")
 		closeDone := CloseWhenGone(func() {

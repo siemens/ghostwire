@@ -5,13 +5,14 @@
 package nlnetdev
 
 import (
-	"github.com/siemens/ghostwire/v2/innetns"
-	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
-	"github.com/siemens/ghostwire/v2/passedthrough"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/innetns"
+	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
+	"github.com/siemens/ghostwire/v2/passedthrough"
 )
 
 // Discover returns netdev configuration information about the RX/TX queue
@@ -38,7 +39,7 @@ func discoverInNetns(
 	var conn *Conn
 	defer func() {
 		if conn != nil {
-			conn.Close()
+			_ = conn.Close()
 		}
 	}()
 	// We need the naming information about the links, as this is unfortunately
@@ -49,7 +50,7 @@ func discoverInNetns(
 		if err != nil {
 			return nil
 		}
-		defer nlHandle.Close()
+		defer func() { _ = nlHandle.Close() }()
 		links, err = nlHandle.LinkList()
 		if err != nil {
 			return nil

@@ -8,10 +8,10 @@
 # Nota bene: not all existing value combinations with respect to Alpine and Node
 # versions might work, so you'll need to check Docker hub for the available base
 # image versions.
-ARG ALPINE_VERSION=3.20
-ARG ALPINE_PATCH=2
-ARG GO_VERSION=1.22.5
-ARG NODE_VERSION=20
+ARG ALPINE_VERSION=3.24
+ARG ALPINE_PATCH=1
+ARG GO_VERSION=1.26.5
+ARG NODE_VERSION=22
 
 # Go build settings
 ARG LDFLAGS="-s -w -extldflags=-static"
@@ -88,10 +88,14 @@ RUN go mod download
 COPY api/ ./api/
 COPY cmd/ ./cmd/
 COPY decorator/ ./decorator/
+COPY innetns/ ./innetns/
 COPY internal/ ./internal/
-COPY metadata/ ./metadata/
+COPY meta/ ./meta/
 COPY mobydig/ ./mobydig/
+COPY netdev/ ./netdev/
 COPY network/ ./network/
+COPY passedthrough/ ./passedthrough/
+COPY xsk/ ./xsk/
 COPY *.go ./
 
 RUN --mount=target=. \
@@ -108,7 +112,7 @@ RUN --mount=target=. \
 # Build Ghostwire's frontend UI browser application.
 FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webui
 WORKDIR /webui
-ENV PATH /webui/node_modules/.bin:$PATH
+ENV PATH=/webui/node_modules/.bin:$PATH
 RUN yarn set version berry
 RUN yarn config set nodeLinker node-modules
 # stage 2.1 :) install a full-blown node_modules dependency hell; we need to

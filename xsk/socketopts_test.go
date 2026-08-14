@@ -28,7 +28,7 @@ var _ = Describe("XDP socket configuration options", func() {
 
 			o = &Options{}
 			Expect(WithUmemFd(0)(o)).To(Succeed())
-			defer unix.Close(o.umemFd)
+			DeferCleanup(unix.Close, o.umemFd)
 			Expect(WithSharedUmem(&Socket{})(o)).NotTo(Succeed())
 		})
 

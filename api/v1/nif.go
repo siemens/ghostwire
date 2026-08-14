@@ -8,9 +8,9 @@ import (
 	"net"
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
-
 	"github.com/thediveo/lxkns/model"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // networkInterface is the API v1 JSON representation of an individual network
@@ -52,7 +52,7 @@ type vxlanConfig struct {
 	VID             uint32          `json:"vid"`
 	ArpProxy        bool            `json:"arp-proxy"`
 	Source          *sourceIP       `json:"source,omitempty"`
-	SourcePortRange sourcePortRange `json:"source-portrange,omitempty"`
+	SourcePortRange sourcePortRange `json:"source-portrange"`
 	Remote          *remoteIP       `json:"remote,omitempty"`
 	RemotePort      uint16          `json:"remote-port"`
 }

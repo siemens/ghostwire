@@ -49,6 +49,8 @@ var _ = Describe("discovering umems", func() {
 	})
 
 	It("collects the umems", func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{Level: slog.LevelDebug})))
 
 		const (
 			chunkAmount1 = 128
@@ -73,9 +75,9 @@ var _ = Describe("discovering umems", func() {
 		mcvlan2 := macvlan.NewTransient(dmy)
 
 		umem1fd := Successful(umem.New(int64(chunkAmount1) * int64(chunkSize)))
-		defer unix.Close(umem1fd)
+		DeferCleanup(unix.Close, umem1fd)
 		umem2fd := Successful(umem.New(int64(chunkAmount2) * int64(chunkSize)))
-		defer unix.Close(umem2fd)
+		DeferCleanup(unix.Close, umem2fd)
 
 		xsk1a := Successful(xsk.New(
 			mcvlan1.Attrs().Index,
@@ -88,7 +90,7 @@ var _ = Describe("discovering umems", func() {
 			xsk.WithoutRxRing(),
 			xsk.WithTxRingSize(chunkAmount1),
 		))
-		defer xsk1a.Close()
+		DeferCleanup(xsk1a.Close)
 
 		xsk1b := Successful(xsk.New(
 			mcvlan1.Attrs().Index,
@@ -97,7 +99,7 @@ var _ = Describe("discovering umems", func() {
 			xsk.WithRxRingSize(chunkAmount1),
 			xsk.WithoutTxRing(),
 		))
-		defer xsk1b.Close()
+		DeferCleanup(xsk1b.Close)
 
 		xsk2 := Successful(xsk.New(
 			mcvlan2.Attrs().Index,
@@ -110,7 +112,7 @@ var _ = Describe("discovering umems", func() {
 			xsk.WithRxRingSize(chunkAmount2),
 			xsk.WithTxRingSize(chunkAmount2),
 		))
-		defer xsk2.Close()
+		DeferCleanup(xsk2.Close)
 
 		By("discovering our XSKs related to our process, with their umems")
 		disco := lxkns.Namespaces(

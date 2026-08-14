@@ -127,6 +127,7 @@ func (t *Tenant) readResolvConf(tfs *mountineer.Mountineer) (nameservers []net.I
 			// ...silently ignore all other lines
 		}
 	}
+	_ = scanner.Err()
 
 	return
 }
@@ -162,6 +163,7 @@ func (t *Tenant) readHosts(tfs *mountineer.Mountineer) map[string]net.IP {
 			hosts[name] = ip
 		}
 	}
+	_ = scanner.Err()
 
 	return hosts
 }

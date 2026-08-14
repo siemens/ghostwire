@@ -7,6 +7,7 @@ package network
 import (
 	"net"
 	"os"
+	"sync"
 	"syscall"
 	"time"
 
@@ -247,7 +248,10 @@ var _ = Describe("discovers transport ports", func() {
 		// let's create a dummy socket we then next try to find.
 		sock, err := net.Listen("tcp", ":0")
 		Expect(err).NotTo(HaveOccurred())
-		defer sock.Close()
+		sockClose := sync.OnceFunc(func() {
+			Expect(sock.Close()).To(Succeed())
+		})
+		defer sockClose()
 		sockport := sock.Addr().(*net.TCPAddr).Port
 		Expect(sockport).NotTo(BeZero())
 
@@ -262,7 +266,7 @@ var _ = Describe("discovers transport ports", func() {
 			ConsistOf(model.PIDType(pid)),
 		))
 
-		sock.Close()
+		sockClose()
 		sockmap = discoverAllSockInodes("/proc")
 		Expect(sockmap).NotTo(BeEmpty())
 		Expect(sockmap).NotTo(ContainElement(

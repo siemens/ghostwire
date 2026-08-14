@@ -20,7 +20,7 @@ type DescriptorPooler interface {
 	Put(addr uint64)
 }
 
-// Descriptor pool implements a concurrency-safe descriptor pool. DescriptorPool
+// DescriptorPool implements a concurrency-safe descriptor pool. DescriptorPool
 // is safe to pass around by value. It not optimized in any way.
 type DescriptorPool struct {
 	pool chan uint64 // creativity alert: misusing a channel as a pool

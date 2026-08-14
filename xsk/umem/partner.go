@@ -76,7 +76,7 @@ func (p Partner) Cease() (unmapped bool) {
 	if *p.refs == 1 {
 		// we're still under lock, so we can unmap before we decrement the
 		// interest/reference counter.
-		Unmap(p.Slice)
+		_ = Unmap(p.Slice)
 		unmapped = true
 	}
 	*p.refs--

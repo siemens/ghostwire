@@ -59,7 +59,7 @@ var _ = Describe("discovering XSKs", func() {
 			0,
 			xsk.WithChunkAmount(256),
 			xsk.WithHeadroom(32)))
-		xskClose := sync.OnceFunc(func() { xsk.Close() })
+		xskClose := sync.OnceFunc(func() { _ = xsk.Close() })
 		defer xskClose()
 
 		By("discovering our XSK related to our process")

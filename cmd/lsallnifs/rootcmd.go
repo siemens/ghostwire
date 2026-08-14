@@ -67,7 +67,7 @@ var lc = map[network.SocketSimplifiedState]string{
 
 func lsallnifs(cmd *cobra.Command, _ []string) error {
 	out := cmd.OutOrStdout()
-	fmt.Fprint(out, "lsallnifs\n")
+	_, _ = fmt.Fprint(out, "lsallnifs\n")
 
 	showAll, _ := cmd.PersistentFlags().GetBool("all")
 	showTenants, _ := cmd.PersistentFlags().GetBool("tenants")
@@ -80,15 +80,15 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 	cizer := turtles.Containerizer(ctx, cmd)
 	defer cizer.Close()
 
-	fmt.Fprint(out, "discovering network namespaces and containers...\n")
+	_, _ = fmt.Fprint(out, "discovering network namespaces and containers...\n")
 	allnetns := gostwire.Discover(context.Background(), cizer, nil)
 
 	for _, netns := range allnetns.Netns.Sorted() {
-		fmt.Fprintf(out, "net:[%d] with %s:\n", netns.ID().Ino, netns.DisplayName())
+		_, _ = fmt.Fprintf(out, "net:[%d] with %s:\n", netns.ID().Ino, netns.DisplayName())
 
 		// Section "Tenants"
 		if showAll || showTenants {
-			fmt.Fprint(out, "  tenants:\n")
+			_, _ = fmt.Fprint(out, "  tenants:\n")
 			tenants := netns.Tenants[:]
 			tenants.Sort()
 			for _, tenant := range tenants {
@@ -96,25 +96,25 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				if tenant.Process.PID == 2 {
 					continue
 				}
-				fmt.Fprintf(out, "    %s\n", tenant.Name())
-				fmt.Fprintf(out, "      /etc/hostname: '%s', UTS hostname: '%s', /etc/domainname: '%s'\n",
+				_, _ = fmt.Fprintf(out, "    %s\n", tenant.Name())
+				_, _ = fmt.Fprintf(out, "      /etc/hostname: '%s', UTS hostname: '%s', /etc/domainname: '%s'\n",
 					tenant.DNS.EtcHostname, tenant.DNS.Hostname, tenant.DNS.EtcDomainname)
-				fmt.Fprintf(out, "      search list: %s\n", strings.Join(tenant.DNS.Searchlist, ", "))
+				_, _ = fmt.Fprintf(out, "      search list: %s\n", strings.Join(tenant.DNS.Searchlist, ", "))
 				addrs := []string{}
 				for _, addr := range tenant.DNS.Nameservers {
 					addrs = append(addrs, addr.String())
 				}
-				fmt.Fprintf(out, "      name servers: %s\n", strings.Join(addrs, ", "))
-				fmt.Fprintf(out, "      hosts:\n")
+				_, _ = fmt.Fprintf(out, "      name servers: %s\n", strings.Join(addrs, ", "))
+				_, _ = fmt.Fprintf(out, "      hosts:\n")
 				for name, ip := range tenant.DNS.Hosts {
-					fmt.Fprintf(out, "        %s %s\n", name, ip.String())
+					_, _ = fmt.Fprintf(out, "        %s %s\n", name, ip.String())
 				}
 			}
 		}
 
 		// Section "Transports"
 		if showAll || showPorts {
-			fmt.Fprint(out, "  transports:\n")
+			_, _ = fmt.Fprint(out, "  transports:\n")
 			listPorts := func(ports network.ProcessSockets) {
 				ports.Sort()
 				for _, port := range ports {
@@ -132,7 +132,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 					}
 					localservice := netdb.ServiceByPort(int(port.LocalPort), strings.ToLower(port.Protocol.String()))
 					remoteservice := netdb.ServiceByPort(int(port.RemotePort), strings.ToLower(port.RemoteIP.String()))
-					fmt.Fprintf(out, "    %s %s%s %s:%d%s %s:%d%s ↷ %s\n",
+					_, _ = fmt.Fprintf(out, "    %s %s%s %s:%d%s %s:%d%s ↷ %s\n",
 						lc[port.SimplifiedState], port.Protocol.String(), viasock6,
 						network.IP(port.LocalIP).String(), port.LocalPort, serviceList(localservice),
 						network.IP(port.RemoteIP).String(), port.RemotePort, serviceList(remoteservice),
@@ -143,7 +143,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 		}
 
 		// Section "Network Interfaces"
-		fmt.Fprint(out, "  network interfaces:\n")
+		_, _ = fmt.Fprint(out, "  network interfaces:\n")
 		allnifs := netns.NifList()
 		allnifs.Sort()
 		for _, netif := range allnifs {
@@ -152,7 +152,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 			if nif.Alias != "" {
 				alias = fmt.Sprintf(" ~'%s'", nif.Alias)
 			}
-			fmt.Fprintf(out, "    %s %s(%d)%s: kind %s, address %s\n",
+			_, _ = fmt.Fprintf(out, "    %s %s(%d)%s: kind %s, address %s\n",
 				nif.State.TerminalIcon(), nif.Name, nif.Index, alias, nif.Kind, nif.L2Addr.String())
 
 			// Addresses, addresses, addresses...
@@ -160,21 +160,21 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				nifaddrs := append(nif.Addrsv4, nif.Addrsv6...)
 				nifaddrs.Sort()
 				for _, addr := range nifaddrs {
-					fmt.Fprintf(out, "        %s/%d\n", addr.Address.String(), addr.PrefixLength)
+					_, _ = fmt.Fprintf(out, "        %s/%d\n", addr.Address.String(), addr.PrefixLength)
 				}
 			}
 
 			// Is this a bridge port? Then show its bridge...
 			if nif.Bridge != nil {
 				bridge := nif.Bridge.(network.Bridge).Bridge()
-				fmt.Fprintf(out, "        ⌒ %s(%d)\n",
+				_, _ = fmt.Fprintf(out, "        ⌒ %s(%d)\n",
 					bridge.Name, bridge.Index)
 			}
 			// Is this a MACVLAN master? Then list its MACVLANs...
 			if macvlans := nif.Slaves.OfKind("macvlan"); len(macvlans) != 0 {
 				for _, macvlan := range macvlans {
 					macvlan := macvlan.Nif()
-					fmt.Fprintf(out, "       ↳ MACVLAN: %s(%d) in %s\n",
+					_, _ = fmt.Fprintf(out, "       ↳ MACVLAN: %s(%d) in %s\n",
 						macvlan.Name, macvlan.Index, macvlan.Netns.DisplayName())
 				}
 			}
@@ -182,7 +182,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 			if vxlans := nif.Slaves.OfKind("vxlan"); len(vxlans) != 0 {
 				for _, vxlan := range vxlans {
 					vxlan := vxlan.(network.Vxlan).Vxlan()
-					fmt.Fprintf(out, "       ↳ VXLAN overlay ID %d: %s(%d) in %s\n",
+					_, _ = fmt.Fprintf(out, "       ↳ VXLAN overlay ID %d: %s(%d) in %s\n",
 						vxlan.VID, vxlan.Name, vxlan.Index, vxlan.Netns.DisplayName())
 				}
 			}
@@ -191,7 +191,7 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				bridge := bridge.Bridge()
 				for _, port := range bridge.Ports {
 					port := port.Nif()
-					fmt.Fprintf(out, "        ◌ port: %s(%d)\n",
+					_, _ = fmt.Fprintf(out, "        ◌ port: %s(%d)\n",
 						port.Name, port.Index)
 				}
 			}
@@ -199,23 +199,23 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 			if macvlan, ok := netif.(network.Macvlan); ok {
 				macvlan := macvlan.Macvlan()
 				master := macvlan.Master.Nif()
-				fmt.Fprintf(out, "      %s mode\n", macvlan.Mode.String())
-				fmt.Fprintf(out, "       ☝  master %s(%d) in %s\n",
+				_, _ = fmt.Fprintf(out, "      %s mode\n", macvlan.Mode.String())
+				_, _ = fmt.Fprintf(out, "       ☝  master %s(%d) in %s\n",
 					master.Name, master.Index, master.Netns.DisplayName())
 			}
 			// Is this a VETH? Then show its peer...
 			if veth, ok := netif.(network.Veth); ok {
 				veth := veth.Veth()
 				peer := veth.Peer.(network.Veth).Veth()
-				fmt.Fprintf(out, "        ↔ %s(%d) in %s\n",
+				_, _ = fmt.Fprintf(out, "        ↔ %s(%d) in %s\n",
 					peer.Name, peer.Index, peer.Netns.DisplayName())
 			}
 			// Is this a VXLAN? Then show its underlay master...
 			if vxlan, ok := netif.(network.Vxlan); ok {
 				vxlan := vxlan.Vxlan()
-				fmt.Fprintf(out, "      VID %d, dest port %d\n", vxlan.VID, vxlan.DestinationPort)
+				_, _ = fmt.Fprintf(out, "      VID %d, dest port %d\n", vxlan.VID, vxlan.DestinationPort)
 				master := vxlan.Master.Nif()
-				fmt.Fprintf(out, "       👇  underlay %s(%d) in %s\n",
+				_, _ = fmt.Fprintf(out, "       👇  underlay %s(%d) in %s\n",
 					master.Name, master.Index, master.Netns.DisplayName())
 			}
 		}

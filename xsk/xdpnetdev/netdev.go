@@ -77,7 +77,7 @@ func newByIndex(ifindex int, dropall bool) (n *Netdev, err error) {
 	}
 	defer func() {
 		if err != nil {
-			n.objs.Close()
+			_ = n.objs.Close()
 			n = nil
 		}
 	}()
@@ -100,8 +100,8 @@ func newByIndex(ifindex int, dropall bool) (n *Netdev, err error) {
 
 // Release the XDP program and associated resources attached to this netdev.
 func (n *Netdev) Release() {
-	n.netdev.Close()
-	n.objs.Close()
+	_ = n.netdev.Close()
+	_ = n.objs.Close()
 }
 
 // AddXsk registers an XSK, identified by its file descriptor, to receive RX

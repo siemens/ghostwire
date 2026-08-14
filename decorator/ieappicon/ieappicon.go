@@ -128,7 +128,7 @@ func loadProjectIcons(engines []*model.ContainerEngine, projects []ieAppProject)
 		slog.Error("cannot access IED IE App data base", xslog.Error(err))
 		return
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	apps, err := db.Apps()
 	if err != nil {
 		slog.Error("cannot discover installed IE Apps: %s", xslog.Error(err))

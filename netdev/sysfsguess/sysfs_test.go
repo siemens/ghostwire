@@ -19,6 +19,7 @@ import (
 	"github.com/thediveo/morbyd/v2/session"
 	"github.com/thediveo/morbyd/v2/timestamper"
 	"github.com/thediveo/notwork/dummy"
+	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/netns"
 	"golang.org/x/sys/unix"
 
@@ -45,8 +46,8 @@ var _ = Describe("network namespace-tagged sysfs", func() {
 	})
 
 	It("rejects a process-less network namespace", func() {
-		emptynetnsfd := netns.NewTransient()
-		defer unix.Close(emptynetnsfd)
+		emptynetnsfd := spacetest.NewUnmanagedTransient(unix.CLONE_NEWNET)
+		DeferCleanup(unix.Close, emptynetnsfd)
 
 		allns := discover.Namespaces(discover.WithStandardDiscovery())
 		emptynetns := allns.Namespaces[model.NetNS][species.NamespaceIDfromInode(netns.Ino(emptynetnsfd))]

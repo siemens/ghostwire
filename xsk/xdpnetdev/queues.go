@@ -16,7 +16,7 @@ func MaxRxQueueID(ifindex int) uint32 {
 	if err != nil {
 		return 0
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	queues, err := conn.Queues(uint32(ifindex))
 	if err != nil {
 		return 0

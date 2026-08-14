@@ -62,7 +62,6 @@ func discoverXsks(netns model.Namespace, inosockmap lxknsdiscover.SocketProcesse
 
 	var xsks []XSK
 	var xsksinfo []*netlink.XDPDiagInfoResp
-	var dialErr error
 
 	if err := ops.Visit(func() {
 		// First dump the XSKs in this network namespace...
@@ -95,7 +94,7 @@ func discoverXsks(netns model.Namespace, inosockmap lxknsdiscover.SocketProcesse
 				Processes: procs,
 			})
 		}
-	}, netnsref); err != nil || dialErr != nil {
+	}, netnsref); err != nil {
 		return nil
 	}
 	return xsks

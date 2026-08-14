@@ -23,7 +23,7 @@ import (
 // or ID and is also of the specified type. Alternatively of a name/ID string, a
 // GomegaMatcher can also be specified for matching the name or ID, such as
 // ContainSubstring and MatchRegexp.
-func ContainContainer(nameorid interface{}, typ string) types.GomegaMatcher {
+func ContainContainer(nameorid any, typ string) types.GomegaMatcher {
 	return ContainElement(WithTransform(
 		func(actual *network.NetworkNamespace) []*model.Container {
 			containers := make([]*model.Container, 0, len(actual.Tenants))
@@ -45,7 +45,7 @@ func ContainContainer(nameorid interface{}, typ string) types.GomegaMatcher {
 // type.  Alternatively of a name/ID string, a GomegaMatcher can also be
 // specified for matching the name or ID, such as ContainSubstring and
 // MatchRegexp.
-func HaveContainer(nameid interface{}, typ string) types.GomegaMatcher {
+func HaveContainer(nameid any, typ string) types.GomegaMatcher {
 	return SatisfyAll(HaveContainerNameID(nameid), HaveContainerType(typ))
 }
 
@@ -53,7 +53,7 @@ func HaveContainer(nameid interface{}, typ string) types.GomegaMatcher {
 // *model.Container with the specified name or ID. Alternatively of a name/ID
 // string, a GomegaMatcher can also be specified for matching the name or ID,
 // such as ContainSubstring and MatchRegexp.
-func HaveContainerNameID(nameorid interface{}) types.GomegaMatcher {
+func HaveContainerNameID(nameorid any) types.GomegaMatcher {
 	var nameoridMatcher types.GomegaMatcher
 	switch nameorid := nameorid.(type) {
 	case string:
@@ -64,7 +64,7 @@ func HaveContainerNameID(nameorid interface{}) types.GomegaMatcher {
 		panic("nameorid argument must be string or GomegaMatcher")
 	}
 	return SatisfyAny(
-		WithTransform(func(actual interface{}) (string, error) {
+		WithTransform(func(actual any) (string, error) {
 			switch container := actual.(type) {
 			case *model.Container:
 				return container.ID, nil
@@ -80,7 +80,7 @@ func HaveContainerNameID(nameorid interface{}) types.GomegaMatcher {
 // HaveContainerType succeeds if ACTUAL is either a model.Container or
 // *model.Container with the specified type.
 func HaveContainerType(typ string) types.GomegaMatcher {
-	return WithTransform(func(actual interface{}) string {
+	return WithTransform(func(actual any) string {
 		switch container := actual.(type) {
 		case *model.Container:
 			return container.Type
@@ -91,7 +91,7 @@ func HaveContainerType(typ string) types.GomegaMatcher {
 	}, Equal(typ))
 }
 
-func FromPod(pod interface{}) types.GomegaMatcher {
+func FromPod(pod any) types.GomegaMatcher {
 	var podNameMatcher types.GomegaMatcher
 	switch pod := pod.(type) {
 	case string:
@@ -101,7 +101,7 @@ func FromPod(pod interface{}) types.GomegaMatcher {
 	default:
 		panic("pod argument must be string or GomegaMatcher")
 	}
-	return WithTransform(func(actual interface{}) ([]*model.Group, error) {
+	return WithTransform(func(actual any) ([]*model.Group, error) {
 		switch container := actual.(type) {
 		case *model.Container:
 			return container.Groups, nil

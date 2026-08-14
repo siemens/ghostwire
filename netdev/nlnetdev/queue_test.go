@@ -90,7 +90,7 @@ var _ = Describe("netdev queues", func() {
 		It("returns an empty map if everything is down", func() {
 			defer netns.EnterTransient()()
 			c := Successful(Dial(nil))
-			defer c.Close()
+			DeferCleanup(c.Close)
 			Expect(Successful(c.netdevsQueues())).To(BeEmpty())
 		})
 
@@ -101,7 +101,7 @@ var _ = Describe("netdev queues", func() {
 			link.EnsureUp(mcvlan)
 
 			c := Successful(Dial(nil))
-			defer c.Close()
+			DeferCleanup(c.Close)
 			nifsqs := Successful(c.netdevsQueues())
 			Expect(nifsqs).To(HaveLen(2)) // without lo, as it is down
 			Expect(nifsqs).To(HaveKeyWithValue(
@@ -129,7 +129,7 @@ var _ = Describe("netdev queues", func() {
 			dmy := dummy.NewTransientUp()
 
 			c := Successful(Dial(nil))
-			defer c.Close()
+			DeferCleanup(c.Close)
 			nicqueues := Successful(c.Queues(uint32(dmy.Attrs().Index)))
 			Expect(nicqueues).To(HaveLen(2))
 			Expect(nicqueues).To(ConsistOf(
@@ -144,14 +144,14 @@ var _ = Describe("netdev queues", func() {
 		It("returns an error when there is no matching network interface", func() {
 			defer netns.EnterTransient()()
 			c := Successful(Dial(nil))
-			defer c.Close()
+			DeferCleanup(c.Close)
 			Expect(c.Queues(42)).Error().To(MatchError(
 				ContainSubstring("no such device")))
 		})
 
 		It("returns an error when specifying the zero interface index", func() {
 			c := Successful(Dial(nil))
-			defer c.Close()
+			DeferCleanup(c.Close)
 			Expect(c.Queues(0)).Error().To(MatchError(
 				ContainSubstring("invalid ifindex")))
 		})

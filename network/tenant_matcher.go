@@ -7,9 +7,10 @@
 package network
 
 import (
+	"github.com/thediveo/lxkns/model"
+
 	g "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/thediveo/lxkns/model"
 )
 
 // ContainTenantWithPID succeeds if ACTUAL is of type network.Tenants and

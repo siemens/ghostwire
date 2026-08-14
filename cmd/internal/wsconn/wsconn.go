@@ -2,11 +2,11 @@
 //
 // SPDX-License-Identifier: MIT
 
-// Wraps a server-side websocket connection with its own human-readable unique
-// ID. This helps to clearly map log debug and error messages to their
-// respective websocket connections, thus keeping them clearly separated.
-// Additionally, we also associate the capturing process (if any) with this
-// connection, so we can sanely manage it.
+// Package wsconn wraps a server-side websocket connection with its own
+// human-readable unique ID. This helps to clearly map log debug and error
+// messages to their respective websocket connections, thus keeping them clearly
+// separated. Additionally, we also associate the capturing process (if any)
+// with this connection, so we can sanely manage it.
 package wsconn
 
 import (
@@ -126,7 +126,8 @@ func NewWSConn(w http.ResponseWriter, req *http.Request) (*WSConn, error) {
 	return c, nil
 }
 
-// Log a structured debug message that includes the unique random connection ID.
+// Debug logs a structured debug message that includes the unique random
+// connection ID.
 func (c *WSConn) Debug(msg string, attrs ...slog.Attr) {
 	c.log.LogAttrs(context.Background(), slog.LevelDebug, msg, attrs...)
 }
@@ -190,7 +191,7 @@ func (c *WSConn) Watch() {
 			// Any error means that the websocket is broken, and any close means
 			// that we're done by now. So release resources.
 			c.Debug("websocket closed")
-			c.Close()
+			_ = c.Close()
 			return
 		}
 		// Whatever the websocket client is sending us ... we'll ignore it. And
@@ -234,7 +235,7 @@ func (c *WSConn) InitiateGracefulClose(code int, reason string) {
 		c.mux.Unlock()
 		c.Error("sending graceful websocket close control message failed",
 			xslog.Error(err))
-		c.Close()
+		_ = c.Close()
 	}
 }
 

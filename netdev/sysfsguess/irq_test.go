@@ -5,8 +5,9 @@
 package sysfsguess
 
 import (
-	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
 	"github.com/thediveo/lxkns/model"
+
+	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

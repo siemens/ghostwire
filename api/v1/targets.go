@@ -7,11 +7,12 @@ package v1
 import (
 	"strings"
 
-	gostwire "github.com/siemens/ghostwire/v2"
-	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/turtlefinder/v2"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
+
+	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 type captureTargets []captureTarget

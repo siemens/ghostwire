@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"maps"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -17,7 +18,6 @@ import (
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
-	"golang.org/x/exp/maps"
 
 	"github.com/siemens/ghostwire/v2/netdev/nlnetdev"
 	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
@@ -98,7 +98,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 	// Sort network namespaces by their inode numbers; a side effect is that the
 	// initial network namespace comes first, as it gets one of the lowest nsfs
 	// ino numbers assigned.
-	netnsids := maps.Values(allns.Namespaces[model.NetNS])
+	netnsids := slices.Collect(maps.Values(allns.Namespaces[model.NetNS]))
 	slices.SortFunc(netnsids,
 		func(netnsA, netnsB model.Namespace) int {
 			return int(netnsA.ID().Ino) - int(netnsB.ID().Ino)
@@ -159,7 +159,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 				fmt.Printf(" source %s\n", irq.Source)
 			}
 
-			napis := maps.Values(ndev.NAPIs)
+			napis := slices.Collect(maps.Values(ndev.NAPIs))
 			slices.SortFunc(napis,
 				func(a, b *rxtxlayout.NAPI) int {
 					return int(a.ID) - int(b.ID)
@@ -171,7 +171,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 						napi.Kthread.Name, napi.Kthread.PID)
 					_ = napi.Kthread.RetrieveAffinity()
 					if affinity := napi.Kthread.Affinity; affinity != nil {
-						fmt.Print(" CPU♥️ " + affinity.String())
+						fmt.Print(" CPU ♥️ " + affinity.String())
 					}
 				}
 				if irq := napi.IRQ; irq != nil {
@@ -184,7 +184,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 							irq.Kthread.Name, irq.Kthread.PID)
 						_ = irq.Kthread.RetrieveAffinity()
 						if affinity := irq.Kthread.Affinity; affinity != nil {
-							fmt.Print(" CPU♥️ " + affinity.String())
+							fmt.Print(" CPU ♥️ " + affinity.String())
 						}
 					}
 				} else {

@@ -8,11 +8,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"maps"
 	"net"
 	"strconv"
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/turtlefinder/v2"
 	"github.com/siemens/turtlefinder/v2/activator/podman"
 	"github.com/thediveo/cpus"
@@ -23,6 +23,8 @@ import (
 	"github.com/thediveo/whalewatcher/v2/watcher/cri"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 var titler = cases.Title(language.Und)
@@ -174,11 +176,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					// label.
 					var cc = *c
 					c = &cc
-					label := model.Labels{}
-					for k, v := range c.Labels {
-						label[k] = v
-					}
-					c.Labels = label
+					c.Labels = maps.Clone(c.Labels)
 					c.Labels[privilegedContainerLabelName] = ""
 				}
 				typ := v1ContainerType(c.Type)

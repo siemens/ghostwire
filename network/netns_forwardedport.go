@@ -60,12 +60,12 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 	})
 	if err != nil {
 		if conn != nil {
-			conn.CloseLasting()
+			_ = conn.CloseLasting()
 		}
 		slog.Error("cannot connect to netfilters", xslog.Error(err))
 		return
 	}
-	defer conn.CloseLasting()
+	defer func() { _ = conn.CloseLasting() }()
 	n.ForwardedPortsv4 = n.discoverForwardedPortsOfFamily(conn, nufftables.TableFamilyIPv4)
 	n.ForwardedPortsv6 = n.discoverForwardedPortsOfFamily(conn, nufftables.TableFamilyIPv6)
 }
@@ -254,7 +254,7 @@ func (n *NetworkNamespace) WhereIs(destIP net.IP) (*NetworkNamespace, Interface)
 	return nil, nil
 }
 
-// NifInBridgeNetwork returns the network Interface with the specified IP
+// NifInBridgedNetwork returns the network Interface with the specified IP
 // address connected somehow to the specified bridge; otherwise, nil.
 func (n *NetworkNamespace) NifInBridgedNetwork(bridge Interface, addr net.IP) Interface {
 	br, ok := bridge.Interface().(Bridge) // grmpf ... first get the proper Interface

@@ -147,7 +147,7 @@ var _ = Describe("Lord of the Rings", func() {
 
 		By("creating an XSK")
 		xskfd := Successful(unix.Socket(unix.AF_XDP, unix.SOCK_RAW, 0))
-		defer unix.Close(xskfd)
+		DeferCleanup(unix.Close, xskfd)
 
 		By("registering the umem with the XSK")
 		umemReg := unix.XDPUmemReg{
@@ -239,7 +239,7 @@ var _ = Describe("Lord of the Rings", func() {
 			Should(BeZero())
 
 		By("scheduling packets for transmission and picking up completed descriptors")
-		for i := 0; i < 32; i++ {
+		for range 32 {
 			txChunkAddr := Allright(descpool.Get())
 
 			copy(umem[txChunkAddr:], frame)

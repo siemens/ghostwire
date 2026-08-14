@@ -9,11 +9,11 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/thediveo/caps/v2"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/thediveo/caps"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/success"
 )
@@ -42,10 +42,9 @@ var _ = Describe("XDP sockets needing capabilities", func() {
 
 			runtime.LockOSThread() // never unlock, so afterwards the thread gets thrown away
 
-			taskOrigCaps := Successful(caps.OfThisTask())
-			droppedCaps := taskOrigCaps.Clone()
-			droppedCaps.Effective.Drop(caps.CAP_NET_RAW)
-			Expect(caps.SetForThisTask(droppedCaps)).To(Succeed(), "could not drop CAP_NET_RAW")
+			before := Successful(caps.OfCurrentTask())
+			Expect(before.Effective().Drop(caps.CAP_NET_RAW).ApplyToCurrentTask()).
+				Error().NotTo(HaveOccurred(), "could not drop CAP_NET_RAW")
 
 			// Please note that unix.Socket returns -1 for the fd instead of 0 in
 			// case of an error. This would trip Gomega's error return pattern
@@ -53,10 +52,11 @@ var _ = Describe("XDP sockets needing capabilities", func() {
 			_, err := unix.Socket(unix.AF_XDP, unix.SOCK_RAW, 0)
 			Expect(err).To(HaveOccurred())
 
-			Expect(caps.SetForThisTask(taskOrigCaps)).To(Succeed(), "cannot regain CAP_NET_RAW")
+			Expect(before.ApplyToCurrentTask()).
+				Error().NotTo(HaveOccurred(), "cannot regain CAP_NET_RAW")
 
 			xskfd := Successful(unix.Socket(unix.AF_XDP, unix.SOCK_RAW, 0))
-			unix.Close(xskfd)
+			Expect(unix.Close(xskfd)).To(Succeed())
 		}()
 
 		Eventually(done).Should(BeClosed())

@@ -11,10 +11,11 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/thediveo/caps/v2/errno"
+	"golang.org/x/sys/unix"
+
 	"github.com/siemens/ghostwire/v2/xsk/rings"
 	"github.com/siemens/ghostwire/v2/xsk/umem"
-	"github.com/thediveo/caps/errno"
-	"golang.org/x/sys/unix"
 )
 
 // Socket represents an XDP socket – often just termed “XSK” due to tight
@@ -135,7 +136,7 @@ func New(ifindex int, queueid int, opts ...Option) (xsk *Socket, err error) {
 			return xsk, err
 		}
 		xsk.umem = umem.NewPartner(umemsl)
-	} else {
+	} else /* xsk.opts.umemFd >= 0 */ {
 		// With an explicitly configured umem fd (yet not shared with another
 		// XSK), map the umem into memory.
 		umemsl, err := umem.Map(xsk.opts.umemFd)
@@ -278,13 +279,6 @@ func (xsk *Socket) Close() error {
 			xsk.completion.Close()
 		}
 		xsk.umem.Slice = nil // aid the GC
-	}
-	if xsk.opts.umemFd >= 0 {
-		err := unix.Close(xsk.opts.umemFd)
-		xsk.opts.umemFd = -1
-		if err != nil {
-			return err
-		}
 	}
 	if xsk.fd < 0 {
 		return nil

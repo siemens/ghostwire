@@ -92,11 +92,8 @@ func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
 				}
 			}
 
-			// Work around bug(s) #14733/#9295 in CodeQL scanning which
-			// currently block correct parsing using ParseUint(...,
-			// strconv.IntSize-1) and then casting to int.
-			fd, err := strconv.ParseInt(fdInfoEntry.Name(), 10, strconv.IntSize)
-			if err != nil || fd < 0 {
+			fd, err := strconv.ParseUint(fdInfoEntry.Name(), 10, strconv.IntSize)
+			if err != nil {
 				continue
 			}
 			taptunFd, err := unix.PidfdGetfd(pidfd, int(fd), 0)
@@ -104,12 +101,12 @@ func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
 				continue
 			}
 			netnsFd, err := getTapNetdevNetnsFd(taptunFd)
-			unix.Close(taptunFd)
+			_ = unix.Close(taptunFd)
 			if err != nil {
 				continue
 			}
 			netnsID, err := ops.NamespaceFd(netnsFd).ID()
-			unix.Close(netnsFd)
+			_ = unix.Close(netnsFd)
 			if err != nil {
 				continue
 			}
@@ -121,7 +118,7 @@ func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
 			})
 		}
 		if pidfd > 0 {
-			unix.Close(pidfd)
+			_ = unix.Close(pidfd)
 			pidfd = 0
 		}
 	}
@@ -137,7 +134,7 @@ func iff(path string) string {
 	if err != nil {
 		return ""
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -146,6 +143,7 @@ func iff(path string) string {
 			return line[len(iffEntry):]
 		}
 	}
+	_ = scanner.Err()
 	return ""
 }
 

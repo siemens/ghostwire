@@ -106,10 +106,10 @@ var _ = Describe("XDP processing netdevs", Ordered, func() {
 			By("opening data-link layer sockets")
 			txconn := Successful(packet.Listen(
 				&net.Interface{Index: macvlan1.Attrs().Index}, packet.Raw, experimentalEthType, nil))
-			defer txconn.Close()
+			DeferCleanup(txconn.Close)
 			rxconn := Successful(packet.Listen(
 				&net.Interface{Index: macvlan2.Attrs().Index}, packet.Raw, experimentalEthType, nil))
-			defer rxconn.Close()
+			DeferCleanup(rxconn.Close)
 
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
@@ -126,7 +126,7 @@ var _ = Describe("XDP processing netdevs", Ordered, func() {
 				}
 				frame := Successful(f.MarshalBinary())
 				toAddr := packet.Addr{HardwareAddr: mac2}
-				for i := 0; i < pings; i++ {
+				for range pings {
 					By("sending something...")
 					_, err := txconn.WriteTo(frame, &toAddr)
 					Expect(err).NotTo(HaveOccurred())

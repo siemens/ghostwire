@@ -6,6 +6,7 @@ package network
 
 import (
 	"log/slog"
+	"maps"
 	"net"
 	"sort"
 	"strings"
@@ -321,9 +322,7 @@ func (n *NifAttrs) ResolveRelations(allns NetworkNamespaces) {
 // assigned to this network interface. Added labels take precedence over
 // existing labels, replacing them in case of conflict.
 func (n *NifAttrs) AddLabels(labels model.Labels) {
-	for key, val := range labels {
-		n.Labels[key] = val
-	}
+	maps.Copy(n.Labels, labels)
 }
 
 // Sort sorts the list of Interface elements in-place.

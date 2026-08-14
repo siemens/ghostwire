@@ -9,8 +9,9 @@ import (
 	"net"
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 type ipvxForwardedPorts struct {

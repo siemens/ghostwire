@@ -11,17 +11,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/siemens/ghostwire/v2/internal/discover"
-	"github.com/siemens/ghostwire/v2/util"
 	"github.com/siemens/turtlefinder/v2"
 	"github.com/thediveo/lxkns/containerizer"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/whalewatcher/v2/watcher/moby"
 	"sigs.k8s.io/kind/pkg/cluster"
 
+	"github.com/siemens/ghostwire/v2/internal/discover"
+	"github.com/siemens/ghostwire/v2/util"
+
+	"github.com/onsi/gomega/types"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/types"
 	. "github.com/thediveo/success"
 )
 

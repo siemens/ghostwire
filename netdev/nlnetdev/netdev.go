@@ -6,14 +6,16 @@ package nlnetdev
 
 import (
 	"fmt"
+	"maps"
+	"slices"
+
+	"github.com/thediveo/lxkns/model"
 
 	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
-	"github.com/thediveo/lxkns/model"
-	"golang.org/x/exp/maps"
 )
 
-// Discover the netdevs with their queues, NAPIs (including kernel threads), and
-// IRQs.
+// Netdevs discovers the netdevs with their queues, NAPIs (including kernel
+// threads), and IRQs.
 //
 // The following bits (or sometimes chunks) of information are missing:
 //   - Netdevs in operstate DOWN are skipped by the Linux kernel's NETLINK netdev
@@ -99,5 +101,5 @@ func (c *Conn) Netdevs(irqkthreads rxtxlayout.IRQKthreadMap, procs model.Process
 			IRQ:  irq,
 		})
 	}
-	return maps.Values(ndevsmap), nil
+	return slices.Collect(maps.Values(ndevsmap)), nil
 }

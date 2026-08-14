@@ -78,15 +78,15 @@ var _ = Describe("Services", func() {
 
 	It("filters service network labels", func() {
 		s := make(Services, 1)
-		copier.CopyWithOption(&s[0], s1, copier.Option{DeepCopy: true, IgnoreEmpty: false})
+		_ = copier.CopyWithOption(&s[0], s1, copier.Option{DeepCopy: true, IgnoreEmpty: false})
 		s.FilterNetworkLabels([]string{"net-x"})
 		Expect(s[0].NetworkLabels).To(BeEmpty())
 
-		copier.CopyWithOption(&s[0], s1, copier.Option{DeepCopy: true, IgnoreEmpty: false})
+		_ = copier.CopyWithOption(&s[0], s1, copier.Option{DeepCopy: true, IgnoreEmpty: false})
 		s.FilterNetworkLabels([]string{"net-b"})
 		Expect(s[0].NetworkLabels).To(ConsistOf("net-b"))
 
-		copier.CopyWithOption(&s[0], s1, copier.Option{DeepCopy: true, IgnoreEmpty: false})
+		_ = copier.CopyWithOption(&s[0], s1, copier.Option{DeepCopy: true, IgnoreEmpty: false})
 		s.FilterNetworkLabels([]string{"net-b", "net-a", "net-x"})
 		Expect(s[0].NetworkLabels).To(ConsistOf("net-a", "net-b"))
 	})

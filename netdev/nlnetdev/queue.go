@@ -10,6 +10,7 @@ import (
 
 	"github.com/mdlayher/genetlink"
 	"github.com/mdlayher/netlink"
+
 	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
 )
 

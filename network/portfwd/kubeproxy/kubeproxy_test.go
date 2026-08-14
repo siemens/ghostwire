@@ -23,26 +23,30 @@ var _ = Describe("kube-proxy port forwarding", func() {
 	Context("detecting forwarded kube-proxy ports", func() {
 
 		It("doesn't crash", func() {
-			Expect(PortForwardings(nufftables.TableMap{}, nufftables.TableFamilyINet))
-			Expect(PortForwardings(nil, nufftables.TableFamilyIPv4))
-			Expect(PortForwardings(nufftables.TableMap{
-				nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{},
-			}, nufftables.TableFamilyIPv4))
-			Expect(PortForwardings(nufftables.TableMap{
-				nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{
-					ChainsByName: map[string]*nufftables.Chain{
-						kubeServicesChain: {
-							Rules: []nufftables.Rule{
-								{
-									Rule: &nftables.Rule{
-										Exprs: nil,
+			Expect(func() { _ = PortForwardings(nufftables.TableMap{}, nufftables.TableFamilyINet) }).NotTo(Panic())
+			Expect(func() { _ = PortForwardings(nil, nufftables.TableFamilyIPv4) }).NotTo(Panic())
+			Expect(func() {
+				_ = PortForwardings(nufftables.TableMap{
+					nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{},
+				}, nufftables.TableFamilyIPv4)
+			}).NotTo(Panic())
+			Expect(func() {
+				_ = PortForwardings(nufftables.TableMap{
+					nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{
+						ChainsByName: map[string]*nufftables.Chain{
+							kubeServicesChain: {
+								Rules: []nufftables.Rule{
+									{
+										Rule: &nftables.Rule{
+											Exprs: nil,
+										},
 									},
 								},
 							},
 						},
 					},
-				},
-			}, nufftables.TableFamilyIPv4))
+				}, nufftables.TableFamilyIPv4)
+			}).NotTo(Panic())
 		})
 
 		It("detects forwarded ports", func() {

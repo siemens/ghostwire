@@ -85,7 +85,7 @@ func NewNetworkNamespace(netns model.Namespace, tenantProcs []*model.Process) *N
 			xslog.Error(err))
 		return nil
 	}
-	defer nlh.Close()
+	defer func() { _ = nlh.Close() }()
 	// Discover the network interfaces in this network namespace, together with
 	// the addresses assigned to these network interfaces.
 	nns.discoverNetworkInterfaces(nlh)
@@ -314,7 +314,7 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 		slog.Error("cannot discover NSIDs", xslog.Error(err))
 		return
 	}
-	defer nlh.Close()
+	defer func() { _ = nlh.Close() }()
 	for _, peerNetns := range allnetns {
 		if peerNetns == n {
 			continue // don't try to ask for an nsid to yourself
@@ -406,7 +406,7 @@ func (n *NetworkNamespace) OpenNetlink() (*netlink.Handle, error) {
 		return err
 	}); err != nil {
 		if nlHandle != nil {
-			nlHandle.Close() // safety net
+			_ = nlHandle.Close() // safety net
 		}
 		return nil, err
 	}
@@ -416,7 +416,7 @@ func (n *NetworkNamespace) OpenNetlink() (*netlink.Handle, error) {
 // OpenInNetworkNamespace calls the supplied opener function in the context of
 // this network namespace.
 func (n *NetworkNamespace) OpenInNetworkNamespace(opener func() error) error {
-	ref := n.Namespace.Ref()
+	ref := n.Ref()
 	if len(ref) == 0 {
 		return fmt.Errorf("invalid empty netns reference")
 	}
@@ -497,7 +497,7 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 			var err error
 			if ethtoolFd, err = n.OpenEthtool(); err == nil { // TODO: improve error handling
 				physNifsPresent = true
-				defer unix.Close(ethtoolFd)
+				defer func() { _ = unix.Close(ethtoolFd) }()
 			}
 		}
 		nif.Nif().discoverBusAddress(ethtoolFd)

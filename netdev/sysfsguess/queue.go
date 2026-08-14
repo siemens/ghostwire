@@ -34,7 +34,7 @@ func NetdevQueues(sysfspath string, ndev *rxtxlayout.Netdev) error {
 		return fmt.Errorf("cannot determine queues of interface '%s', reason: %w",
 			ndev.Name, err)
 	}
-	defer queuesDir.Close()
+	defer func() { _ = queuesDir.Close() }()
 
 	queueEntries, err := queuesDir.ReadDir(-1)
 	if err != nil {

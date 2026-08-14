@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"sort"
@@ -175,6 +174,7 @@ func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm s
 			sox = append(sox, procsock)
 		}
 	}
+	_ = scanner.Err()
 	return sox
 }
 
@@ -234,7 +234,7 @@ func newProcessSocket(procnetline string, af int, proto int, sm socketToProcessM
 // discoverAllSockInodes returns a map of the inodes-to-PID for all sockets that
 // currently exist in the system.
 func discoverAllSockInodes(procroot string) socketToProcessMap {
-	procentries, err := ioutil.ReadDir(procroot)
+	procentries, err := os.ReadDir(procroot)
 	if err != nil {
 		return nil
 	}
@@ -247,7 +247,7 @@ func discoverAllSockInodes(procroot string) socketToProcessMap {
 		}
 		//
 		fdbasepath := procroot + "/" + procentry.Name() + "/fd"
-		fdentries, err := ioutil.ReadDir(fdbasepath)
+		fdentries, err := os.ReadDir(fdbasepath)
 		if err != nil {
 			continue
 		}

@@ -5,13 +5,14 @@
 package sysfsguess
 
 import (
-	"github.com/siemens/ghostwire/v2/innetns"
-	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
-	"github.com/siemens/ghostwire/v2/passedthrough"
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/innetns"
+	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
+	"github.com/siemens/ghostwire/v2/passedthrough"
 )
 
 // Discover returns netdev configuration information about the RX/TX queue
@@ -32,7 +33,7 @@ func Discover(allnetns *discover.Result) (rxtxlayout.NetdevsByNetns, error) {
 			if err != nil {
 				return err
 			}
-			defer nlHandle.Close()
+			defer func() { _ = nlHandle.Close() }()
 			links, err = nlHandle.LinkList()
 			return err
 		}); err != nil {

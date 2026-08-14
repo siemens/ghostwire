@@ -92,7 +92,7 @@ func init() {
 							if !ok {
 								return
 							}
-							conn.Conn.WriteMessage(websocket.TextMessage, []byte(verdict))
+							_ = conn.WriteMessage(websocket.TextMessage, []byte(verdict))
 						case <-ctx.Done():
 							return
 						}

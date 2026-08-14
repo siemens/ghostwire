@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"slices"
 	"strings"
 
 	monetw "github.com/moby/moby/api/types/network"
@@ -281,15 +280,4 @@ func linuxBridgeName(netw monetw.Network) string {
 		return brname // ...explicitly configured bridge nif name.
 	}
 	return "br-" + netw.ID[0:12] // ...auto-generated nif name.
-}
-
-// isPassthroughDriver returns true if the specified driver name is a well-known
-// (single) network interface passthrough/isolation driver.
-func isPassthroughDriver(driver string) bool {
-	return slices.ContainsFunc([]string{
-		"passthrough",
-		"iedge",
-	}, func(e string) bool {
-		return driver == e || strings.HasPrefix(driver, e+":")
-	})
 }

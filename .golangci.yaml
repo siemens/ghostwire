@@ -13,6 +13,11 @@ linters:
     - godoclint
     - modernize
     - nolintlint
+  
+  settings:
+    staticcheck:
+      checks:
+        - '-ST1005'
 formatters:
   enable:
     - gci

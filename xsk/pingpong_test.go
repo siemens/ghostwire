@@ -14,14 +14,15 @@ import (
 	"time"
 
 	"github.com/mdlayher/ethernet"
-	"github.com/siemens/ghostwire/v2/xsk/rings"
-	"github.com/siemens/ghostwire/v2/xsk/xdpnetdev"
 	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/notwork/link"
 	"github.com/thediveo/notwork/macvlan"
-	"github.com/thediveo/notwork/netns"
+	"github.com/thediveo/spacetest/netns"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/xsk/rings"
+	"github.com/siemens/ghostwire/v2/xsk/xdpnetdev"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -104,7 +105,7 @@ var _ = Describe("playing XDP socket ping-pong", func() {
 			WithoutRxRing(),
 			WithFillRingSize(fillSize),
 			WithCompletionRingSize(completionSize)))
-		defer xskPlayer1.Close()
+		DeferCleanup(xskPlayer1.Close)
 
 		xskPlayer2 := Successful(New(macvlan2.Attrs().Index, 0,
 			WithChunkAmount(chunkAmount),
@@ -113,13 +114,13 @@ var _ = Describe("playing XDP socket ping-pong", func() {
 			WithRxRingSize(rxSize),
 			WithFillRingSize(fillSize),
 			WithCompletionRingSize(completionSize)))
-		defer xskPlayer2.Close()
+		DeferCleanup(xskPlayer2.Close)
 
 		By("installing an XSK director into the second MACVLAN and registering the RX XDP socket")
 		netdev2 := Successful(xdpnetdev.NewByIndex(macvlan2.Attrs().Index))
-		defer netdev2.Release()
+		DeferCleanup(netdev2.Release)
 		Expect(netdev2.AddXsk(0, xskPlayer2.Fd())).To(Succeed())
-		defer netdev2.RemoveXsk(0)
+		DeferCleanup(netdev2.RemoveXsk, 0)
 
 		By("creating a template frame")
 		f := ethernet.Frame{
