@@ -15,6 +15,7 @@ import (
 	_ "github.com/thediveo/lxkns/cmd/cli/silent"
 	"github.com/thediveo/lxkns/cmd/cli/turtles"
 	"github.com/thediveo/netdb"
+	"github.com/thediveo/nonstd/without"
 
 	gostwire "github.com/siemens/ghostwire/v2"
 	"github.com/siemens/ghostwire/v2/network"
@@ -34,10 +35,6 @@ func newRootCmd() (rootCmd *cobra.Command) {
 		RunE: lsallnifs,
 	}
 	// Sets up the flags.
-	rootCmd.PersistentFlags().BoolP(
-		"debug", "d", false,
-		"show debug output")
-
 	rootCmd.PersistentFlags().BoolP(
 		"all", "x", false,
 		"everything, but the kitchen sink")
@@ -69,10 +66,10 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 	out := cmd.OutOrStdout()
 	_, _ = fmt.Fprint(out, "lsallnifs\n")
 
-	showAll, _ := cmd.PersistentFlags().GetBool("all")
-	showTenants, _ := cmd.PersistentFlags().GetBool("tenants")
-	showPorts, _ := cmd.PersistentFlags().GetBool("ports")
-	showAddrs, _ := cmd.PersistentFlags().GetBool("addresses")
+	showAll := without.Error(cmd.PersistentFlags().GetBool("all"))
+	showTenants := without.Error(cmd.PersistentFlags().GetBool("tenants"))
+	showPorts := without.Error(cmd.PersistentFlags().GetBool("ports"))
+	showAddrs := without.Error(cmd.PersistentFlags().GetBool("addresses"))
 	//showRoutes, _ := cmd.PersistentFlags().GetBool("routes")
 
 	ctx, cancel := context.WithCancel(context.Background())

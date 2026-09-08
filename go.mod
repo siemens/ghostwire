@@ -44,7 +44,7 @@ require (
 	github.com/thediveo/morbyd/v2 v2.2.4
 	github.com/thediveo/namspill v0.1.9
 	github.com/thediveo/netdb v1.1.4
-	github.com/thediveo/nonstd v0.21.0
+	github.com/thediveo/nonstd v0.22.0
 	github.com/thediveo/notwork v1.14.0
 	github.com/thediveo/nufftables v0.10.1
 	github.com/thediveo/osrelease v1.1.0
