@@ -7,7 +7,7 @@
             "protocol": "http"
         }
     },
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
     "features": {
         "ghcr.io/devcontainers/features/node:2": {},
         "ghcr.io/devcontainers/features/go:1": {},
@@ -19,7 +19,8 @@
         "ghcr.io/thediveo/devcontainer-features/lazygit:0": {},
         "ghcr.io/devcontainers/features/docker-in-docker:4": {
             "version": "latest",
-            "moby": false // go for the upstream Docker-CE
+            "moby": false, // go for the upstream Docker-CE
+            "iptablesSwitchAtRuntime": false
         },
         "ghcr.io/thediveo/devcontainer-features/nerdctl:0": {},
         "./ipnufftables":{},
