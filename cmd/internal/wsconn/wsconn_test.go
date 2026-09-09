@@ -122,7 +122,7 @@ var _ = Describe("web socket connections", func() {
 
 		By("watching the connection on the server side")
 		done := CloseWhenGone(wsconn.Watch)
-		DeferCleanup(wsconn.Close)
+		DeferCleanup(func() { _ = wsconn.Close() })
 		Eventually(log.String).Within(5 * time.Second).ProbeEvery(10 * time.Millisecond).
 			Should(MatchRegexp(`level=DEBUG msg="monitoring.*started"`))
 
@@ -192,7 +192,7 @@ var _ = Describe("web socket connections", func() {
 		clntconn, resp := Successful2R(
 			websocket.DefaultDialer.DialContext(ctx, wsurl(url), nil))
 		DeferCleanup(resp.Body.Close)
-		DeferCleanup(clntconn.Close)
+		DeferCleanup(func() { _ = clntconn.Close() })
 
 		By("checking the WSConn")
 		var res Pair[*WSConn, error]

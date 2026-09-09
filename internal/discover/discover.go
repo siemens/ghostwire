@@ -8,7 +8,6 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/siemens/turtlefinder/v2"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"
@@ -46,13 +45,9 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 		discoverednetns.Namespaces[model.NetNS],
 		discoverednetns.Processes,
 		discoverednetns.Containers)
-	engines := []*model.ContainerEngine{}
-	if overseer, ok := cizer.(turtlefinder.Overseer); ok {
-		engines = overseer.Engines()
-	}
 	slog.Debug("running gostwire decorators")
 	for _, decorateur := range plugger.Group[decorator.Decorate]().Symbols() {
-		decorateur(ctx, allnetns, discoverednetns.Processes, engines)
+		decorateur(ctx, allnetns, discoverednetns.Processes, discoverednetns.ContainerEngines)
 	}
 	slog.Debug("gostwire discovery finished")
 	return allnetns, discoverednetns

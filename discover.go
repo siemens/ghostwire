@@ -7,7 +7,6 @@ package gostwire
 import (
 	"context"
 
-	"github.com/siemens/turtlefinder/v2"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
@@ -34,9 +33,5 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 	// break the vicious import cycle which otherwise happens for some unit test
 	// needing discovery.
 	allnetns, nsdisco := discover.Discover(ctx, cizer, labels)
-	var engines []*model.ContainerEngine
-	if overseer, ok := cizer.(turtlefinder.Overseer); ok {
-		engines = overseer.Engines()
-	}
-	return DiscoveryResult{Netns: allnetns, Lxkns: nsdisco, Engines: engines}
+	return DiscoveryResult{Netns: allnetns, Lxkns: nsdisco, Engines: nsdisco.ContainerEngines}
 }

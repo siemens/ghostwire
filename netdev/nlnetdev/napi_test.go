@@ -14,6 +14,7 @@ import (
 	nl "github.com/mdlayher/netlink"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/notwork/netdevsim"
+	"github.com/thediveo/notwork/netdevsim/ensure"
 	"github.com/thediveo/spacetest"
 	"github.com/thediveo/spacetest/mntns"
 	"github.com/thediveo/spacetest/netns"
@@ -77,6 +78,10 @@ var _ = Describe("netdev NAPIs", func() {
 		BeforeEach(func() {
 			if os.Getuid() != 0 {
 				Skip("needs root")
+			}
+
+			if !ensure.Netdevsim() {
+				Skip("wants netdevsim")
 			}
 
 			goodgos := Goroutines()

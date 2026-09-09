@@ -83,7 +83,7 @@ var _ = Describe("dockernet decorator", func() {
 			Expect(allnetns).NotTo(BeEmpty())
 
 			By("decorating with proxy ports")
-			Decorate(ctx, allnetns, lxknsdisco.Processes, cizer.Engines())
+			Decorate(ctx, allnetns, lxknsdisco.Processes, cizer.Engines(ctx))
 
 			wl := lxknsdisco.Containers.FirstWithNameType(testWorkloadName, moby.Type)
 			Expect(wl).NotTo(BeNil())

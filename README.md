@@ -12,7 +12,7 @@
 <br/>
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
-![Coverage](https://img.shields.io/badge/Coverage-82.4%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-80.2%25-brightgreen)
 
 **G(h)ostwire** discovers the virtual (or not) network configuration inside
 _Linux_ hosts – and can be deployed as a REST service or consumed as a Go

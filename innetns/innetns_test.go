@@ -17,7 +17,6 @@ import (
 	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/spacetest/netns"
 	"github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -48,7 +47,6 @@ var _ = Describe("in a netns", func() {
 		}
 
 		netnsfd := netns.NewTransient()
-		DeferCleanup(unix.Close, netnsfd)
 
 		allns := discover.Namespaces(discover.WithStandardDiscovery())
 		newnetns := allns.Namespaces[model.NetNS][species.NamespaceIDfromInode(netns.Ino(netnsfd))]

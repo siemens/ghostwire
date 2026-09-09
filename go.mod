@@ -26,11 +26,11 @@ require (
 	github.com/moby/moby/api v1.56.0
 	github.com/moby/moby/client v0.6.0
 	github.com/ohler55/ojg v1.28.5
-	github.com/onsi/ginkgo/v2 v2.32.1
+	github.com/onsi/ginkgo/v2 v2.32.2
 	github.com/onsi/gomega v1.43.0
 	github.com/siemens/ieddata v1.4.0
 	github.com/siemens/mobydig v1.2.0
-	github.com/siemens/turtlefinder/v2 v2.3.1
+	github.com/siemens/turtlefinder/v2 v2.4.1
 	github.com/spf13/cobra v1.10.2
 	github.com/thediveo/caps/v2 v2.0.0
 	github.com/thediveo/clippy v0.2.2
@@ -40,7 +40,7 @@ require (
 	github.com/thediveo/fdooze v0.3.4
 	github.com/thediveo/go-plugger/v3 v3.2.2
 	github.com/thediveo/ioctl v0.9.5
-	github.com/thediveo/lxkns v0.47.1
+	github.com/thediveo/lxkns v0.48.0
 	github.com/thediveo/morbyd/v2 v2.2.4
 	github.com/thediveo/namspill v0.1.9
 	github.com/thediveo/netdb v1.1.4
@@ -57,7 +57,7 @@ require (
 	github.com/thediveo/whalewatcher/v2 v2.1.0
 	github.com/vishvananda/netlink v1.3.2-0.20260610182031-c05a276ed0e0
 	golang.org/x/sys v0.48.0
-	golang.org/x/text v0.41.0
+	golang.org/x/text v0.42.0
 	sigs.k8s.io/kind v0.33.0
 )
 
@@ -73,13 +73,13 @@ require (
 	github.com/containerd/cgroups/v3 v3.1.3 // indirect
 	github.com/containerd/console v1.0.5 // indirect
 	github.com/containerd/containerd/api v1.11.1 // indirect
-	github.com/containerd/containerd/v2 v2.3.4 // indirect
+	github.com/containerd/containerd/v2 v2.3.5 // indirect
 	github.com/containerd/continuity v0.5.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/fifo v1.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/containerd/platforms v1.0.0-rc.4 // indirect
+	github.com/containerd/platforms v1.0.0-rc.5 // indirect
 	github.com/containerd/plugin v1.1.0 // indirect
 	github.com/containerd/ttrpc v1.2.8 // indirect
 	github.com/containerd/typeurl/v2 v2.3.0 // indirect
@@ -166,17 +166,17 @@ require (
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/mod v0.39.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
-	google.golang.org/grpc v1.83.1 // indirect
+	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
-	k8s.io/cri-api v0.36.4 // indirect
+	k8s.io/cri-api v0.37.0 // indirect
 	modernc.org/libc v1.74.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
