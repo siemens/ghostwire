@@ -28,8 +28,6 @@ import {
     Grid,
 } from '@mui/material';
 
-import { gwDarkTheme, gwLightTheme } from './appstyles'
-
 import { Discovery, useDiscovery } from 'components/discovery'
 import Refresher from 'components/refresher'
 import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
@@ -59,6 +57,7 @@ import { useDynVars } from 'components/dynvars'
 import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
 import { FilterInput, FilterPattern } from 'components/filterinput'
+import { gwDarkTheme, gwLightTheme } from 'styles/themes'
 
 
 const SettingsViewIcon = SettingsIcon
@@ -213,7 +212,7 @@ const GhostwireApp = () => {
                             }}>
                                 <Grid container direction="column">
                                     <Grid item>Containees</Grid>
-                                    { canFilter &&
+                                    {canFilter &&
                                         <Grid item>
                                             <FilterInput
                                                 focusRef={focusRef}
@@ -314,12 +313,17 @@ const ThemedApp = () => {
                 </SnackbarProvider>
             </ThemeProvider>
         </StyledEngineProvider>
-    );
+    )
 }
 
+// Finally, the exported App component wraps the themed app component into a
+// Jotai state provider, to keep state provision and app theme switching
+// separated. And we also place the router high up here.
 const App = () => (
     <StateProvider>
-        <ThemedApp />
+        <Router basename={basename}>
+            <ThemedApp />
+        </Router>
     </StateProvider>
 )
 

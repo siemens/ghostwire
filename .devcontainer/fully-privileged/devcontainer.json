@@ -46,9 +46,12 @@
     },
     "postCreateCommand": {
         "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
-        "yawn": ". ${NVM_DIR}/nvm.sh && cd webui && corepack enable && CI=1 yarn set version latest",
+        "yawn": ". ${NVM_DIR}/nvm.sh && cd webui && corepack enable && corepack enable && corepack install",
         "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
-        "nft": "sudo bash -c 'nft add table ip4 && nft add table nat && nft add table filter && nft add chain nat POSTROUTING'"
+        "nft": "sudo bash -c 'nft add table ip4 && nft add table nat && nft add table filter && nft add chain nat POSTROUTING'",
+        "no-first-run-notice": "rm -f /workspaces/.codespaces/shared/first-run-notice.txt",
+        "enable-userns-aa": "echo 0 | sudo tee -a /proc/sys/kernel/apparmor_restrict_unprivileged_userns",
+        "enable-userns-clone": "echo 1 | sudo tee -a /proc/sys/kernel/unprivileged_userns_clone"
     },
     "customizations": {
         "vscode": {

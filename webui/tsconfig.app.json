@@ -3,15 +3,17 @@
     "baseUrl": "./src",
     "ignoreDeprecations": "6.0",
 
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2023",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
     "lib": [
-      "ES2023",
-      "dom"
+      "ES2022", 
+      "DOM", 
+      "DOM.Iterable"
     ],
     "module": "ESNext",
     "types": [
-      "node",
+      "react",
       "vite/client"
     ],
     "skipLibCheck": true,
