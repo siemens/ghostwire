@@ -1,5 +1,5 @@
 import JSBI from 'jsbi'
-import { AddressFamily, Busybox, Container, ContainerState, HostAddressBinding, IpAddress, NetworkInterface, NetworkNamespace, OperationalState, Pod, Process, Sandbox, SRIOVRole } from 'models/gw'
+import { AddressFamily, type Busybox, type Container, ContainerState, type HostAddressBinding, type IpAddress, type NetworkInterface, type NetworkNamespace, OperationalState, type Pod, type Process, type Sandbox, SRIOVRole } from 'models/gw'
 
 // Mock data needed here solely for illustrational purposes, to explain
 // Ghostwire's display to unsuspecting users.

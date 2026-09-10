@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { IpAddress } from "./address";
-import { PrimitiveContainee } from "./containee";
+import type { IpAddress } from "./address";
+import type { PrimitiveContainee } from "./containee";
 
 export interface TransportPort {
     /** state, such as listening, connecting, connected, et cetera. */

@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { type JSX } from 'react'
 
 import { MuiMarkdown } from 'components/muimarkdown'
 import { styled } from '@mui/material';
 import { SmartA } from 'components/smarta';
-import { MDXComponents } from 'mdx/types';
+import type { MDXComponents } from 'mdx/types';
 
 
 const GwMD = styled(MuiMarkdown)(({ theme }) => ({

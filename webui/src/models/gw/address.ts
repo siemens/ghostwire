@@ -5,11 +5,13 @@
 import { parse } from 'ipaddr.js'
 
 
-export enum AddressFamily {
-    MAC = 0, /** pseudo family for "hw" network addresses */
-    IPv4 = 2,
-    IPv6 = 10
-}
+export const AddressFamily = {
+    MAC: 0, /** pseudo family for "hw" network addresses */
+    IPv4: 2,
+    IPv6: 10,
+} as const
+
+export type AddressFamily = (typeof AddressFamily)[keyof typeof AddressFamily]
 
 export type AddressFamilySet = AddressFamily[]
 

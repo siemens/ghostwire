@@ -2,11 +2,11 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { isContainer, Pod, PrimitiveContainee, Project, sortContaineesByName } from './containee'
-import { ForwardedPort } from './forwardedports'
-import { NetworkInterfaces } from './nif'
-import { TransportPort } from './ports'
-import { IpRoute } from './route'
+import { isContainer, type Pod, type PrimitiveContainee, type Project, sortContaineesByName } from './containee'
+import type { ForwardedPort } from './forwardedports'
+import type { NetworkInterfaces } from './nif'
+import type { TransportPort } from './ports'
+import type { IpRoute } from './route'
 
 export type NetworkNamespaces = { [key: number]: NetworkNamespace }
 

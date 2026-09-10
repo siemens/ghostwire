@@ -4,15 +4,15 @@
 
 import JSBI from 'jsbi'
 
-import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
-import { NetworkInterface, NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, TapTunProcessor } from './nif'
-import { Process } from './process'
-import { AddressFamily, addressFamilyByName, IpAddress } from './address'
-import { IpRoute } from './route'
-import { NetworkNamespace, NetworkNamespaces } from './netns'
-import { PortUser, TransportPort } from './ports'
+import { type PrimitiveContainee, type Busybox, type Container, containerState, type HostAddressBinding, ContaineeTypes, ContainerFlavors, type Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
+import { type NetworkInterface, type NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, type TapTunProcessor } from './nif'
+import type { Process } from './process'
+import { AddressFamily, addressFamilyByName, type IpAddress } from './address'
+import type { IpRoute } from './route'
+import type { NetworkNamespace, NetworkNamespaces } from './netns'
+import type { PortUser, TransportPort } from './ports'
 import { isBusybox } from '.'
-import { ForwardedPort } from './forwardedports'
+import type { ForwardedPort } from './forwardedports'
 
 /* Ghostwire's engine v2 own label namespace for passing additional information. */
 export const GHOSTWIRE_LABEL_ROOT = 'gostwire/'

@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { IpAddress } from './address'
-import { firstContainee, NetworkNamespace } from './netns'
-import { PortUser } from './ports'
+import type { IpAddress } from './address'
+import { firstContainee, type NetworkNamespace } from './netns'
+import type { PortUser } from './ports'
 
 /**
  * The network interfaces of a network namespace are keyed by their so-called
@@ -74,10 +74,13 @@ export const isNetworkInterface = (nif: unknown): nif is NetworkInterface => {
         && (nif as NetworkInterface)?.index !== undefined
 }
 
-export enum TapTunMode {
-    TAP = 'tap',
-    TUN = 'tun',
-}
+export const TapTunMode = {
+    TAP: 'tap',
+    TUN: 'tun',
+} as const
+
+export type TapTunMode = (typeof TapTunMode)[keyof typeof TapTunMode]
+
 
 export type TapTunProcessor = PortUser
 
@@ -106,26 +109,30 @@ export interface VlanDetails {
  * functionality enabled. To ease handling, None represents both non-SR-IOV
  * network interfaces as well as network interfaces on which SR-IOV is disabled.
  */
-export enum SRIOVRole {
-    None = 0,
-    PF,
-    VF,
-}
+export const SRIOVRole = {
+    None: 0,
+    PF: 1,
+    VF: 2,
+} as const
+
+export type SRIOVRole = (typeof SRIOVRole)[keyof typeof SRIOVRole]
 
 /**
  * The operational states of network interfaces as reported via RTNETLINK and
  * passed on by Ghostwire. Please note that some operational states are not used
  * by Linux kernels, such as Dormant, Testing, and NotPresent.
  */
-export enum OperationalState {
-    Unknown = 'UNKNOWN', /** unknown is considered to be "running", like "up". */
-    NotPresent = 'NOTPRESENT',
-    Down = 'DOWN',
-    Up = 'UP', /** considered to be "running", like "unknown". */
-    LowerLayerDown = 'LOWERLAYERDOWN',
-    Dormant = 'DORMANT',
-    Testing = 'TESTING'
-}
+export const OperationalState = {
+    Unknown: 'UNKNOWN', /** unknown is considered to be "running", like "up". */
+    NotPresent: 'NOTPRESENT',
+    Down: 'DOWN',
+    Up: 'UP', /** considered to be "running", like "unknown". */
+    LowerLayerDown: 'LOWERLAYERDOWN',
+    Dormant: 'DORMANT',
+    Testing: 'TESTING'
+} as const
+
+export type OperationalState = (typeof OperationalState)[keyof typeof OperationalState]
 
 /**
  * Returns true, if the specified network interface is operational in some

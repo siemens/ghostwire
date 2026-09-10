@@ -2,15 +2,15 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { MouseEvent, ReactNode, useRef, useState } from 'react'
-import { useMatch, useNavigate } from 'react-router-dom'
+import React, { type MouseEvent, type ReactNode, useEffect, useRef, useState } from 'react'
+import { useLocation, useMatch, useNavigate } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
-import { MuiMarkdown, MuiMarkdownProps } from 'components/muimarkdown'
+import { MuiMarkdown, type MuiMarkdownProps } from 'components/muimarkdown'
 import { ChapterSkeleton } from 'components/chapterskeleton'
 import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
-import { MDXContent } from 'mdx/types';
+import type { MDXComponents, MDXContent } from 'mdx/types';
 
 const navigatorBorder = 1 // px
 const navigatorLeftPadding = 4 // px
@@ -55,9 +55,18 @@ const NavigatorButton = styled(IconButton)(({ theme }) => ({
     },
 }))
 
-const Markdowner = styled(MuiMarkdown)(() => ({
+const Markdowner = styled(MuiMarkdown)(({ theme }) => ({
     // Compensate for the height of the sticky toc navigator button.
     marginTop: '-24px',
+
+    '& .MuiSvgIcon-root.avatar': {
+        verticalAlign: 'middle',
+        fontSize: 'calc(175% + 2px)',
+        backgroundColor: theme.alpha(theme.palette.grey[400], 0.25),
+        padding: 4,
+        borderRadius: '50%',
+    },
+
 }))
 
 const Padding = styled('div')(({ theme }) => ({
@@ -86,7 +95,7 @@ export interface HelpViewerChapter {
     /** chapter title to show in ToC and bottom navigation. */
     title: string
     /** the help chapter contents. */
-    chapter: (props: unknown) => ReactNode
+    chapter: (props: Record<string, unknown>) => ReactNode
     /** 
      * optional chapter slug, relative to base of help viewer path; if left
      * undefined, then defaults to the "slugified" chapter title, where the
@@ -119,7 +128,6 @@ const findChapter = (slug: string, chapters: HelpViewerChapter[]) => {
     return chidx >= 0 ? chidx : 0
 }
 
-
 export interface HelpViewerProps {
     /** 
      * list of chapters, with title and chapter fields, and an optional slug
@@ -137,25 +145,27 @@ export interface HelpViewerProps {
      * [MuiMarkdown](#MuiMarkdown). And yes, I've worked for too long with Go
      * interfaces...
      */
-    markdowner?: (props: MuiMarkdownProps) => JSX.Element
+    markdowner?: (props: MuiMarkdownProps) => React.JSX.Element
     /** shortcodes, that is, available components. */
-    shortcodes?: { [key: string]: React.ComponentType<unknown> }
+    shortcodes?: MDXComponents
     /** inline styles. */
     style?: React.CSSProperties
 }
 
 /**
- * A multi-page help view component with "chapter" navigation. The rendered
- * chapter (in MDX) is selected via the current route. When selecting a
- * different chapter, the component will change the route in order to show it.
+ * `HelpViewer` is a multi-page help view component with "chapter" navigation.
+ * The rendered chapter (in MDX) is selected via the current route. When
+ * selecting a different chapter, the component will change the route in order
+ * to show it.
  *
  * Chapter navigation:
  *
  * - previous/next chapter buttons at the end of each chapter.
  * - ToC navigation button which pops up a ToC menu.
  *
- * This help component defaults to using the [MuiMarkdown](#muimarkdown) MDX
- * renderer, which uses Material-UI typography.
+ * This help component defaults to using the
+ * [MuiMarkdown](?path=/docs/universal-muimarkdown--description) MDX renderer,
+ * which uses Material-UI typography.
  *
  * > **Important:** the ToC navigation button is sticky. Now for it to correctly
  * > stick in place as percepted by users as opposed to what the DOM does, the
@@ -171,6 +181,9 @@ export interface HelpViewerProps {
  * > Works!](https://medium.com/@elad/css-position-sticky-how-it-really-works-54cd01dc2d46)
  * > for some helpful insights. It actually all does make sense, but you need to
  * > dive into it.
+ *
+ * This component is licensed under the [Apache License, Version
+ * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
  */
 export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style }: HelpViewerProps) => {
     // Determine the help chapter to show on the basis of the current route.
@@ -182,7 +195,7 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
     // Renders a chapter button linking to a specific chapter, or nothing if the
     // chapter index is out of range. Changes the route when clicked (taking the
     // base into account).
-    const ChapterButton = ({ chapterIndex }: {chapterIndex: number}) => {
+    const chapterButton = (chapterIndex: number) => {
         if (chapterIndex < 0 || chapterIndex >= chapters.length) {
             return null
         }
@@ -199,28 +212,33 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         </Button>)
     }
 
+    const location = useLocation()
+    const canvas = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        canvas.current?.parentElement?.scrollTo({ top: 0, left: 0 })
+    }, [location])
 
     // Anchor state for the ToC navigation popup menu.
-    const [tocOpen, setTocOpen] = useState(false)
-    const anchorEl = useRef<HTMLButtonElement>(null) // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/35572#issuecomment-498242139
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     // Pop up the table of contents menu...
-    const handleIconClick = () => {
-        setTocOpen(true)
+    const handleNavButtonClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget)
     }
 
     // close popup menu, change route...
-    const handleMenuItemClick = (event: MouseEvent<HTMLElement>, index: number) => {
+    const handleMenuItemClick = (_event: MouseEvent<HTMLElement>, index: number) => {
         navigate(`${baseroute || '/'}/${slugify(chapters[index])}`)
-        setTocOpen(false)
+        setAnchorEl(null)
     }
 
     // just close that popup menu!
     const handleClose = () => {
-        setTocOpen(false)
+        setAnchorEl(null)
     }
 
-    return <HelpCanvas style={style}>
+    return <HelpCanvas style={style} ref={canvas}>
         {/* 
             the ToC navigation/navigator button is sticky, but of course in the
             *outer* "canvas" div. In consequence, the outer canvas must not
@@ -228,18 +246,17 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
         */}
         <Tooltip title="open table of contents">
             <NavigatorButton
-                ref={anchorEl}
                 size="small"
-                onClick={handleIconClick}
+                onClick={handleNavButtonClick}
             >
                 <TocIcon />
             </NavigatorButton>
         </Tooltip>
         <Menu
             id="help-viewer-menu"
-            anchorEl={anchorEl.current}
+            anchorEl={anchorEl}
             keepMounted
-            open={tocOpen}
+            open={!!anchorEl}
             onClose={handleClose}
         >
             {chapters.map((chapter, index) => (
@@ -257,15 +274,15 @@ export const HelpViewer = ({ chapters, baseroute, markdowner, shortcodes, style 
                 as={markdowner || MuiMarkdown}
                 mdx={chapters[currentChapterIndex].chapter as MDXContent}
                 fallback={
-                    <Box sx={{ marginTop: '-24px' }} m={1}>
-                        <ChapterSkeleton sx={{width: '15rem'}}/>
+                    <Box sx={{ marginTop: '-24px', m: 1 }}>
+                        <ChapterSkeleton sx={{ width: '15rem' }} />
                     </Box>
                 }
                 shortcodes={shortcodes}
             />
             <Divider />
-            <ChapterButton chapterIndex={currentChapterIndex - 1} />
-            <ChapterButton chapterIndex={currentChapterIndex + 1} />
+            {chapterButton(currentChapterIndex - 1)}
+            {chapterButton(currentChapterIndex + 1)}
             <div style={{ clear: 'both' }}></div>
         </Padding>
     </HelpCanvas>

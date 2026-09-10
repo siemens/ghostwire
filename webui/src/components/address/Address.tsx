@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react'
 import clsx from 'clsx'
 
-import { AddressFamily, IpAddress } from 'models/gw'
+import { AddressFamily, type IpAddress } from 'models/gw'
 import { IpAddressAndPrefix, IpAddressLifetime } from './IpAddressAndPrefix'
 import { TooltipWrapper } from 'utils/tooltipwrapper'
 import MacAddress from 'icons/addresses/MacAddress'

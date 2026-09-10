@@ -6,7 +6,7 @@ import React from 'react'
 
 import { styled, Tooltip } from '@mui/material'
 
-import { AddressFamily, IpAddress, IpRoute, NetworkInterface, RouteTableLocal } from 'models/gw'
+import { AddressFamily, type IpAddress, type IpRoute, type NetworkInterface, RouteTableLocal } from 'models/gw'
 import { Address } from 'components/address'
 import { NifBadge } from 'components/nifbadge'
 import RouteVia from 'icons/routes/RouteVia'
