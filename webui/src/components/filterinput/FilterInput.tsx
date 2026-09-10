@@ -103,7 +103,7 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, o
         debouncedOnChange(newPattern, filterOptions)
     }
 
-    const handleOptions = (event: React.MouseEvent<HTMLElement>, newopts: string[]) => {
+    const handleOptions = (_event: React.MouseEvent<HTMLElement>, newopts: string[]) => {
         setFilterOptions(newopts)
         debouncedOnChange(pattern, newopts)
     }
@@ -138,15 +138,17 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, o
             error={regexpError}
             onChange={handleInput}
             onKeyDown={handleEnter}
-            InputProps={{
-                spellCheck: false,
-                endAdornment: <IconButton
-                    sx={{ visibility: pattern && 'visible' || 'hidden' }}
-                    onClick={handleClear}
-                    size="small"
-                >
-                    <Clear fontSize="small" />
-                </IconButton>
+            slotProps={{
+                input: {
+                    spellCheck: false,
+                    endAdornment: <IconButton
+                        sx={{ visibility: pattern && 'visible' || 'hidden' }}
+                        onClick={handleClear}
+                        size="small"
+                    >
+                        <Clear fontSize="small" />
+                    </IconButton>
+                },
             }}
         />
         <ToggleButtonGroup

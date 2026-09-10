@@ -49,14 +49,14 @@ import { NetnsDetails as NetnsDetailsView } from 'views/netnsdetails'
 import { ContaineeNavigator } from 'components/containeenavigator'
 import { useScrollToHash } from 'hooks/scrolltohash'
 import { scrollIdIntoView } from 'utils'
-import { emptyNetns, NetworkNamespace } from 'models/gw'
+import { emptyNetns, type NetworkNamespace } from 'models/gw'
 import { Brand } from 'components/brand'
 import { BrandIcon } from 'components/brandicon'
 
 import { useDynVars } from 'components/dynvars'
 import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
-import { FilterInput, FilterPattern } from 'components/filterinput'
+import { FilterInput, type FilterPattern } from 'components/filterinput'
 import { gwDarkTheme, gwLightTheme } from 'styles/themes'
 
 
@@ -134,7 +134,14 @@ const GhostwireApp = () => {
     useScrollToHash(scrollIdIntoView)
 
     return (
-        <Box width="100vw" height="100vh" display="flex" flexDirection="column">
+        <Box
+            sx={{
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <AppBarDrawer
                 drawerwidth={360}
 
@@ -210,10 +217,10 @@ const GhostwireApp = () => {
                                 event.stopPropagation()
                                 event.preventDefault()
                             }}>
-                                <Grid container direction="column">
-                                    <Grid item>Containees</Grid>
+                                <Grid container sx={{ flexDirection: "column" }}>
+                                    <Grid>Containees</Grid>
                                     {canFilter &&
-                                        <Grid item>
+                                        <Grid>
                                             <FilterInput
                                                 focusRef={focusRef}
                                                 filterPattern={{
@@ -240,7 +247,7 @@ const GhostwireApp = () => {
             />
 
             {/* main content area */}
-            <Box m={0} flex={1} overflow="auto">
+            <Box sx={{ m: 0, flex: 1, overflow: "auto" }}>
                 <Routes>
                     <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
                     <Route path="/w" element={<NetnsWiring ref={snapshotRef} />} />
