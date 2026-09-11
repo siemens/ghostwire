@@ -1,2 +1,1 @@
-export * from './IpAddressAndPrefix'
-export * from './Address'
+export { Address } from './Address'

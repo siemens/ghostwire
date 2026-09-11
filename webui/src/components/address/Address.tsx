@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { forwardRef } from 'react'
+import React from 'react'
 import clsx from 'clsx'
 
 import { AddressFamily, type IpAddress } from 'models/gw'
@@ -117,7 +117,7 @@ export interface AddressProps {
  * Address lifetimes are formatted as "days hh:mm:ss", with at most seconds
  * resolution.
  */
-export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) => {
+export const Address = (props: AddressProps, ref: React.ForwardedRef<HTMLSpanElement>) => {
 
     const {
         address, route, plain, familyicon, className, notooltip, nofamilyicon,
@@ -178,5 +178,5 @@ export const Address = forwardRef<HTMLSpanElement, AddressProps>((props, ref) =>
             }
         </AddressContainer>
     )
-})
+}
 Address.displayName = "Address"

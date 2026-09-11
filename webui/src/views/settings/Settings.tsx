@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
-
 import { atom, useAtom, useSetAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
@@ -18,7 +16,7 @@ import {
     ListItemText,
     MenuItem,
     Select,
-    SelectChangeEvent,
+    type SelectChangeEvent,
     styled,
     Switch as Toggle,
     Typography,

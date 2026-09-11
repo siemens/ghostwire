@@ -58,7 +58,7 @@ export interface FilterInputProps {
      * an optional React reference (object) that will be set to the text input's
      * HTML input field. 
      */
-    focusRef?: React.RefObject<HTMLDivElement>
+    focusRef?: React.RefObject<HTMLDivElement | null>
 }
 
 export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, onEnter }: FilterInputProps) => {

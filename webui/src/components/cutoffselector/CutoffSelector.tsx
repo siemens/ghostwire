@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
-import { PrimitiveAtom, useAtom } from 'jotai'
-import { MenuItem, Select, SelectChangeEvent } from '@mui/material'
+import { type PrimitiveAtom, useAtom } from 'jotai'
+import { MenuItem, Select, type SelectChangeEvent } from '@mui/material'
 import useId from 'hooks/id/id'
 
 

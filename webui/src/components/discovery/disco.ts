@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { atom, useAtom, Setter } from 'jotai'
+import { atom, useAtom, type Setter } from 'jotai'
 
-import { Discovery as DiscoveryResult, fromjson } from 'models/gw'
+import { type Discovery as DiscoveryResult, fromjson } from 'models/gw'
 import { showIEAppIconsAtom } from 'views/settings'
 
 /** Internal discovery result state; can be used only via useDiscovery(). */

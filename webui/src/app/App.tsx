@@ -72,6 +72,11 @@ const refresherIntervals = [
     { interval: 5 * 60 * 1000 },
 ]
 
+interface GwDrawerProps {
+    closeDrawer: () => void
+    focusRef: React.RefObject<HTMLDivElement | null>
+}
+
 /**
  * The `GhostwireApp` component renders the general app layout without thinking
  * about providers for routing, themes, discovery, et cetera. So this component
@@ -131,6 +136,85 @@ const GhostwireApp = () => {
         if (filterRegexp != fp.isRegexp) setFilterRegexp(fp.isRegexp)
     }
 
+    const GwDrawer = ({ closeDrawer, focusRef }: GwDrawerProps) => {
+
+        return <>
+            <List onClick={closeDrawer}>
+                <DrawerLinkItem
+                    key="wiring"
+                    icon={<WiringViewIcon />}
+                    label="Wiring"
+                    path="/w"
+                />
+                <DrawerLinkItem
+                    key="openhouse"
+                    icon={<OpenHouseIcon />}
+                    label="Open & Forwarding Host Ports"
+                    path="/lochla"
+                />
+                <DrawerLinkItem
+                    key="details"
+                    icon={<NetnsViewIcon />}
+                    label="Network Namespace Details"
+                    path="/n"
+                />
+                <DrawerLinkItem
+                    key="settings"
+                    icon={<SettingsViewIcon />}
+                    label="Settings"
+                    path="/settings"
+                />
+                <DrawerLinkItem
+                    key="help"
+                    icon={<HelpIcon />}
+                    label="Help"
+                    path="/help/gw"
+                />
+                <DrawerLinkItem
+                    key="about"
+                    icon={<AboutViewIcon />}
+                    label="About"
+                    path="/about"
+                />
+            </List>
+
+            {/* show containee navigation only in wiring and detail views */}
+            {listContainees && <>
+                <Divider />
+                <List
+                    subheader={<ListSubheader onClick={(event) => {
+                        event.stopPropagation()
+                        event.preventDefault()
+                    }}>
+                        <Grid container sx={{ flexDirection: "column" }}>
+                            <Grid>Containees</Grid>
+                            {canFilter &&
+                                <Grid>
+                                    <FilterInput
+                                        focusRef={focusRef}
+                                        filterPattern={{
+                                            pattern: filterPattern,
+                                            isCaseSensitive: filterCase,
+                                            isRegexp: filterRegexp,
+                                        }}
+                                        onChange={onFilterChangeHandler}
+                                        onEnter={closeDrawer}
+                                    />
+                                </Grid>
+                            }
+                        </Grid>
+                    </ListSubheader>}
+                    onClick={closeDrawer}
+                >
+                    <ContaineeNavigator
+                        allnetns={discovery.networkNamespaces}
+                        filterEmpty={!showEmptyNetns}
+                    />
+                </List>
+            </>}
+        </>
+    }
+
     useScrollToHash(scrollIdIntoView)
 
     return (
@@ -169,81 +253,7 @@ const GhostwireApp = () => {
                         <Brand />
                     </Typography>
                 </>}
-                drawer={(closeDrawer, focusRef) => <>
-                    <List onClick={closeDrawer}>
-                        <DrawerLinkItem
-                            key="wiring"
-                            icon={<WiringViewIcon />}
-                            label="Wiring"
-                            path="/w"
-                        />
-                        <DrawerLinkItem
-                            key="openhouse"
-                            icon={<OpenHouseIcon />}
-                            label="Open & Forwarding Host Ports"
-                            path="/lochla"
-                        />
-                        <DrawerLinkItem
-                            key="details"
-                            icon={<NetnsViewIcon />}
-                            label="Network Namespace Details"
-                            path="/n"
-                        />
-                        <DrawerLinkItem
-                            key="settings"
-                            icon={<SettingsViewIcon />}
-                            label="Settings"
-                            path="/settings"
-                        />
-                        <DrawerLinkItem
-                            key="help"
-                            icon={<HelpIcon />}
-                            label="Help"
-                            path="/help/gw"
-                        />
-                        <DrawerLinkItem
-                            key="about"
-                            icon={<AboutViewIcon />}
-                            label="About"
-                            path="/about"
-                        />
-                    </List>
-
-                    {/* show containee navigation only in wiring and detail views */}
-                    {listContainees && <>
-                        <Divider />
-                        <List
-                            subheader={<ListSubheader onClick={(event) => {
-                                event.stopPropagation()
-                                event.preventDefault()
-                            }}>
-                                <Grid container sx={{ flexDirection: "column" }}>
-                                    <Grid>Containees</Grid>
-                                    {canFilter &&
-                                        <Grid>
-                                            <FilterInput
-                                                focusRef={focusRef}
-                                                filterPattern={{
-                                                    pattern: filterPattern,
-                                                    isCaseSensitive: filterCase,
-                                                    isRegexp: filterRegexp,
-                                                }}
-                                                onChange={onFilterChangeHandler}
-                                                onEnter={closeDrawer}
-                                            />
-                                        </Grid>
-                                    }
-                                </Grid>
-                            </ListSubheader>}
-                            onClick={closeDrawer}
-                        >
-                            <ContaineeNavigator
-                                allnetns={discovery.networkNamespaces}
-                                filterEmpty={!showEmptyNetns}
-                            />
-                        </List>
-                    </>}
-                </>}
+                drawer={GwDrawer}
             />
 
             {/* main content area */}
@@ -279,32 +289,42 @@ const ThemedApp = () => {
         ? (prefersDarkMode ? 'dark' : 'light')
         : (theme === THEME_DARK ? 'dark' : 'light')
 
-    const appTheme = React.useMemo(() => createTheme({
-        components: {
-            MuiSelect: {
-                defaultProps: {
-                    variant: 'standard', // MUI v4 default.
+    const appTheme = React.useMemo(() => {
+        const theme = createTheme({
+            components: {
+                MuiSelect: {
+                    defaultProps: {
+                        variant: 'standard', // MUI v4 default.
+                    },
                 },
-            },
-            MuiCssBaseline: {
-                styleOverrides: {
-                    body: {
-                        fontSize: '0.875rem', // ...go back to typography body2 font size as in MUI v4.
-                        lineHeight: 1.43,
-                        letterSpacing: '0.01071em',
+                MuiCssBaseline: {
+                    styleOverrides: {
+                        body: {
+                            fontSize: '0.875rem', // ...go back to typography body2 font size as in MUI v4.
+                            lineHeight: 1.43,
+                            letterSpacing: '0.01071em',
+                        },
                     },
                 },
             },
-        },
-        palette: {
-            mode: themeMode,
-            primary: { main: '#009999' },
-            secondary: { main: '#ffc400' },
-        },
-    }, themeMode === 'dark' ? gwDarkTheme : gwLightTheme), [themeMode])
-
-    appTheme.palette.containee.privileged.contrastText =
-        appTheme.palette.getContrastText(appTheme.palette.containee.privileged.main)
+            palette: {
+                mode: themeMode,
+                primary: { main: '#009999' },
+                secondary: { main: '#ffc400' },
+            },
+        }, themeMode === 'dark' ? gwDarkTheme : gwLightTheme)
+        const privileged = theme.palette.containee.privileged
+        return createTheme(theme, {
+            palette: {
+                containee: {
+                    privileged: {
+                        ...privileged,
+                        contrastText: theme.palette.getContrastText(privileged.main)
+                    }
+                }
+            }
+        })
+    }, [themeMode])
 
     return (
         <StyledEngineProvider injectFirst>

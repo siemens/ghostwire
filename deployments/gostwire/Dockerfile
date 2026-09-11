@@ -12,13 +12,14 @@ ARG ALPINE_VERSION=3.24
 ARG ALPINE_PATCH=1
 ARG GO_VERSION=1.26.5
 ARG NODE_VERSION=22
+ARG XX_VERSION=1.9.0
 
 # Go build settings
 ARG LDFLAGS="-s -w -extldflags=-static"
 ARG TAGS="osusergo,netgo,sqlite_omit_load_extension"
 
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
-FROM --platform=${BUILDPLATFORM} tonistiigi/xx AS cc-helpers
+FROM --platform=${BUILDPLATFORM} tonistiigi/xx:${XX_VERSION} AS cc-helpers
 
 # -- 1st stage ---------------------------------------------------------------
 #
@@ -102,9 +103,9 @@ RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     xx-go build -v \
-        -tags="${TAGS}" \
-        -ldflags="${LDFLAGS}" \
-        -o /gostwire ./cmd/gostwire && \
+    -tags="${TAGS}" \
+    -ldflags="${LDFLAGS}" \
+    -o /gostwire ./cmd/gostwire && \
     xx-verify --static /gostwire
 
 # -- 2nd stage ---------------------------------------------------------------
@@ -120,16 +121,19 @@ RUN yarn config set nodeLinker node-modules
 COPY --from=webappsrc \
     package.json \
     yarn.lock \
-    .eslintrc.cjs \
+    .eslintignore \
+    eslint.config.js \
     tsconfig.json \
+    tsconfig.app.json \
     tsconfig.node.json \
     vite.config.ts \
+    yarn.lock \
     index.html \
     ghostwire.svg \
-        ./
+    ./
 
-RUN yarn workspaces focus --production
-RUN yarn eslint --init
+#RUN yarn workspaces focus --production
+RUN yarn
 
 # stage 2.2 only now copy in the web ui completely and build the optimized
 # static artefacts.
@@ -160,9 +164,9 @@ COPY --from=webui /webui/build/ ./webui/build/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     xx-go build -v \
-        -tags="${TAGS},webui" \
-        -ldflags="${LDFLAGS}" \
-        -o /gostwire ./cmd/gostwire && \
+    -tags="${TAGS},webui" \
+    -ldflags="${LDFLAGS}" \
+    -o /gostwire ./cmd/gostwire && \
     xx-verify --static /gostwire
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override,cap_net_raw,cap_net_admin+ep" /gostwire
 

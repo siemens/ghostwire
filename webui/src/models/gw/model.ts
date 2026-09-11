@@ -4,7 +4,7 @@
 
 import JSBI from 'jsbi'
 
-import { type PrimitiveContainee, type Busybox, type Container, containerState, type HostAddressBinding, ContaineeTypes, ContainerFlavors, type Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
+import { type PrimitiveContainee, type Busybox, type Container, containerState, type HostAddressBinding, ContaineeTypes, ContainerFlavors, type Pod, isContainer, type Project, type NetworkNamespaceOrProject } from './containee'
 import { type NetworkInterface, type NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, type TapTunProcessor } from './nif'
 import type { Process } from './process'
 import { AddressFamily, addressFamilyByName, type IpAddress } from './address'
