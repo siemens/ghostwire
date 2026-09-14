@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo, type LegacyRef, useEffect } from 'react'
+import React, { useState, useRef, useMemo, type LegacyRef, useEffect, type RefObject } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
@@ -303,21 +303,21 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     // the wires in those circumstances, we simply derive a "layout token"
     // changing whenever the dimensions of the content change (as this then can
     // shuffle the wired network interfaces around) and we need to follow.
-    const contentref = useRef<HTMLElement>(null)
-    const contentRect = useResizeObserver(contentref, 100/*ms*/)
-    const layoutToken = contentRect 
-        ? `${contentRect.width}x${contentRect.height}-${generation}` 
+    const contentref = useRef<HTMLDivElement>(null)
+    const contentRect = useResizeObserver(contentref as RefObject<HTMLElement>, 100/*ms*/)
+    const layoutToken = contentRect
+        ? `${contentRect.width}x${contentRect.height}-${generation}`
         : generation.toString()
 
     const contentMemo = useMemo(() => (
-        <ContentPane id={nifContainerDomId} ref={contentref as LegacyRef<HTMLDivElement>}>
+        <ContentPane id={nifContainerDomId} ref={contentref}>
             {children}
         </ContentPane>
     ), [nifContainerDomId, children])
 
     useEffect(() => {
         prevnetnsref.current = netns
-        setGeneration(generation+1)
+        setGeneration(generation + 1)
     }, [netns])
 
     const wires = extractWiring(netns, domIdBase)
