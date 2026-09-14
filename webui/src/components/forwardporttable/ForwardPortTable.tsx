@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { ForwardedPort } from 'models/gw/forwardedports'
+import type { ForwardedPort } from 'models/gw/forwardedports'
 import React, { useEffect, useState } from 'react'
 
 import {
@@ -18,7 +18,7 @@ import {
 
 import ProcessIcon from 'icons/Process'
 
-import { AddressFamily, AddressFamilySet, Containee, containeeDisplayName, isContainer, isPod, netnsId, NetworkNamespace, orderAddresses, PortUser, PrimitiveContainee } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, type Containee, containeeDisplayName, isContainer, isPod, netnsId, type NetworkNamespace, orderAddresses, type PortUser, type PrimitiveContainee } from 'models/gw'
 import { ContaineeIcon } from 'utils/containeeicon'
 import { ContaineeBadge } from 'components/containeebadge'
 import { scrollIdIntoView } from 'utils'

@@ -2,11 +2,11 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import ClearIcon from '@mui/icons-material/Clear'
 
-import { AddressFamily, AddressFamilySet, PrimitiveContainee, containeeDescription, Container, ContainerState, containerStateString, isSandbox, containeeDisplayName, isContainer, orderAddresses, hiddenLabel } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, type PrimitiveContainee, containeeDescription, type Container, ContainerState, containerStateString, isSandbox, containeeDisplayName, isContainer, orderAddresses, hiddenLabel } from 'models/gw'
 import { Address } from 'components/address'
 import StoppedState from 'icons/containeestates/StoppedState'
 import PausedState from 'icons/containeestates/PausedState'

@@ -7,7 +7,7 @@ import clsx from 'clsx'
 
 import { Box, Button, styled, Tooltip } from '@mui/material'
 
-import { containeeDescription, containeeState, ContainerState, containerStateString, Containee, containeeFullName, isPrivilegedContainer, isElevatedContainer, isContainer, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
+import { containeeDescription, containeeState, ContainerState, containerStateString, type Containee, containeeFullName, isPrivilegedContainer, isElevatedContainer, isContainer, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
 import { ContaineeIcon } from 'utils/containeeicon'
 import { TargetCapture } from 'components/targetcapture'
 import { PrivilegedIcon } from 'icons/containeestates/Privileged'
@@ -237,7 +237,9 @@ export const ContaineeBadge = ({
     // User pressed the badge button, now call the supplied callback function
     // and pass it the containee object.
     const handleClick = () => {
-        onClick && onClick(containee)
+        if (onClick) {
+            onClick(containee)
+        }
     }
 
     const badge = (button &&

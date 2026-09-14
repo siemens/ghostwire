@@ -5,10 +5,10 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import { Link as RouterLink, LinkProps as RouterLinkProps, useMatch } from 'react-router-dom'
+import { Link as RouterLink, type LinkProps as RouterLinkProps, useMatch } from 'react-router-dom'
 import { Avatar, List, ListItem, ListItemAvatar, ListItemButton, ListSubheader, styled, Typography } from '@mui/material'
 
-import { Containee, containeeState, Container, ContainerState, containerStateString, emptyNetns, isContainer, isElevatedContainer, isPod, isPodContainer, isPrivilegedContainer, netnsId, NetworkNamespaces, Pod, PodFlavors, sortContaineesByName } from 'models/gw'
+import { type Containee, containeeState, type Container, ContainerState, containerStateString, emptyNetns, isContainer, isElevatedContainer, isPod, isPodContainer, isPrivilegedContainer, netnsId, type NetworkNamespaces, type Pod, PodFlavors, sortContaineesByName } from 'models/gw'
 import { ContaineeIcon } from 'utils/containeeicon'
 import { useContextualId } from 'components/idcontext'
 import PrivilegedIcon from 'icons/containeestates/Privileged'

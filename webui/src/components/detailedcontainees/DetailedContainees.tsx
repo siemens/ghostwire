@@ -7,7 +7,7 @@ import React from 'react'
 import { styled, Tooltip } from '@mui/material'
 
 import { ContaineeDetails } from 'components/containeedetails'
-import { AddressFamilySet, containeesOfNetns, isPod, isSandbox, NetworkNamespace, sortContaineesByName } from 'models/gw'
+import { type AddressFamilySet, containeesOfNetns, isPod, isSandbox, type NetworkNamespace, sortContaineesByName } from 'models/gw'
 import { ContaineeIcon } from 'utils/containeeicon'
 
 

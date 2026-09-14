@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { ForwardedPort } from 'models/gw/forwardedports'
+import type { ForwardedPort } from 'models/gw/forwardedports'
 import React, { useEffect, useState } from 'react'
 
 import {
@@ -16,7 +16,7 @@ import {
     TableSortLabel,
 } from '@mui/material'
 
-import { AddressFamily, AddressFamilySet, Containee, containeeDisplayName, isContainer, isPod, netnsId, NetworkNamespace, orderAddresses, PortUser, PrimitiveContainee } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, type Containee, containeeDisplayName, isContainer, isPod, netnsId, type NetworkNamespace, orderAddresses, type PortUser, type PrimitiveContainee } from 'models/gw'
 import { ContaineeBadge } from 'components/containeebadge'
 import { scrollIdIntoView } from 'utils'
 import { useNavigate, useMatch } from 'react-router-dom'
@@ -375,7 +375,7 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
 
     // User clicks on a column header in order to sort the table rows by this
     // column. So, let's sort...
-    const handleColumnSort = (event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
+    const handleColumnSort = (_event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
         if (colHeader.id !== orderBy) {
             // Different row to be sorted: start with an ascending sort of the
             // new column.

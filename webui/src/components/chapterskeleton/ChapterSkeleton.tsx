@@ -2,10 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
-
-import { Skeleton, styled, Theme, Typography } from '@mui/material'
-import { SxProps } from '@mui/system'
+import { Skeleton, styled, type Theme, Typography } from '@mui/material'
+import type { SxProps } from '@mui/system'
 
 const Bones = styled('div')(() => ({
     width: '100%',

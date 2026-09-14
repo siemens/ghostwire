@@ -2,15 +2,15 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo, LegacyRef, useEffect } from 'react'
+import React, { useState, useRef, useMemo, type LegacyRef, useEffect } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
 import useResizeObserver from 'beautiful-react-hooks/useResizeObserver'
 
 import { useContextualId } from 'components/idcontext'
-import { Wire, Wiring } from 'components/wiring'
-import { NetworkInterface, NetworkNamespace, NetworkNamespaces, nifId, OperationalState } from 'models/gw'
+import { type Wire, Wiring } from 'components/wiring'
+import { type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, OperationalState } from 'models/gw'
 import { isRelationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 

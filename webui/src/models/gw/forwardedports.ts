@@ -2,9 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-// (c) Siemens AG 2023
-//
-// SPDX-License-Identifier: MIT
 import type { IpAddress } from "./address"
 import type { NetworkNamespace } from "./netns"
 import type { PortUser } from "./ports"

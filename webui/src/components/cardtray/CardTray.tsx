@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { Key } from 'react'
+import React, { type Key } from 'react'
 import { TransitionGroup } from 'react-transition-group'
 
 import { Collapse, styled } from '@mui/material'
