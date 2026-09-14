@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useNavigate, useMatch } from 'react-router-dom'
 import clsx from 'clsx'
@@ -145,8 +145,8 @@ export interface NeighboorhoodProps {
  * potentially multiple horizontally scaled containers, but also the
  * individually addressable containers as a non-scaling service.
  */
-export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
-    seenby = (seenby || []).filter(cntr => isContainer(cntr))
+export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps) => {
+    const seenby = (rawseenby || []).filter(cntr => isContainer(cntr))
 
     const navigate = useNavigate()
 
@@ -232,12 +232,12 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {services.sort((a, b) => sortServices(a, b))
+                        {services.toSorted((a, b) => sortServices(a, b))
                             .map((service,) => {
                                 const itsme = shareContainers(service.containers, seenby as Container[])
                                 const tlds = ['', ...service.networks].sort((a, b) => a.localeCompare(b))
                                 return service.containers
-                                    .sort((a, b) => a.name.localeCompare(b.name))
+                                    .toSorted((a, b) => a.name.localeCompare(b.name))
                                     .map((cntr, idx) =>
                                         <TableRow key={`${service.name}-${cntr.name}`} className={clsx(itsme && 'itsme')}>
                                             <TableCell key={cntr.name}>

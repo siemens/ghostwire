@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { type JSX } from 'react'
+import { type JSX } from 'react'
 
 import { MuiMarkdown } from 'components/muimarkdown'
 import { styled } from '@mui/material';

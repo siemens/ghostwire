@@ -95,6 +95,8 @@ export interface AddressProps {
     notooltip?: boolean
     /** don't show an address family icon. */
     nofamilyicon?: boolean
+
+    ref?: React.ForwardedRef<HTMLSpanElement>
 }
 
 /**
@@ -117,10 +119,11 @@ export interface AddressProps {
  * Address lifetimes are formatted as "days hh:mm:ss", with at most seconds
  * resolution.
  */
-export const Address = (props: AddressProps, ref: React.ForwardedRef<HTMLSpanElement>) => {
+export const Address = (props: AddressProps) => {
 
     const {
         address, route, plain, familyicon, className, notooltip, nofamilyicon,
+        ref,
         ...andnowforsomethingcompletelydifferentprops
     } = props
 

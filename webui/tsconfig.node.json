@@ -7,7 +7,7 @@
     "target": "ES2023",
     "lib": [
       "ES2023",
-      "dom"
+      "dom",
     ],
     "module": "ESNext",
     "types": [

@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 import clsx from 'clsx'
 
 import { Link as RouterLink, type LinkProps as RouterLinkProps, useMatch } from 'react-router-dom'
