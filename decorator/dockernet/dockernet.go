@@ -10,7 +10,7 @@ import (
 	"log/slog"
 	"strings"
 
-	monetw "github.com/moby/moby/api/types/network"
+	mobynet "github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/model"
@@ -26,12 +26,6 @@ import (
 // GostwireNetworkNameKey defines the label key for storing the Docker network
 // name of bridge networks.
 const GostwireNetworkNameKey = "gostwire/network/name"
-
-// BridgeNameOptionName optionally specifies the name of the Linux-kernel bridge
-// for a Docker "bridge" network. If missing, then the default naming scheme
-// applies, taking the first 12 hex digits of the network's ID and prepending
-// them with "br-".
-const BridgeNameOptionName = "com.docker.network.bridge.name"
 
 // PassthroughHostIfnameOptionName specifies the name of a host network
 // interface to be passed through into a single network namespace (sandbox).
@@ -58,7 +52,7 @@ func init() {
 // NetworkNamespace these networks are managed in, which are the network
 // namespace of the particular managing Docker engine.
 type dockerNetworks struct {
-	networks    []monetw.Network          // Docker-managed network information
+	networks    []mobynet.Network         // Docker-managed network information
 	engine      *model.ContainerEngine    // corresponding Docker engine.
 	engineNetns *network.NetworkNamespace // ...of the managing Docker engine.
 }
@@ -81,7 +75,7 @@ func dockerNetworksOfEngine(ctx context.Context, engine *model.ContainerEngine, 
 	_ = moby.Close()
 	netnsid, _ := ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", engine.PID)).ID()
 	docknets.networks = xslices.Map(networks.Items,
-		func(s monetw.Summary) monetw.Network { return s.Network })
+		func(s mobynet.Summary) mobynet.Network { return s.Network })
 	docknets.engine = engine
 	docknets.engineNetns = allnetns[netnsid]
 	slog.Info("found Docker custom networks",
@@ -275,7 +269,7 @@ type PassedThrough struct {
 // given Docker bridge network. Docker bridge networks don't explicitly store
 // the bridge interface name in their configurations, but instead the bridge
 // name is derived implicitly from part of the networks unique ID hex string.
-func linuxBridgeName(netw monetw.Network) string {
+func linuxBridgeName(netw mobynet.Network) string {
 	if brname, ok := netw.Options[BridgeNameOptionName]; ok {
 		return brname // ...explicitly configured bridge nif name.
 	}
