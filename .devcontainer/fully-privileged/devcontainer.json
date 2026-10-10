@@ -31,7 +31,8 @@
             "verbose": true,
             "html": true, // generate coverage.html
             "tags": "matchers"
-        }
+        },
+        "ghcr.io/thediveo/devcontainer-features/docsify:1": {}
     },
     "runArgs": [
         "--pid=host",
