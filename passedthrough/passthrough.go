@@ -39,19 +39,50 @@ const AltNameKVDelemiter = "="
 // with its original name.
 const AltNameOriginalIfnamePrefix = "siemens.iedge.orig-ifname" + AltNameKVDelemiter
 
+// AltNameDockerNetworkPrefix is the key (prefix) of an “alternative name” of
+// the network interface that specifies the Docker network ID while the network
+// interface is passed through. It is removed when the network interface isn't
+// currently passed through.
+const AltNameDockerNetworkPrefix = "siemens.iedge.docker-nw" + AltNameKVDelemiter
+
 // OriginalIfname returns the original name of an interface that currently might
 // be roaming in some other network namespace, or "" if not applicable.
 func OriginalIfname(nif netlink.Link) string {
-	idx := slices.IndexFunc(nif.Attrs().AltNames, hasOriginalIfname)
-	if idx < 0 {
-		return ""
-	}
-	origIfname, _ := strings.CutPrefix(nif.Attrs().AltNames[idx], AltNameOriginalIfnamePrefix)
+	origIfname, _ := AltnameValueOk(nif, AltNameOriginalIfnamePrefix)
 	return origIfname
 }
 
-// hasOriginalIfname returns true if the alternative name specifies the
-// original ifname of a (host) network interface roaming around.
-func hasOriginalIfname(altname string) bool {
-	return strings.HasPrefix(altname, AltNameOriginalIfnamePrefix)
+// DockernetID returns the Docker network ID of an interface while being
+// passed-through; otherwise, it returns an empty string.
+func DockernetID(nif netlink.Link) string {
+	id, ok := AltnameValueOk(nif, AltNameDockerNetworkPrefix)
+	if !ok {
+		return ""
+	}
+	if idx := strings.Index(id, "."); idx != -1 {
+		return id[:idx]
+	}
+	return id
+}
+
+// Altname returns the alternate name of the passed network interface that
+// matches the passed suffix, otherwise an empty string.
+func Altname(nif netlink.Link, prefix string) string {
+	altnames := nif.Attrs().AltNames
+	if idx := slices.IndexFunc(altnames, func(altname string) bool {
+		return strings.HasPrefix(altname, prefix)
+	}); idx >= 0 {
+		return altnames[idx]
+	}
+	return ""
+}
+
+// AltnameValueOk returns the value of the alternate name of the passed network
+// interface and true, otherwise it returns an empty value and false.
+func AltnameValueOk(nif netlink.Link, prefix string) (string, bool) {
+	altname := Altname(nif, prefix)
+	if altname == "" {
+		return "", false
+	}
+	return strings.TrimPrefix(altname, prefix), true
 }

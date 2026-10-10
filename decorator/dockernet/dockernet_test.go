@@ -15,6 +15,7 @@ import (
 	"github.com/thediveo/go-plugger/v3"
 	lxkns "github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/morbyd/v2"
 	"github.com/thediveo/morbyd/v2/ipam"
 	"github.com/thediveo/morbyd/v2/net"
@@ -22,10 +23,13 @@ import (
 	"github.com/thediveo/morbyd/v2/run"
 	"github.com/thediveo/morbyd/v2/session"
 	"github.com/thediveo/notwork/dummy"
+	"github.com/vishvananda/netlink"
+	vishnetns "github.com/vishvananda/netns"
 
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
+	"github.com/siemens/ghostwire/v2/passedthrough"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -49,7 +53,7 @@ var _ = Describe("dockernet decorator", func() {
 			ContainElement("dockernet"))
 	})
 
-	Context("when looking for Docker-managed networks", func() {
+	When("looking for Docker-managed networks", func() {
 
 		BeforeEach(func() {
 			goodfds := Filedescriptors()
@@ -175,6 +179,78 @@ var _ = Describe("dockernet decorator", func() {
 			Expect(master).To(network.HaveInterfaceAlias(testMACVLANNetworkName))
 			Expect(master.Nif().Labels).To(HaveKeyWithValue(GostwireNetworkNameKey, testMACVLANNetworkName))
 			Expect(master.Nif().Labels).To(HaveKeyWithValue("foo", "bar"))
+		})
+
+	})
+
+	When("looking for passed-through interfaces", func() {
+
+		BeforeEach(func() {
+			goodfds := Filedescriptors()
+			goodgos := Goroutines()
+			DeferCleanup(func() {
+				Eventually(Goroutines).WithTimeout(5 * time.Second).WithPolling(250 * time.Millisecond).
+					ShouldNot(HaveLeaked(goodgos))
+				Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
+			})
+
+			DeferCleanup(slog.SetDefault, slog.Default())
+			slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+				Level: slog.LevelDebug,
+			})))
+		})
+
+		It("discovers the original interface name and pass-through network", func(ctx context.Context) {
+			if os.Getuid() != 0 {
+				Skip("needs root")
+			}
+
+			const origNifname = "2flower"
+
+			By("creating a canary container attached to docker0")
+			sess := Successful(morbyd.NewSession(ctx,
+				session.WithAutoCleaning("test=ghostwire.decorator.dockernet")))
+			DeferCleanup(sess.Close)
+
+			docker0 := Successful(sess.Network(ctx, "bridge"))
+
+			testwl := Successful(sess.Run(ctx, "busybox:latest",
+				run.WithName(testWorkloadName),
+				run.WithCommand("/bin/sh", "-c", "while true; do sleep 1; done"),
+			))
+			testwlPID := model.PIDType(Successful(testwl.PID(ctx)))
+
+			By("making the canary's eth0 to appear passed-through")
+			netnsfd, closer := Successful2R(
+				ops.NamespacePath(fmt.Sprintf("/proc/%d/ns/net", testwlPID)).NsFd())
+			DeferCleanup(closer)
+			nlh := Successful(netlink.NewHandleAt(vishnetns.NsHandle(netnsfd)))
+			DeferCleanup(nlh.Close)
+			eth0 := Successful(nlh.LinkByName("eth0"))
+			Expect(nlh.LinkAddAltName(eth0, passedthrough.AltNameOriginalIfnamePrefix+origNifname)).To(Succeed())
+			Expect(nlh.LinkAddAltName(eth0, passedthrough.AltNameDockerNetworkPrefix+docker0.ID)).To(Succeed())
+
+			By("running a discovery")
+			ctx, cancel := context.WithCancel(ctx)
+			cizer := turtlefinder.New(func() context.Context { return ctx })
+			defer cancel()
+			defer cizer.Close()
+			allnetns, lxknsdisco := discover.Discover(ctx, cizer, nil)
+			Expect(allnetns).NotTo(BeEmpty())
+
+			Expect(lxknsdisco.Processes).To(HaveKey(testwlPID))
+			testwlc := lxknsdisco.Processes[testwlPID].Container
+
+			// Expect eth0 inside the container to be marked as passthrough with
+			// its fake original name and as belonging to the default bridge
+			// docker0 network.
+			wlnetnsid := testwlc.Process.Namespaces[model.NetNS].ID()
+			Expect(allnetns).To(HaveKey(wlnetnsid))
+			wlnetns := allnetns[wlnetnsid]
+			Expect(wlnetns.NamedNifs).To(network.ContainInterfaceWithName("eth0"))
+			cntreth0 := wlnetns.NamedNifs["eth0"]
+			Expect(cntreth0.Nif().Alias).To(Equal("bridge"))
+			Expect(cntreth0.Nif().Labels).To(HaveKeyWithValue(GhostwireInterfaceOrigNameKey, origNifname))
 		})
 
 	})

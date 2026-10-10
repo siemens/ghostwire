@@ -11,7 +11,9 @@ import (
 
 // GostwireInternalBridgeKey specifies the label key indicating if a bridge
 // belongs to a Docker network that has been configured as "internal". If
-// present, it has an empty value.
+// present, it has an empty value. It is actually a misnomer, as the property of
+// "internal" also applies to other Docker network drivers. We keep it here for
+// legacy reasons.
 const GostwireInternalBridgeKey = "gostwire/bridge/internal"
 
 // Bridge represents a bridge network interface, and especially the bridge-port
