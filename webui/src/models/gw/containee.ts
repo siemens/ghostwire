@@ -221,12 +221,22 @@ export type ContainerFlavors = (typeof ContainerFlavors)[keyof typeof ContainerF
 export const containeeType = (containee: PrimitiveContainee) => {
     // Type guards to our rescue... ;)
     return (isContainer(containee) && containee.engineType)
-        || (isSandbox(containee) && ContaineeTypes.PROCESS)
+        || (isBusybox(containee) && ContaineeTypes.PROCESS)
         || ContaineeTypes.BINDMOUNT
 }
 
 /**
- * Sort function ordering containees by their names, yet ensuring that the
+ * Returns the sort precedence of a containee by its kind: pods and containers
+ * first, then stand-alone processes, and finally bind-mounts.
+ */
+const containeeKindRank = (containee: Containee) =>
+    isPod(containee) || isContainer(containee) ? 0
+        : isBusybox(containee) ? 1
+            : 2
+
+/**
+ * Sort function ordering containees first by their kind (containers and pods,
+ * processes, bind-mounts), then by their names, yet ensuring that the
  * "init(1)" entity will always be first. Even if it's systemd.
  * 
  * Turtle namespaces are taken into account for sorting order.
@@ -239,6 +249,10 @@ export const sortContaineesByName = (containeeA: Containee, containeeB: Containe
     const bIsInit = isBusybox(containeeB) && containeeB.ealdorman.pid === 1
     if (aIsInit !== bIsInit) {
         return aIsInit ? -1 : 1
+    }
+    const rankDiff = containeeKindRank(containeeA) - containeeKindRank(containeeB)
+    if (rankDiff !== 0) {
+        return rankDiff
     }
     return `${isContainer(containeeA) ? containeeA.turtleNamespace : ''}:${containeeA.name}`
         .localeCompare(`${isContainer(containeeB) ? containeeB.turtleNamespace : ''}:${containeeB.name}`)
