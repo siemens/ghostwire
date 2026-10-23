@@ -46,7 +46,9 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait = 300, focus
     const [filterOptions, setFilterOptions] = useState<string[]>([])
 
     const [prevFilterPattern, setPrevFilterPattern] = useState<FilterPattern>()
-    if (filterPattern !== prevFilterPattern) {
+    if (filterPattern?.pattern !== prevFilterPattern?.pattern
+        || filterPattern?.isCaseSensitive !== prevFilterPattern?.isCaseSensitive
+        || filterPattern?.isRegexp !== prevFilterPattern?.isRegexp) {
         setPrevFilterPattern(filterPattern)
         setPattern(filterPattern?.pattern || '')
         setFilterOptions((filterPattern?.isCaseSensitive ? ["case"] : []).concat(filterPattern?.isRegexp ? ["regexp"] : []))

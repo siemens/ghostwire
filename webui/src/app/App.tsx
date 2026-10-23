@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useRef } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { BrowserRouter as Router, Route, Routes, useMatch, Navigate } from 'react-router-dom'
 
 import { basename } from 'utils/basename'
@@ -77,6 +77,108 @@ interface GwDrawerProps {
     focusRef: React.RefObject<HTMLDivElement | null>
 }
 
+// Must stay at module level: defining it inside another component would remount
+// it on every parent render, losing the filter input focus.
+const GwDrawer = ({ closeDrawer, focusRef }: GwDrawerProps) => {
+
+    const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
+    const [filterPattern, setFilterPattern] = useAtom(filterPatternAtom)
+    const [filterCase, setFilterCase] = useAtom(filterCaseSensitiveAtom)
+    const [filterRegexp, setFilterRegexp] = useAtom(filterRegexpAtom)
+
+    const discovery = useDiscovery()
+
+    const wmatch1 = useMatch('/w')
+    const wmatch2 = useMatch('/w/:slug')
+    const nmatch1 = useMatch('/n')
+    const nmatch2 = useMatch('/n/:slug')
+    const listContainees = wmatch1 !== null || wmatch2 !== null
+        || nmatch1 !== null || nmatch2 !== null
+    const canFilter = wmatch1 !== null || nmatch1 !== null
+
+    const onFilterChangeHandler = useCallback((fp: FilterPattern) => {
+        setFilterPattern(fp.pattern)
+        setFilterCase(fp.isCaseSensitive)
+        setFilterRegexp(fp.isRegexp)
+    }, [setFilterPattern, setFilterCase, setFilterRegexp])
+
+    return <>
+        <List onClick={closeDrawer}>
+            <DrawerLinkItem
+                key="wiring"
+                icon={<WiringViewIcon />}
+                label="Wiring"
+                path="/w"
+            />
+            <DrawerLinkItem
+                key="openhouse"
+                icon={<OpenHouseIcon />}
+                label="Open & Forwarding Host Ports"
+                path="/lochla"
+            />
+            <DrawerLinkItem
+                key="details"
+                icon={<NetnsViewIcon />}
+                label="Network Namespace Details"
+                path="/n"
+            />
+            <DrawerLinkItem
+                key="settings"
+                icon={<SettingsViewIcon />}
+                label="Settings"
+                path="/settings"
+            />
+            <DrawerLinkItem
+                key="help"
+                icon={<HelpIcon />}
+                label="Help"
+                path="/help/gw"
+            />
+            <DrawerLinkItem
+                key="about"
+                icon={<AboutViewIcon />}
+                label="About"
+                path="/about"
+            />
+        </List>
+
+        {/* show containee navigation only in wiring and detail views */}
+        {listContainees && <>
+            <Divider />
+            <List
+                subheader={<ListSubheader onClick={(event) => {
+                    event.stopPropagation()
+                    event.preventDefault()
+                }}>
+                    <Grid container sx={{ flexDirection: "column" }}>
+                        <Grid>Containees</Grid>
+                        {canFilter &&
+                            <Grid>
+                                <FilterInput
+                                    focusRef={focusRef}
+                                    filterPattern={{
+                                        pattern: filterPattern,
+                                        isCaseSensitive: filterCase,
+                                        isRegexp: filterRegexp,
+                                    }}
+                                    onChange={onFilterChangeHandler}
+                                    onEnter={closeDrawer}
+                                />
+                            </Grid>
+                        }
+                    </Grid>
+                </ListSubheader>}
+                onClick={closeDrawer}
+            >
+                <ContaineeNavigator
+                    allnetns={discovery.networkNamespaces}
+                    filterEmpty={!showEmptyNetns}
+                />
+            </List>
+        </>}
+    </>
+}
+
 /**
  * The `GhostwireApp` component renders the general app layout without thinking
  * about providers for routing, themes, discovery, et cetera. So this component
@@ -88,9 +190,6 @@ interface GwDrawerProps {
 const GhostwireApp = () => {
 
     const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
-    const [filterPattern, setFilterPattern] = useAtom(filterPatternAtom)
-    const [filterCase, setFilterCase] = useAtom(filterCaseSensitiveAtom)
-    const [filterRegexp, setFilterRegexp] = useAtom(filterRegexpAtom)
 
     // Determine the number of discovered network namespaces, as well as the
     // number of shown network namespaces: depending on filter settings and
@@ -116,8 +215,6 @@ const GhostwireApp = () => {
     const nmatch2 = useMatch('/n/:slug')
     const isDetails = nmatch1 !== null || nmatch2 != null
 
-    const canFilter = wmatch1 !== null || nmatch1 !== null
-
     const listContainees = isWiring || isDetails
 
     const alsoSnapshotable = useMatch('/lochla') !== null
@@ -129,91 +226,6 @@ const GhostwireApp = () => {
     const snapshotRef = useRef<HTMLDivElement | null>(null)
 
     const setModal = useScreenShooterModal()
-
-    const onFilterChangeHandler = (fp: FilterPattern) => {
-        if (filterPattern != fp.pattern) setFilterPattern(fp.pattern)
-        if (filterCase != fp.isCaseSensitive) setFilterCase(fp.isCaseSensitive)
-        if (filterRegexp != fp.isRegexp) setFilterRegexp(fp.isRegexp)
-    }
-
-    const GwDrawer = ({ closeDrawer, focusRef }: GwDrawerProps) => {
-
-        return <>
-            <List onClick={closeDrawer}>
-                <DrawerLinkItem
-                    key="wiring"
-                    icon={<WiringViewIcon />}
-                    label="Wiring"
-                    path="/w"
-                />
-                <DrawerLinkItem
-                    key="openhouse"
-                    icon={<OpenHouseIcon />}
-                    label="Open & Forwarding Host Ports"
-                    path="/lochla"
-                />
-                <DrawerLinkItem
-                    key="details"
-                    icon={<NetnsViewIcon />}
-                    label="Network Namespace Details"
-                    path="/n"
-                />
-                <DrawerLinkItem
-                    key="settings"
-                    icon={<SettingsViewIcon />}
-                    label="Settings"
-                    path="/settings"
-                />
-                <DrawerLinkItem
-                    key="help"
-                    icon={<HelpIcon />}
-                    label="Help"
-                    path="/help/gw"
-                />
-                <DrawerLinkItem
-                    key="about"
-                    icon={<AboutViewIcon />}
-                    label="About"
-                    path="/about"
-                />
-            </List>
-
-            {/* show containee navigation only in wiring and detail views */}
-            {listContainees && <>
-                <Divider />
-                <List
-                    subheader={<ListSubheader onClick={(event) => {
-                        event.stopPropagation()
-                        event.preventDefault()
-                    }}>
-                        <Grid container sx={{ flexDirection: "column" }}>
-                            <Grid>Containees</Grid>
-                            {canFilter &&
-                                <Grid>
-                                    <FilterInput
-                                        focusRef={focusRef}
-                                        filterPattern={{
-                                            pattern: filterPattern,
-                                            isCaseSensitive: filterCase,
-                                            isRegexp: filterRegexp,
-                                        }}
-                                        onChange={onFilterChangeHandler}
-                                        onEnter={closeDrawer}
-                                    />
-                                </Grid>
-                            }
-                        </Grid>
-                    </ListSubheader>}
-                    onClick={closeDrawer}
-                >
-                    <ContaineeNavigator
-                        allnetns={discovery.networkNamespaces}
-                        filterEmpty={!showEmptyNetns}
-                    />
-                </List>
-            </>}
-        </>
-    }
 
     useScrollToHash(scrollIdIntoView)
 
