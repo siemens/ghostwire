@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { AppBar, Box, Divider, IconButton, styled, SwipeableDrawer, Theme, Toolbar, useTheme } from '@mui/material'
+import { AppBar, Box, Divider, IconButton, styled, SwipeableDrawer, type Theme, Toolbar, useTheme } from '@mui/material'
 import { useHotkeys } from 'react-hotkeys-hook'
 
 
@@ -37,7 +37,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
     justifyContent: 'flex-end',
 }))
 
-const SwappyDrawer = styled(SwipeableDrawer)<SwipeableDrawerStyleProps>(({ theme, drawerwidth }) => ({
+const SwappyDrawer = styled(SwipeableDrawer)<SwipeableDrawerStyleProps>(({ theme, drawerwidth }: SwipeableDrawerStyleProps) => ({
     width: drawerwidth || defaultDrawerWidth,
     flexShrink: 0,
 
@@ -46,14 +46,9 @@ const SwappyDrawer = styled(SwipeableDrawer)<SwipeableDrawerStyleProps>(({ theme
     },
 
     '& .MuiListSubheader-root': {
-        background: theme.palette.background.paper,
+        background: theme?.palette.background.paper,
     },
 }))
-
-/**
- * Callback function to call when the drawer needs to be closed.
- */
-type drawerCloser = () => void
 
 export interface AppBarDrawerProps {
     /** app title in the app bar. */
@@ -69,13 +64,16 @@ export interface AppBarDrawerProps {
      */
     drawertitle?: React.ReactNode | (() => React.ReactNode)
     /**
-     * a function rendering the contents inside the drawer. This function gets
-     * passed a callback function so that components inside the drawer are
-     * able to close the drawer when necessary. For instance, links typically
-     * want to close the drawer whenever the user clicks on them in order to
-     * navigate to a different route.
+     * a component rendering the contents inside the drawer. This component gets
+     * passed a callback function so that components inside the drawer are able
+     * to close the drawer when necessary. For instance, links typically want to
+     * close the drawer whenever the user clicks on them in order to navigate to
+     * a different route.
      */
-    drawer?: (drawerCloser: drawerCloser, focusRef?: React.RefObject<HTMLDivElement>) => React.ReactNode
+    drawer?: React.ComponentType<{
+        closeDrawer: () => void
+        focusRef: React.RefObject<HTMLDivElement | null>
+    }>
     /**
      * optionally sets the width in pixels of the drawer. Defaults to 240 pixels
      * if unspecified.
@@ -88,35 +86,36 @@ export interface AppBarDrawerProps {
 }
 
 /**
- * `AppBarDrawer` provides not only an application bar ("app bar") with title
- * and optional action buttons in the bar, but also a navigation drawer.
+ * `AppBarDrawer` provides an application bar ("app bar") with a navigation
+ * drawer. The app bar comes with title and optional action buttons.
  *
  * The navigation drawer can be opened by swiping from the left side or by
- * clicking/tapping on the drawer icon (☰) to the left of the app bar. It can
- * be closed either by swiping to the left or clicking on the close (<) button
- * in the drawer. The drawer close button is automatically added. The
- * navigation drawer takes arbitrary content, yet you typically will want to
- * fill it with [`DrawerLinkItem`](#DrawerLinkItem)s.
+ * clicking/tapping on the drawer icon (☰) to the left of the app bar. It can be
+ * closed either by swiping to the left or clicking on the close (<) button in
+ * the drawer. The drawer close button is automatically added. The navigation
+ * drawer takes arbitrary content, yet you typically will want to fill it with
+ * [`DrawerLinkItem`](#DrawerLinkItem)s.
  *
  * Please note that the `drawer=` property expects a function rendering the
  * drawer contents on request; it gets passed a `closeDrawer` handler argument
- * which should called as an event handler to close the drawer when clicking
- * on navigation buttons, et cetera. Please see the example for usage.
+ * which should called as an event handler to close the drawer when clicking on
+ * navigation buttons, et cetera. Please see the example for usage.
  *
  * When using
- * [IconButton](https://material-ui.com/api/icon-button/#iconbutton-api) as
- * app bar action buttons don't forget to set `color="inherit"` on the icon
- * button: the icons then will take on the appropriate appbar foreground color
- * (usually as opposed to the default primary color).
- *
- * This component is licensed under the [Apache License, Version
- * 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+ * [IconButton](https://material-ui.com/api/icon-button/#iconbutton-api) as app
+ * bar action buttons don't forget to set `color="inherit"` on the icon button:
+ * the icons then will take on the appropriate appbar foreground color (usually
+ * as opposed to the default primary color).
+ * 
+ * **IMPORTANT:** `AppBarDrawer` must be directly or indirectly enclosed inside
+ * a [`Router`](https://reactrouter.com/web/api/Router) or
+ * [`BrowserRouter`](https://reactrouter.com/web/api/BrowserRouter) component.
  */
 const AppBarDrawer = ({
     title,
     tools,
     drawertitle,
-    drawer,
+    drawer: Drawer,
     drawerwidth,
     drawerClassName,
     swipeAreaWidth,
@@ -163,7 +162,6 @@ const AppBarDrawer = ({
                     <ToolbarActionButton
                         edge="start"
                         color="inherit"
-                        aria-label="menu"
                         onClick={toggleDrawer}
                         size="large">
                         <MenuIcon />
@@ -193,7 +191,10 @@ const AppBarDrawer = ({
                 </IconButton>
             </DrawerHeader>
             <Divider />
-            {drawer && drawer(closeDrawer, focusRef)}
+            {Drawer && (<Drawer
+                closeDrawer={closeDrawer}
+                focusRef={focusRef}
+            />)}
         </SwappyDrawer>
     </>
 }

@@ -10,7 +10,7 @@ import { Avatar, Card, CardContent, CardHeader, styled, Tooltip } from '@mui/mat
 import AppProjectIcon from 'icons/groups/AppProject'
 import ComposerProjectIcon from 'icons/groups/ComposerProject'
 
-import { ContainerFlavors, GHOSTWIRE_LABEL_ROOT, Project, projectDescription } from 'models/gw'
+import { ContainerFlavors, GHOSTWIRE_LABEL_ROOT, type Project, projectDescription } from 'models/gw'
 import { lighten } from '@mui/material'
 
 

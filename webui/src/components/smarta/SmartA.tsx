@@ -14,6 +14,14 @@ export interface SmartAProps {
     /** children to render inside the hyperlink. */
     children: React.ReactNode
 }
+const isAbsoluteURL = (href: string) => {
+    try {
+        new URL(href)
+        return true
+    } catch {
+        return false
+    }
+}
 
 /**
  * Renders a hyperlink either as an external link (using the ExtLink component),
@@ -22,13 +30,10 @@ export interface SmartAProps {
  * route handling without having to reload the application and thus destroying
  * the any discovery result.
  */
-export const SmartA = ({href, children, ...otherprops}: SmartAProps) => {
-    try {
-        new URL(href)
-        return <ExtLink href={href} {...otherprops}>{children}</ExtLink>
-    } catch {
-        return <Link to={href} {...otherprops}>{children}</Link>
-    }
-}
+export const SmartA = ({href, children, ...otherprops}: SmartAProps) => (
+    isAbsoluteURL(href)
+        ? <ExtLink href={href} {...otherprops}>{children}</ExtLink>
+        : <Link to={href} {...otherprops}>{children}</Link>
+)
 
 export default SmartA

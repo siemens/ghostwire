@@ -2,19 +2,20 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useNavigate, useMatch } from 'react-router-dom'
 import clsx from 'clsx'
 
-import useWebSocket, { ReadyState } from 'react-use-websocket'
+// CJS-only package: its default export doesn't survive Vite 8's CommonJS interop.
+import { useWebSocket } from 'react-use-websocket/dist/lib/use-websocket'
 
 import { Button, styled, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import { Label as LabelIcon, HourglassTop, LocalHospital, QuestionMark, Verified, VerifiedOutlined } from '@mui/icons-material'
-import { Service, shareContainers, sortServices } from 'utils/neighborhood'
+import { type Service, shareContainers, sortServices } from 'utils/neighborhood'
 import { ContaineeBadge } from 'components/containeebadge'
 import { rgba } from 'utils/rgba'
-import { AddressFamily, Containee, Container, IpAddress, isContainer, JSONObject, orderAddresses } from 'models/gw'
+import { AddressFamily, type Containee, type Container, type IpAddress, isContainer, type JSONObject, orderAddresses } from 'models/gw'
 import { basename } from 'utils/basename'
 import { Address } from 'components/address'
 
@@ -145,8 +146,8 @@ export interface NeighboorhoodProps {
  * potentially multiple horizontally scaled containers, but also the
  * individually addressable containers as a non-scaling service.
  */
-export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
-    seenby = (seenby || []).filter(cntr => isContainer(cntr))
+export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps) => {
+    const seenby = (rawseenby || []).filter(cntr => isContainer(cntr))
 
     const navigate = useNavigate()
 
@@ -161,24 +162,19 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
 
     const seenbyName = (seenby.find(cntr => cntr !== undefined) as Container).name
     const [runCheck, setRunCheck] = useState(false)
-    const { lastJsonMessage, readyState } = useWebSocket(url, {
-        queryParams: { target: seenbyName },
-        shouldReconnect: () => false,
-    }, runCheck)
 
-    useEffect(() => {
-        console.log("websocket ready state", readyState)
-        if (readyState === ReadyState.CLOSED || readyState === ReadyState.UNINSTANTIATED) {
-            setRunCheck(false)
-        }
-    }, [readyState])
-
-    useEffect(() => {
-        if (!lastJsonMessage) {
+    const handleMessage = (event: MessageEvent) => {
+        let msg: JSONObject
+        try {
+            msg = JSON.parse(event.data)
+        } catch {
             return
         }
-        const fqdn = ((lastJsonMessage as JSONObject)['fqdn'] as string).slice(0, -1) // -"."
-        const addr = (lastJsonMessage as JSONObject)['address'] as string
+        if (!msg) {
+            return
+        }
+        const fqdn = (msg['fqdn'] as string).slice(0, -1) // -"."
+        const addr = msg['address'] as string
         if (addr) {
             setFqdnAddrs((fqdnAddrs) => {
                 const updatedFqdnAddrs = {
@@ -192,12 +188,19 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                         family: fam,
                         prefixlen: fam === AddressFamily.IPv6 ? 128 : 32,
                     },
-                    quality: (lastJsonMessage as JSONObject)['quality'] as string,
+                    quality: msg['quality'] as string,
                 } as QualifiedServiceAddress
                 return updatedFqdnAddrs
             })
         }
-    }, [lastJsonMessage])
+    }
+
+    useWebSocket(url, {
+        queryParams: { target: seenbyName },
+        shouldReconnect: () => false,
+        onMessage: handleMessage,
+        onClose: () => setRunCheck(false),
+    }, runCheck)
 
     const handleCheck = () => {
         setFqdnAddrs({})
@@ -232,12 +235,12 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {services.sort((a, b) => sortServices(a, b))
+                        {services.toSorted((a, b) => sortServices(a, b))
                             .map((service,) => {
                                 const itsme = shareContainers(service.containers, seenby as Container[])
                                 const tlds = ['', ...service.networks].sort((a, b) => a.localeCompare(b))
                                 return service.containers
-                                    .sort((a, b) => a.name.localeCompare(b.name))
+                                    .toSorted((a, b) => a.name.localeCompare(b.name))
                                     .map((cntr, idx) =>
                                         <TableRow key={`${service.name}-${cntr.name}`} className={clsx(itsme && 'itsme')}>
                                             <TableCell key={cntr.name}>
@@ -286,5 +289,5 @@ export const Neighborhood = ({ services, seenby }: NeighboorhoodProps) => {
                 </Table>
             </ServiceTable>
         </div>
-        : <Typography variant="body2" color="textSecondary" paragraph />
+        : <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }} />
 }

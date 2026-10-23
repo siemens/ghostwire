@@ -2,15 +2,16 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactNode, useContext, useState } from 'react'
+import React, { type ReactNode, useState } from 'react'
 import { styled } from '@mui/material'
-import { NetworkInterface } from 'models/gw'
+import { type NetworkInterface } from 'models/gw'
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Snackbar, Tooltip } from '@mui/material'
 import ClearIcon from '@mui/icons-material/Clear'
 import { ContentCopy } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
 
 import { NifIcon } from 'components/nificon'
+import { NifInfoModalContext } from './context'
 
 const NifDialogTitle = styled(DialogTitle)(({ theme }) => ({
     '& .close': {
@@ -67,9 +68,6 @@ const Contents = styled(DialogContent)(({ theme }) => ({
     fontSize: theme.typography.body1.fontSize,
 }))
 
-
-const NifInfoModalContext = React.createContext<
-    undefined | React.Dispatch<React.SetStateAction<NetworkInterface | undefined>>>(undefined)
 
 export interface NifInfoModalProviderProps {
     children: React.ReactNode
@@ -175,11 +173,3 @@ const add = (s: string, key: string, value: string | undefined) => {
 }
 
 export default NifInfoModalProvider
-
-/**
- * Returns a setter to specify the Nif to show information about in a modal
- * dialog.
- */
-export const useNifInfoModal = () => {
-    return useContext(NifInfoModalContext)
-}

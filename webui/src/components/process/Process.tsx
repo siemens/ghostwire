@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import type { JSX } from 'react'
 
 import { styled } from '@mui/material'
 import { ProcessDetails } from "components/procdetails"
-import { PrimitiveContainee, containeeDisplayName, isContainer } from "models/gw"
-import { ContaineeIcon } from "utils/containeeicon"
+import { type PrimitiveContainee, containeeDisplayName, isContainer } from "models/gw"
+import { ContaineeTypeIcon } from "utils/containeetypeicon"
 
 const Details = styled('span')(({ theme }) => ({
     whiteSpace: 'nowrap',
@@ -50,12 +50,10 @@ export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
     if (containee) {
         if (isContainer(containee) && containee.pod) {
             // This is a "pot'ed" container...
-            const CI = ContaineeIcon(containee)
-            info.push([<CI key="pod" fontSize="inherit" />, containee.pod.name])
+            info.push([<ContaineeTypeIcon key="pod" containee={containee.pod} fontSize="inherit" />, containee.pod.name])
         }
         // Add the container details...
-        const CI = ContaineeIcon(containee)
-        info.push([<CI key="containee" fontSize="inherit" />, containeeDisplayName(containee)])
+        info.push([<ContaineeTypeIcon key="containee" containee={containee} fontSize="inherit" />, containeeDisplayName(containee)])
     }
     // And finally: the process details ... cmdline and PID.
     info.push(

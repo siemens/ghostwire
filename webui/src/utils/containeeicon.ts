@@ -13,15 +13,16 @@ import KinDIcon from 'icons/containees/Kind'
 import PodIcon from 'icons/containees/Pod'
 import K8sPodIcon from 'icons/containees/K8sPod'
 
-import { isContainer, isPod, Containee, ContainerFlavors, PodFlavors, isBusybox } from 'models/gw'
+import { isContainer, isPod, type Containee, ContainerFlavors, PodFlavors, isBusybox } from 'models/gw'
 import { IEAppProjectIcon } from './appicon'
 import DockerManagedPluginIcon from 'icons/containees/DockerManagedPlugin'
 import InitialIcon from 'icons/containees/Initial'
 import PodmanIcon from 'icons/containees/Podman'
-import { SvgIcon, SvgIconProps } from '@mui/material'
+import { SvgIcon, type SvgIconProps } from '@mui/material'
 import CRIIcon from 'icons/containees/CRI'
 import TerminalIcon from '@mui/icons-material/Terminal'
 import CaptureIcon from 'icons/Capture'
+import type { JSX } from 'react/jsx-runtime'
 
 
 const ContaineeTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {

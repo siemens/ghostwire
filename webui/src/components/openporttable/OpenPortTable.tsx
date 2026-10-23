@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { ForwardedPort } from 'models/gw/forwardedports'
-import React, { useEffect, useState } from 'react'
+import type { ForwardedPort } from 'models/gw/forwardedports'
+import React, { useState } from 'react'
 
 import {
     styled,
@@ -16,7 +16,7 @@ import {
     TableSortLabel,
 } from '@mui/material'
 
-import { AddressFamily, AddressFamilySet, Containee, containeeDisplayName, isContainer, isPod, netnsId, NetworkNamespace, orderAddresses, PortUser, PrimitiveContainee } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, type Containee, containeeDisplayName, isContainer, isPod, netnsId, type NetworkNamespace, orderAddresses, type PortUser, type PrimitiveContainee } from 'models/gw'
 import { ContaineeBadge } from 'components/containeebadge'
 import { scrollIdIntoView } from 'utils'
 import { useNavigate, useMatch } from 'react-router-dom'
@@ -365,17 +365,15 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
 
     // When the externally supplied row data updates, we need to update our
     // sorted table rows for display too ... of course ... erm, well, yes ;)
-    useEffect(() => {
+    const [prevInitialRows, setPrevInitialRows] = useState(initialRows)
+    if (initialRows !== prevInitialRows) {
+        setPrevInitialRows(initialRows)
         setTableRows(sortTableRows(initialRows, [orderBy]))
-        // Please note that we must NOT depend on "orderBy" here on purpose, as
-        // we're otherwise resetting the table rows state each time the user
-        // clicks on a table header column to change sorting ... and that's
-        // ain't a good idea, sir!
-    }, [initialRows])
+    }
 
     // User clicks on a column header in order to sort the table rows by this
     // column. So, let's sort...
-    const handleColumnSort = (event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
+    const handleColumnSort = (_event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
         if (colHeader.id !== orderBy) {
             // Different row to be sorted: start with an ascending sort of the
             // new column.

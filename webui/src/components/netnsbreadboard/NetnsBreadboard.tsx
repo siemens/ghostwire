@@ -2,13 +2,12 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { useNavigate, useLocation, useMatch } from 'react-router-dom'
 
 import { styled } from '@mui/material'
 
-import { AddressFamilySet, PrimitiveContainee, emptyNetns, NetworkInterface, NetworkNamespace, NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
+import { type AddressFamilySet, type PrimitiveContainee, emptyNetns, type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
 import { Breadboard } from 'components/breadboard/Breadboard'
 import { CardTray } from 'components/cardtray'
 import { NetnsPlainCard } from 'components/netnsplaincard'

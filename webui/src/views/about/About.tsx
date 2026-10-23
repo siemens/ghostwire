@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { Box } from '@mui/material'
 
@@ -39,7 +38,7 @@ const CaptureMode = () => {
 export const About = () => (
     // As we want automatic scrollbars, we need to wrap the rendered markdown
     // into its own flexible box.
-    <Box m={2} flex={1} overflow="auto" >
+    <Box sx={{ m: 2, flex: 1, overflow: 'auto' }}>
         <GwMarkdown mdx={AboutMDX} shortcodes={{ Brand, BrandIcon, DiscoveryMetadata, CaptureMode }} />
     </Box >
 )

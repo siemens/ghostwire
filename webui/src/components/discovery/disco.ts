@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { atom, useAtom, Setter } from 'jotai'
+import { atom, useAtom, type Setter } from 'jotai'
 
-import { Discovery as DiscoveryResult, fromjson } from 'models/gw'
+import { type Discovery as DiscoveryResult, fromjson } from 'models/gw'
 import { showIEAppIconsAtom } from 'views/settings'
 
 /** Internal discovery result state; can be used only via useDiscovery(). */
@@ -26,7 +26,7 @@ const initialRefreshInterval = (() => {
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
-    } catch (e) { /* empty */ }
+    } catch { /* empty */ }
     return 5000;
 })()
 
@@ -89,7 +89,7 @@ const fetchDiscoveryData = (set: Setter, query: string) => {
             try {
                 return httpresult.json()
             } catch (e) {
-                throw Error('malformed discovery API response')
+                throw Error('malformed discovery API response', { cause: e })
             }
         })
         .then(jsondata => fromjson(jsondata))

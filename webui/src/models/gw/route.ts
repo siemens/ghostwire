@@ -3,14 +3,16 @@
 // SPDX-License-Identifier: MIT
 
 import { AddressFamily } from './address'
-import { NetworkInterface } from './nif';
+import { type NetworkInterface } from './nif';
 
-export enum RouteType {
-    Unicast = "unicast",
-    Local = "local",
-    Broadcast = "broadcast",
-    Multicast = "multicast",
-}
+export const RouteType = {
+    Unicast: "unicast",
+    Local: "local",
+    Broadcast: "broadcast",
+    Multicast: "multicast",
+} as const
+
+export type RouteType = (typeof RouteType)[keyof typeof RouteType]
 
 export interface IpRoute {
     destination: string

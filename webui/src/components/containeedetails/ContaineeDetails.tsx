@@ -2,16 +2,16 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import ClearIcon from '@mui/icons-material/Clear'
 
-import { AddressFamily, AddressFamilySet, PrimitiveContainee, containeeDescription, Container, ContainerState, containerStateString, isSandbox, containeeDisplayName, isContainer, orderAddresses, hiddenLabel } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, type PrimitiveContainee, containeeDescription, type Container, ContainerState, containerStateString, isSandbox, containeeDisplayName, isContainer, orderAddresses, hiddenLabel } from 'models/gw'
 import { Address } from 'components/address'
 import StoppedState from 'icons/containeestates/StoppedState'
 import PausedState from 'icons/containeestates/PausedState'
 import RunningState from 'icons/containeestates/RunningState'
-import { ContaineeIcon } from 'utils/containeeicon'
+import { ContaineeTypeIcon } from 'utils/containeetypeicon'
 import { useAtom } from 'jotai'
 import { showNamespaceIdsAtom } from 'views/settings'
 import { capsnames } from 'utils/capabilities'
@@ -206,7 +206,7 @@ export const ContaineeDetails = ({ containee, families: fams, className }: Conta
     const containerLabelKeys = ((cntr.labels && Object.keys(cntr.labels)) || [])
         .filter(key => !hiddenLabel(key))
     const containerLabels = (containerLabelKeys.length && <KeyValList>
-        {containerLabelKeys.sort((keyA, keyB) => keyA.localeCompare(keyB))
+        {containerLabelKeys.toSorted((keyA, keyB) => keyA.localeCompare(keyB))
             .map(key => [
                 <KvKey key={key}>{key}:</KvKey>,
                 <KvValue key={`${key}-value`}>{cntr.labels[key]}</KvValue>
@@ -243,7 +243,6 @@ export const ContaineeDetails = ({ containee, families: fams, className }: Conta
     </DNSServers>
 
     const Icon = containeeStatusIcons[cntr.state] || RunningState
-    const CIcon = ContaineeIcon(containee, true)
     const displayName = containeeDisplayName(containee)
     const plaincaps = !isContainer(containee)
     const caps = (cntr.ealdorman &&
@@ -261,7 +260,7 @@ export const ContaineeDetails = ({ containee, families: fams, className }: Conta
             <Details>
                 {isContainer(cntr) && cntr.id !== displayName && prop('container ID', cntr.id)}
                 {prop('type', <>
-                    <CIcon fontSize="inherit" color="disabled" />
+                    <ContaineeTypeIcon containee={containee} forceStdIcon fontSize="inherit" color="disabled" />
                     &nbsp;{containeeDescription(containee)}
                 </>)}
                 {!isSandbox(containee) && [

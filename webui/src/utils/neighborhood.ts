@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { Container, GHOSTWIRE_LABEL_ROOT, NetworkInterface, isContainer } from "models/gw"
+import { type Container, GHOSTWIRE_LABEL_ROOT, type NetworkInterface, isContainer } from "models/gw"
 
 // Service represents a ("neighborhood") service reachable on a set of networks,
 // and with the individual containers powering the service.

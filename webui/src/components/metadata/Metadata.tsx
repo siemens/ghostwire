@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { atomWithStorage } from 'jotai/utils'
 import { Collapse, IconButton, styled } from '@mui/material'
 import { useDiscovery } from 'components/discovery'

@@ -2,14 +2,14 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ChangeEvent, useState } from 'react'
+import React, { type ChangeEvent, useState } from 'react'
 
 import { Box, Checkbox, Fade, IconButton, styled, Tooltip } from '@mui/material'
 import { Paper } from '@mui/material'
 import FullscreenIcon from '@mui/icons-material/Fullscreen'
 
 import { ContaineeBadge } from 'components/containeebadge'
-import { PrimitiveContainee, containeeKey, netnsId, NetworkNamespace, orderNifByName, NetworkInterface, AddressFamilySet, containeesOfNetns, sortContaineesByName, Containee } from 'models/gw'
+import { type PrimitiveContainee, containeeKey, netnsId, type NetworkNamespace, orderNifByName, type NetworkInterface, type AddressFamilySet, containeesOfNetns, sortContaineesByName, type Containee } from 'models/gw'
 import { useContextualId } from 'components/idcontext'
 import { NifBadge } from 'components/nifbadge'
 import { NifNavigator } from 'components/nifnavigator'
@@ -262,7 +262,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
         .sort(orderNifByName)
 
     const handleRouting = () => {
-        onNetnsZoom && onNetnsZoom(netns, 'routes')
+        onNetnsZoom?.(netns, 'routes')
     }
 
     // keep an up-to-date list of selected network interfaces in this network
@@ -385,7 +385,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
     // bubble up the zoom navigation, adding the network namespace object to
     // zoom into.
     const handleZoom = () => {
-        onNetnsZoom && onNetnsZoom(netns)
+        onNetnsZoom?.(netns)
     }
 
     const handleMultiNic = (e: ChangeEvent<HTMLInputElement>) => {

@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { Process } from './process'
-import { NetworkNamespace, NetworkNamespaces } from './netns'
-import { IpAddress } from './address'
+import type { Process } from './process'
+import type { NetworkNamespace, NetworkNamespaces } from './netns'
+import type { IpAddress } from './address'
 import { GHOSTWIRE_LABEL_ROOT } from './model'
 import { notDockerDefaultCaps } from 'utils/capabilities'
 
@@ -183,30 +183,34 @@ export const isElevatedContainer = (containee: Containee): boolean => {
         && !!containee.ealdorman && notDockerDefaultCaps(containee.ealdorman.capbnd)
 }
 
-export enum ContaineeTypes {
+export const ContaineeTypes = {
     /** bind-mounted Sandbox */
-    BINDMOUNT = 'bindmount',
+    BINDMOUNT: 'bindmount',
     /** stand-alone (un-containerized) process Busybox */
-    PROCESS = 'proc', // sic!
+    PROCESS: 'proc', // sic!
 
     /** Docker engine */
-    DOCKER = "docker",
+    DOCKER: "docker",
     /** containerd engine */
-    CONTAINERD = "containerd",
-}
+    CONTAINERD: "containerd",
+} as const
+
+export type ContaineeTypes = (typeof ContaineeTypes)[keyof typeof ContaineeTypes]
 
 // Not identical to the decorator type and flavor definition, so take care. This
 // has some Ghostwire v1 legacy...
-export enum ContainerFlavors {
-    DOCKER = 'docker',
-    DOCKERPLUGIN = 'dockerplugin',
-    CONTAINERD = 'containerd',
-    IERUNTIME = 'ie-runtime',
-    IEAPP = 'ie-app',
-    KIND = 'kind',
-    PODMAN = 'podman',
-    CRI = 'CRI',
-}
+export const ContainerFlavors = {
+    DOCKER: 'docker',
+    DOCKERPLUGIN: 'dockerplugin',
+    CONTAINERD: 'containerd',
+    IERUNTIME: 'ie-runtime',
+    IEAPP: 'ie-app',
+    KIND: 'kind',
+    PODMAN: 'podman',
+    CRI: 'CRI',
+} as const
+
+export type ContainerFlavors = (typeof ContainerFlavors)[keyof typeof ContainerFlavors]
 
 /**
  * Returns the type of container (engine type), ContaineeTypes.PROCESS, or
@@ -251,12 +255,14 @@ export const containeeKey = (containee: Containee) => {
         : `${containee.turtleNamespace}:${containee.name}`
 }
 
-export enum ContainerState {
-    Exited,
-    Running,
-    Paused,
-    Restarted
-}
+export const ContainerState = {
+  Exited: 0,
+  Running: 1,
+  Paused: 2,
+  Restarted: 3,
+} as const
+
+export type ContainerState = (typeof ContainerState)[keyof typeof ContainerState]
 
 // containerState converts a textual container state, such as "running" or
 // "paused" into its corresponding enumeration value.
@@ -284,7 +290,6 @@ const containerStateStrings = {
 
 export const containerStateString = (cs: ContainerState) => containerStateStrings[cs]
 
-
 // The container type description map only needs entries for container flavors
 // which cannot be covered generically.
 const containerFlavorDescriptions: { [key: string]: string } = {
@@ -296,9 +301,11 @@ const containerFlavorDescriptions: { [key: string]: string } = {
     [ContainerFlavors.PODMAN]: 'Podman',
 }
 
-export enum PodFlavors {
-    K8SPOD = 'pod',
-}
+export const PodFlavors = {
+    K8SPOD: 'pod',
+} as const
+
+export type PodFlavors = (typeof PodFlavors)[keyof typeof PodFlavors]
 
 const podFlavorDescriptions: { [key: string]: string } = {
     [PodFlavors.K8SPOD]: 'Kuhbernetes pod',
@@ -426,10 +433,12 @@ export const isProject = (project: NetworkNamespaceOrProject): project is Projec
     (project as Project).name !== undefined
 )
 
-export enum ProjectFlavors {
-    COMPOSER = ContainerFlavors.DOCKER,
-    IEAPP = ContainerFlavors.IEAPP,
-}
+export const ProjectFlavors = {
+    COMPOSER: ContainerFlavors.DOCKER,
+    IEAPP: ContainerFlavors.IEAPP,
+} as const
+
+export type ProjectFlavors = (typeof ProjectFlavors)[keyof typeof ProjectFlavors]
 
 const projectFlavorDescriptions: { [key: string]: string } = {
     [ProjectFlavors.COMPOSER]: 'Docker composer project',

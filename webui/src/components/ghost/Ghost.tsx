@@ -83,7 +83,7 @@ export const Ghost = ({ m, children }: GhostProps) => {
 
     return refreshing ?
         <OuterBox>
-            <GhostBox flex={1}>
+            <GhostBox sx={{ flex: 1 }}>
                 {/* 
                   * This is basically the same SVG markup as in
                   * public/index.html, but with xlink:href getting replaced by
@@ -110,7 +110,7 @@ export const Ghost = ({ m, children }: GhostProps) => {
             </GhostBox>
         </OuterBox>
         :
-        <Box m={m}>{children}</Box>
+        <Box sx={{ m: m }}>{children}</Box>
 }
 
 export default Ghost

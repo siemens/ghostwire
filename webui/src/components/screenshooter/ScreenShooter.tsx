@@ -5,19 +5,12 @@
 import React, { useState } from 'react'
 
 import { useAtom } from 'jotai'
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, SelectChangeEvent, styled, useTheme } from '@mui/material'
-import { useContext } from 'react'
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, type SelectChangeEvent, styled, useTheme } from '@mui/material'
 import { snapshotDensityAtom } from 'views/settings'
 import DensityIcon from 'icons/Density'
 import { toPng } from 'html-to-image'
 import { useSnackbar } from 'notistack'
-
-
-// Changing the context to an HTML element to capture will automatically pop up
-// the modal screenshooter dialog. It will automatically be reset to null after
-// the modal dialog has been closed.
-const ScreenShooterModalContext = React.createContext<
-    null | React.Dispatch<React.SetStateAction<HTMLElement|null>>>(null)
+import { ScreenShooterModalContext } from './context'
 
 
 const Density = styled(DensityIcon)(({ theme }) => ({
@@ -60,7 +53,7 @@ export interface ScreenShooterProps {
  * When an outer notistack SnackbarProvider is expected to be present, then
  * suckzess as well as errors will be reported accordingly to it.
  */
-export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
+export const ScreenShooter = ({ basename = 'screenshot', children }: ScreenShooterProps) => {
     const theme = useTheme()
 
     const [htmlElement, setHtmlElement] = useState<HTMLElement|null>(null)
@@ -68,8 +61,6 @@ export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
     const safeDensity = [1, 2, 4].find(setting => Math.max(Math.floor(density), 1) <= setting)
 
     const { enqueueSnackbar } = useSnackbar() || {}
-
-    basename = basename || 'screenshot'
 
     const handleChange = (event: SelectChangeEvent<number>) => {
         setDensity(event.target.value as number)
@@ -87,18 +78,20 @@ export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
             }
         ).then(dataurl => {
             const link = document.createElement('a')
-            link.download = generateFilename(basename!)
+            link.download = generateFilename(basename)
             link.href = dataurl
             link.click()
-            enqueueSnackbar && enqueueSnackbar(
+            enqueueSnackbar?.(
                 'successfully captured image', {
                 variant: 'success',
                 autoHideDuration: 2000,
             })
         }).catch(err => {
-            enqueueSnackbar
-                ? enqueueSnackbar(err.toString(), { variant: 'error' })
-                : console.error(err.toString())
+            if (enqueueSnackbar) {
+                enqueueSnackbar(err.toString(), { variant: 'error' })
+            } else {
+                console.error(err.toString())
+            }
         })
         setHtmlElement(null)
     }
@@ -144,10 +137,3 @@ export const ScreenShooter = ({ basename, children }: ScreenShooterProps) => {
 }
 
 export default ScreenShooter
-
-/**
- * Returns a setter that when setting true will pop up the screenshooter.
- */
-export const useScreenShooterModal = () => {
-    return useContext(ScreenShooterModalContext)
-}

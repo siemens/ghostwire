@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 import {
     styled,
@@ -18,7 +18,7 @@ import {
 import HearingIcon from '@mui/icons-material/Hearing'
 import ConnectedIcon from 'icons/portstates/Connected'
 
-import { AddressFamily, AddressFamilySet, containeeDisplayName, isContainer, NetworkNamespace, orderAddresses, orderByState, PortUser, TransportPort } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, containeeDisplayName, isContainer, type NetworkNamespace, orderAddresses, orderByState, type PortUser, type TransportPort } from 'models/gw'
 import { Process } from 'components/process'
 
 
@@ -303,17 +303,15 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
 
     // When the externally supplied row data updates, we need to update our
     // sorted table rows for display too ... of course ... erm, well, yes ;)
-    useEffect(() => {
+    const [prevInitialRows, setPrevInitialRows] = useState(initialRows)
+    if (initialRows !== prevInitialRows) {
+        setPrevInitialRows(initialRows)
         setTableRows(sortTableRows(initialRows, [orderBy]))
-        // Please note that we must NOT depend on "orderBy" here on purpose, as
-        // we're otherwise resetting the table rows state each time the user
-        // clicks on a table header column to change sorting ... and that's
-        // ain't a good idea, sir!
-    }, [initialRows])
+    }
 
     // User clicks on a column header in order to sort the table rows by this
     // column. So, let's sort...
-    const handleColumnSort = (event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
+    const handleColumnSort = (_event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
         if (colHeader.id !== orderBy) {
             // Different row to be sorted: start with an ascending sort of the
             // new column.

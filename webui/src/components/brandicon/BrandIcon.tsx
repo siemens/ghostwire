@@ -2,11 +2,10 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 import GhostwireIcon from 'icons/Ghostwire'
 import { useDynVars } from 'components/dynvars'
-import { SvgIconProps } from '@mui/material'
-import SVG, { Props as SVGProps } from 'react-inlinesvg'
+import type { SvgIconProps } from '@mui/material'
+import SVG, { type Props as SVGProps } from 'react-inlinesvg'
 
 /**
  * Renders the brand icon as an icon: this is either the default "Ghostwire"

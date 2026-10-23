@@ -14,7 +14,7 @@ import { Box, styled, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
 import { useDiscovery } from 'components/discovery'
-import { Containee, isPod, NetworkNamespace } from 'models/gw'
+import { type Containee, isPod, type NetworkNamespace } from 'models/gw'
 import { NetnsDetailCard } from 'components/netnsdetailcard'
 import { showIpFamiliesAtom, showLoopbackAtom, showMACAtom } from 'views/settings'
 import { Ghost } from 'components/ghost'
@@ -56,7 +56,7 @@ const SeeAlsoList = styled('ul')(({ theme }) => ({
  * network namespaces indirectly be the name of one of its containees instead of
  * ever-changing inode numbers thus results in a much better UX.
  */
-export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((props, ref) => {
+export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((_props, ref) => {
     const discovery = useDiscovery()
 
     const [showLoopbacks] = useAtom(showLoopbackAtom)
@@ -110,11 +110,11 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
     }
 
     return (netns &&
-        <Box m={0} flex={1} overflow="auto">
+        <Box sx={{ m: 0, flex: 1, overflow: 'auto' }}>
             <NifInfoModalProvider>
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />
-                    <Box m={1}>
+                    <Box sx={{ m: 1 }}>
                         <NetnsDetailCard
                             netns={netns}
                             filterLo={!showLoopbacks}
@@ -128,7 +128,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
         </Box >)
         || (<Ghost m={1}>
             <div ref={ref}>
-                <Typography variant="body1" color="textSecondary" paragraph>
+                <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
                     <InfoOutlinedIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
                     unknown network namespace identifier (inode number),
                     pod, container, or stand-alone process name.
@@ -148,7 +148,7 @@ export const NetnsDetails = React.forwardRef<HTMLDivElement, React.BaseHTMLAttri
                             )}
                         </SeeAlsoList>
                     </Typography>) || null}
-                <Typography variant="body1" color="textSecondary" paragraph>
+                <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
                     Do you want to refresh? <RefreshButton />
                 </Typography>
             </div>

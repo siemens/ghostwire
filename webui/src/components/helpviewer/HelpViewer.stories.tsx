@@ -4,7 +4,7 @@
 
 import { MemoryRouter } from 'react-router'
 import type { Meta, StoryObj } from '@storybook/react'
-import { MuiMarkdown } from 'components/muimarkdown'
+import { MuiMarkdown, type MuiMarkdownProps } from 'components/muimarkdown'
 
 import { HelpViewer } from './HelpViewer'
 
@@ -12,7 +12,7 @@ import chintro from "./01-intro.mdx"
 import chfoobar from "./02-foobar.mdx"
 import chnew from "./03-newchapter.mdx"
 
-const MyMarkdowner = (props: any) => (<MuiMarkdown {...props} />);
+const MyMarkdowner = (props: MuiMarkdownProps) => (<MuiMarkdown {...props} />);
 
 const chapters = [
     { title: "Intro", chapter: chintro },

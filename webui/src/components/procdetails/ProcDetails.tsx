@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { styled } from "@mui/material"
 import ProcessIcon from 'icons/Process'

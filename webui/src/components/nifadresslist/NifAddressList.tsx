@@ -2,10 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
-import { NetworkInterface } from 'models/gw'
-import { AddressFamily, AddressFamilySet, orderAddresses } from 'models/gw/address'
+import { type NetworkInterface } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, orderAddresses } from 'models/gw/address'
 import { Address } from 'components/address'
 
 export interface NifAddressListProps {

@@ -2,15 +2,15 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo, LegacyRef, useEffect } from 'react'
+import React, { useState, useRef, useMemo, type RefObject } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
 import useResizeObserver from 'beautiful-react-hooks/useResizeObserver'
 
 import { useContextualId } from 'components/idcontext'
-import { Wire, Wiring } from 'components/wiring'
-import { NetworkInterface, NetworkNamespace, NetworkNamespaces, nifId, OperationalState } from 'models/gw'
+import { type Wire, Wiring } from 'components/wiring'
+import { type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, OperationalState } from 'models/gw'
 import { isRelationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 
@@ -292,8 +292,12 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
 
     const breadboardref = useRef<HTMLDivElement>(null)
 
-    const prevnetnsref = useRef<NetworkNamespaces | NetworkNamespace[] | NetworkNamespace | null>(null)
+    const [prevNetns, setPrevNetns] = useState(netns)
     const [generation, setGeneration] = useState(0)
+    if (netns !== prevNetns) {
+        setPrevNetns(netns)
+        setGeneration(generation + 1)
+    }
 
     // beautiful react hooks to the (layouting) rescue, as they offer us a slick
     // resize observer with integrated debouncing/throttling. We need to
@@ -303,22 +307,17 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     // the wires in those circumstances, we simply derive a "layout token"
     // changing whenever the dimensions of the content change (as this then can
     // shuffle the wired network interfaces around) and we need to follow.
-    const contentref = useRef<HTMLElement>(null)
-    const contentRect = useResizeObserver(contentref, 100/*ms*/)
-    const layoutToken = contentRect 
-        ? `${contentRect.width}x${contentRect.height}-${generation}` 
+    const contentref = useRef<HTMLDivElement>(null)
+    const contentRect = useResizeObserver(contentref as RefObject<HTMLElement>, 100/*ms*/)
+    const layoutToken = contentRect
+        ? `${contentRect.width}x${contentRect.height}-${generation}`
         : generation.toString()
 
     const contentMemo = useMemo(() => (
-        <ContentPane id={nifContainerDomId} ref={contentref as LegacyRef<HTMLDivElement>}>
+        <ContentPane id={nifContainerDomId} ref={contentref}>
             {children}
         </ContentPane>
     ), [nifContainerDomId, children])
-
-    useEffect(() => {
-        prevnetnsref.current = netns
-        setGeneration(generation+1)
-    }, [netns])
 
     const wires = extractWiring(netns, domIdBase)
 

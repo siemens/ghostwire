@@ -2,11 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
-
 import { styled } from '@mui/material'
 
-import { PrimitiveContainee, NetworkNamespace, sortContaineesByName, containeesOfNetns, isPod, Containee } from 'models/gw'
+import { type PrimitiveContainee, type NetworkNamespace, sortContaineesByName, containeesOfNetns, isPod, type Containee } from 'models/gw'
 import { ContaineeBadge } from 'components/containeebadge'
 
 

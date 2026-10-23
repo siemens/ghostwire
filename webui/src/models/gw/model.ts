@@ -4,15 +4,15 @@
 
 import JSBI from 'jsbi'
 
-import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
-import { NetworkInterface, NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, TapTunProcessor } from './nif'
-import { Process } from './process'
-import { AddressFamily, addressFamilyByName, IpAddress } from './address'
-import { IpRoute } from './route'
-import { NetworkNamespace, NetworkNamespaces } from './netns'
-import { PortUser, TransportPort } from './ports'
+import { type PrimitiveContainee, type Busybox, type Container, containerState, type HostAddressBinding, ContaineeTypes, ContainerFlavors, type Pod, isContainer, type Project, type NetworkNamespaceOrProject } from './containee'
+import { type NetworkInterface, type NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, type TapTunProcessor } from './nif'
+import type { Process } from './process'
+import { AddressFamily, addressFamilyByName, type IpAddress } from './address'
+import type { IpRoute } from './route'
+import type { NetworkNamespace, NetworkNamespaces } from './netns'
+import type { PortUser, TransportPort } from './ports'
 import { isBusybox } from '.'
-import { ForwardedPort } from './forwardedports'
+import type { ForwardedPort } from './forwardedports'
 
 /* Ghostwire's engine v2 own label namespace for passing additional information. */
 export const GHOSTWIRE_LABEL_ROOT = 'gostwire/'
@@ -284,10 +284,10 @@ export const fromjson = (jsondata: JSONObject) => {
                 nif.slaves = (jnif.slaves as JSONObject[]).map(nif => nifmap[nif.idref as string])
                     .filter(slave => !slave.vxlanDetails || nif.kind === 'bridge')
             }
-            jnif.pf && (nif.pf = nifmap[(jnif.pf as JSONObject).idref as string])
-            jnif.master && (nif.master = nifmap[(jnif.master as JSONObject).idref as string])
-            jnif.macvlan && (nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string])
-            jnif.peer && (nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string])
+            if (jnif.pf) nif.pf = nifmap[(jnif.pf as JSONObject).idref as string]
+            if (jnif.master) nif.master = nifmap[(jnif.master as JSONObject).idref as string]
+            if (jnif.macvlan) nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string]
+            if (jnif.peer) nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string]
             if (jnif.vxlan) {
                 // this VXLAN is the overlay, resolve our underlay reference,
                 // and then backlink the underlay to us (the overlay).

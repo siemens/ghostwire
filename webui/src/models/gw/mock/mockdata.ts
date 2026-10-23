@@ -1,26 +1,26 @@
 import data from './mockdata.json'
-import { fromjson } from '../model'
+import { fromjson, type JSONObject } from '../model'
 
-export const discovery = fromjson(data)
+export const discovery = fromjson(data as unknown as JSONObject)
 
 export const initialNetns = Object.values(discovery.networkNamespaces)
-    .find(netns => netns.isInitial)
+    .find(netns => netns.isInitial)!
 
 export const nifLo = Object.values(initialNetns.nifs)
-    .find(nif => nif.name === 'lo')
+    .find(nif => nif.name === 'lo')!
 
 export const nifHw = Object.values(initialNetns.nifs)
-    .find(nif => nif.isPhysical)
+    .find(nif => nif.isPhysical)!
 
 export const nifMacvlanMaster = Object.values(initialNetns.nifs)
-    .find(nif => !!nif.macvlans)
+    .find(nif => !!nif.macvlans)!
 
-export const nifMacvlan = nifMacvlanMaster.macvlans[0]
+export const nifMacvlan = nifMacvlanMaster.macvlans![0]
 
 export const nifBr = Object.values(initialNetns.nifs)
-    .find(nif => nif.kind === 'bridge' && nif.alias === 'mock_default')
+    .find(nif => nif.kind === 'bridge' && nif.alias === 'mock_default')!
 
-export const nifVeth1 = nifBr.slaves[0]
+export const nifVeth1 = nifBr.slaves![0]
 
 export const nifVeth2 = nifVeth1.peer
 
