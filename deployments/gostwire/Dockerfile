@@ -12,6 +12,8 @@ ARG ALPINE_VERSION=3.24
 ARG ALPINE_PATCH=3
 ARG GO_VERSION=1.26.10
 ARG NODE_VERSION=24
+# keep in sync with "packageManager" in webui/package.json
+ARG YARN_VERSION=4.18.1
 ARG XX_VERSION=1.9.0
 
 # Go build settings
@@ -58,9 +60,6 @@ RUN xx-apk add --no-cache gcc musl-dev
 ENV CGO_ENABLED=1
 # https://github.com/mattn/go-sqlite3/issues/1164
 ENV CGO_CFLAGS=-D_LARGEFILE64_SOURCE
-# As of Go 1.20 the Go distribution won't contain a pre-build std library
-# anymore, so do this now and cache it.
-RUN xx-go build std
 
 WORKDIR /ws
 # Copy the additionally used modules into the soon-to-be workspace.
@@ -74,7 +73,7 @@ COPY --from=bctx7 . ${MOD7}
 COPY --from=bctx8 . ${MOD8}
 COPY --from=bctx9 . ${MOD9}
 
-# Make sure we have the main module containing a main package to be build...
+# Make sure we have the main module containing a main package to be built...
 COPY go.mod go.sum ./ghostwire/
 
 # Establish the Go workspace
@@ -99,9 +98,7 @@ COPY passedthrough/ ./passedthrough/
 COPY xsk/ ./xsk/
 COPY *.go ./
 
-RUN --mount=target=. \
-    --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/go/pkg \
+RUN --mount=type=cache,target=/root/.cache/go-build \
     xx-go build -v \
     -tags="${TAGS}" \
     -ldflags="${LDFLAGS}" \
@@ -114,28 +111,27 @@ RUN --mount=target=. \
 FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webui
 WORKDIR /webui
 ENV PATH=/webui/node_modules/.bin:$PATH
-RUN yarn set version berry
-RUN yarn config set nodeLinker node-modules
+ARG YARN_VERSION
+RUN yarn set version ${YARN_VERSION} && \
+    yarn config set nodeLinker node-modules
 # stage 2.1 :) install a full-blown node_modules dependency hell; we need to
 # tell yarn to be more patient. This gives us a nice cached layer.
-COPY --from=webappsrc \
-    package.json \
-    yarn.lock \
-    eslint.config.js \
-    tsconfig.json \
-    tsconfig.app.json \
-    tsconfig.node.json \
-    vite.config.ts \
-    yarn.lock \
-    index.html \
-    ghostwire.svg \
-    ./
+COPY --from=webappsrc package.json yarn.lock ./
 
 #RUN yarn workspaces focus --production
 RUN yarn
 
 # stage 2.2 only now copy in the web ui completely and build the optimized
 # static artefacts.
+COPY --from=webappsrc \
+    eslint.config.js \
+    tsconfig.json \
+    tsconfig.app.json \
+    tsconfig.node.json \
+    vite.config.ts \
+    index.html \
+    ghostwire.svg \
+    ./
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
 COPY --from=webappsrc .env ./
@@ -161,7 +157,6 @@ WORKDIR /ws/ghostwire
 COPY --from=webappsrc webui.go ./webui/
 COPY --from=webui /webui/build/ ./webui/build/
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/go/pkg \
     xx-go build -v \
     -tags="${TAGS},webui" \
     -ldflags="${LDFLAGS}" \
@@ -175,8 +170,6 @@ RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_
 # and its web ui application into the final image.
 FROM alpine:${ALPINE_VERSION}.${ALPINE_PATCH} AS final
 LABEL maintainer="Harald Albrecht <harald.albrecht@siemens.com>"
-ARG ALPINE_VERSION
-ARG GOLANG_VERSION
 COPY --from=embedder /gostwire /gostwire
 #COPY --from=webui /webui/build /webui/build
 # Now bugger off...
@@ -186,6 +179,6 @@ USER 65534
 ENTRYPOINT ["/gostwire"]
 # CMD in combination with ENTRYPOINT now specifies *additional* default command
 # line arguments, which will be added to the ENTRYPOINT parameters. These
-# default arguments can be easily overriden when using "docker run <container>
+# default arguments can be easily overridden when using "docker run <container>
 # additional-args".
 CMD ["--http", "[::]:5000"]

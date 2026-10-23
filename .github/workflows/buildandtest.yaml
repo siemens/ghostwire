@@ -9,6 +9,9 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+
 jobs:
 
   buildandtest:
@@ -20,13 +23,13 @@ jobs:
 
     steps:
       - name: Set up Go ${{matrix.go}}
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # pin@v4
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: ${{matrix.go}}
         id: go
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up nerdctl and CNI plugins
         run: |

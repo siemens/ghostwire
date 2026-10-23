@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Check out the repo
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       
       - name: Get all git tags
         run: |
@@ -28,15 +28,15 @@ jobs:
         run: go generate .
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # pin@v2
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:
           platforms: ${{ env.PLATFORMS }}
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@6a58db7e0d21ca03e6c44877909e80e45217eed2 # pin@v2
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log into the container registry
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # pin@v2
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         if: github.ref_type == 'tag'
         with:
           registry: ghcr.io
@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker metadata
-        uses: docker/metadata-action@2c0bd771b40637d97bf205cbccdd294a32112176 # pin@v4
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: metadata # later referenced as "steps.metadata."
         with:
           images: ghcr.io/${{ github.repository }}
@@ -69,7 +69,7 @@ jobs:
           echo "$EOF" >> $GITHUB_ENV
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # pin@v4
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ./deployments/gostwire/Dockerfile
@@ -83,4 +83,6 @@ jobs:
           build-contexts: |
             webappsrc=./webui
             ${{ env.BUILDCONTEXTS }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Container virtual networks discovery service
