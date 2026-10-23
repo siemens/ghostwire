@@ -46,8 +46,8 @@ type nifnamer func(*network.Network) string
 // network interface naming functions.
 var nifnamerByNetworkType = map[string]nifnamer{
 	"bridge":  bridgeNifName,
-	"ipvlan":  xvlanNifName,
-	"macvlan": xvlanNifName,
+	"ipvlan":  ipvlanNifName,
+	"macvlan": macvlanNifName,
 }
 
 // bridgeNifName returns the name of the bridge network interface for the
@@ -64,11 +64,23 @@ func bridgeNifName(net *network.Network) string {
 	return "br-" + net.ID[0:12] // ...auto-generated nif name.
 }
 
+// macvlanNifName returns the name of either the master network interface or
+// the dummy-type replacement interface for the specified Docker macvlan network.
+func macvlanNifName(net *network.Network) string {
+	return xvlanNifName(net, "dm-")
+}
+
+// ipvlanNifName returns the name of either the master network interface or the
+// dummy-type replacement interface for the specified Docker ipvlan network.
+func ipvlanNifName(net *network.Network) string {
+	return xvlanNifName(net, "di-")
+}
+
 // xvlanNifName returns the name of either the master network interface or the
-// dummy-type replacement interface for the specified Docker macvlan network.
-func xvlanNifName(net *network.Network) string {
+// dummy-type replacement interface with the driver-specific dummy prefix.
+func xvlanNifName(net *network.Network, dummyPrefix string) string {
 	if mastername, ok := net.Options[XvlanParentOptionName]; ok {
-		return mastername // ...explicitly configured bridge nif name.
+		return mastername // ...explicitly configured master nif name.
 	}
-	return "dm-" + net.ID[0:12] // ...auto-generated nif name for the dummy master.
+	return dummyPrefix + net.ID[0:12] // ...auto-generated nif name for the dummy master.
 }

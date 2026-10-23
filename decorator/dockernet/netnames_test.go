@@ -19,6 +19,7 @@ import (
 	"github.com/thediveo/nonstd/xslices"
 	nobridge "github.com/thediveo/notwork/bridge"
 	"github.com/thediveo/notwork/dummy"
+	"github.com/vishvananda/netlink"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -36,7 +37,7 @@ var _ = Describe("network interface names of Docker networks", func() {
 	})
 
 	DescribeTable("*vlan",
-		func(ctx context.Context, driver string, explicitParent bool) {
+		func(ctx context.Context, driver string, nifnamer nifnamer, dummyPrefix string, explicitParent bool) {
 			sess := Successful(morbyd.NewSession(ctx,
 				session.WithAutoCleaning("test.decorator.dockernet.xvlan=")))
 			DeferCleanup(sess.Close)
@@ -48,7 +49,7 @@ var _ = Describe("network interface names of Docker networks", func() {
 					macvlan.WithParent(mastername), // works also for ipvlan
 				))
 				DeferCleanup(netw.Remove)
-				Expect(xvlanNifName(&netw.Details.Network.Network)).To(Equal(mastername))
+				Expect(nifnamer(&netw.Details.Network.Network)).To(Equal(mastername))
 				return
 			}
 
@@ -56,11 +57,14 @@ var _ = Describe("network interface names of Docker networks", func() {
 				net.WithDriver(driver),
 			))
 			DeferCleanup(netw.Remove)
-			Expect(xvlanNifName(&netw.Details.Network.Network)).To(
-				Equal("dm-" + netw.Details.Network.ID[0:12]))
+			Expect(nifnamer(&netw.Details.Network.Network)).To(
+				Equal(dummyPrefix + netw.Details.Network.ID[0:12]))
+			Expect(Successful(netlink.LinkByName(dummyPrefix + netw.Details.Network.ID[0:12]))).NotTo(BeNil())
 		},
-		Entry(nil, "ipvlan", true),
-		Entry(nil, "ipvlan", false),
+		Entry(nil, "ipvlan", ipvlanNifName, "di-", true),
+		Entry(nil, "ipvlan", ipvlanNifName, "di-", false),
+		Entry(nil, "macvlan", macvlanNifName, "dm-", true),
+		Entry(nil, "macvlan", macvlanNifName, "dm-", false),
 	)
 
 	DescribeTable("bridges of the ancients",
