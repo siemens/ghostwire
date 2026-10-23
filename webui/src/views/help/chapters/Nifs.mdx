@@ -19,6 +19,8 @@ export const mcvlan0 = { ...pont0, name: 'mcvlan0', kind: 'macvlan' }
 export const eth0mcmaster = { ...eth0, macvlans: [eth0] }
 export const ipvlan0 = { ...pont0, name: 'ipvlan0', kind: 'ipvlan' }
 export const eth0ipmaster = { ...eth0, ipvlans: [eth0] }
+export const netkit0 = { ...pont0, name: 'netkit0', kind: 'netkit' }
+export const netkit1 = { ...netkit0, name: 'netkit1', netkitDetails: { mode: 'L3', policy: 'forward', primary: true, single: true } }
 export const vxlan0 = { ...pont0, name: 'vxlan0', kind: 'vxlan' }
 export const tun0 = { ...eth0, name: 'tun0', isPhysical: false, tuntapDetails: { mode: 'tun' } }
 export const tap42 = { ...eth0, name: 'tap42', isPhysical: false, tuntapDetails: { mode: 'tap' } }
@@ -96,6 +98,8 @@ on the type of virtual network interface:
 | <NifBadge nif={pont0} style={{whiteSpace: "nowrap"}} /> | **Bridge** | a virtual bridge: this is the network interface of the bridge itself and it always connects the bridge to the virtual IP stack, but never to anywhere else. Additional network interfaces will act as the (Ethernet) ports of the virtual bridge. |
 | <NifBadge nif={int0} style={{whiteSpace: "nowrap"}} /> | **Internal Bridge** | an "internal" Docker virtual bridge: this bridge has additional packet filters installed that block external traffic. Please note that the host itself is still reachable from containers on an internal bridge, as can the host reach the containers attached to this virtual bridge. |
 | <NifBadge nif={veth1Nif} style={{whiteSpace: "nowrap"}} /> | **VETH** | one of exactly two virtual Ethernet network interfaces connected to each other. |
+| <NifBadge nif={netkit0} style={{whiteSpace: "nowrap"}} /> | **netkit** | one of exactly two netkit network interfaces connected to each other, similar to VETH, but programmable using BPF and operating either in layer 2 (Ethernet) or layer 3 (IP) mode. |
+| <NifBadge nif={netkit1} style={{whiteSpace: "nowrap"}} /> | **netkit** (single) | a single-device netkit network interface without any peer. |
 | <NifBadge nif={mcvlan0} style={{whiteSpace: "nowrap"}} /> | **MACVLAN** | an additional "virtual LAN" card to a hardware/physical network interface. The term "VLAN" might be totally misleading, as a MACVLAN network interface is not a separate VLAN in the IEEE 802 sense, but instead adds a separate MAC address on an existing hardware/physical network interface and handles its traffic through this separate network interface. |
 | <NifBadge nif={eth0mcmaster} style={{whiteSpace: "nowrap"}} /> | (**MACVLAN master**) | a hardware/physical network interface to which one or more MACVLAN network interfaces have been added (attached). This is signalled by an Ethernet plug and cable, but with side branches going off to the left and right. |
 | <NifBadge nif={ipvlan0} style={{whiteSpace: "nowrap"}} /> | **IPVLAN** | similar to MACVLAN, but all IPVLAN network interfaces share the MAC address of their hardware/physical network interface, telling their traffic apart by IP address instead. |

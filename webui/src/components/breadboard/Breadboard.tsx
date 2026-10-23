@@ -199,6 +199,7 @@ const extractWiring = (
                 // this special relationship in details, but not in the wiring
                 // view.
                 case 'veth':
+                case 'netkit':
                     if (nif.peer && !wires.has(nif.peer) && !wires.has(nif)) {
                         wires.set(nif, {
                             kind: nif.kind,

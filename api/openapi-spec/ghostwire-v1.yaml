@@ -688,10 +688,54 @@ components:
                                     note that this name might (usually) belong
                                     to a different network namespace!
                                 type: string
+                netkit:
+                    description: 'Only for kind="netkit" interfaces: netkit-specific configuration.'
+                    required:
+                        - mode
+                        - policy
+                        - primary
+                        - single
+                    type: object
+                    properties:
+                        mode:
+                            description: Layer 2 (Ethernet) or layer 3 (IP) mode.
+                            enum:
+                                - L2
+                                - L3
+                                - ''
+                            type: string
+                        policy:
+                            description: |-
+                                Default policy of this netkit end when no BPF
+                                program is attached.
+                            enum:
+                                - forward
+                                - blackhole
+                                - ''
+                            type: string
+                        peer-policy:
+                            description: |-
+                                Default policy of the peer netkit end; absent
+                                in single-device mode.
+                            enum:
+                                - forward
+                                - blackhole
+                                - ''
+                            type: string
+                        primary:
+                            description: |-
+                                Indicates the primary netkit end, which is
+                                usually located in the host network namespace.
+                            type: boolean
+                        single:
+                            description: |-
+                                Indicates a single-device netkit without any
+                                peer netkit interface.
+                            type: boolean
                 peer:
                     description: |-
-                        Only for kind="veth" interfaces: the related peer
-                        interface.
+                        Only for kind="veth" and kind="netkit" interfaces: the
+                        related peer interface.
                     required:
                         - peer-idref
                         - peer-name

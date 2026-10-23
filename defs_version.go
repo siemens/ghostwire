@@ -4,4 +4,4 @@
 package gostwire
 
 // SemVersion is the semantic version string of the ghostwire module.
-const SemVersion = "2.6.1-14-ga708385"
+const SemVersion = "2.6.1-16-gde09e22"

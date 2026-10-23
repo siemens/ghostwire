@@ -216,10 +216,20 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 						master.Name, master.Index, master.Netns.DisplayName())
 				}
 			}
-			// Is this a VETH? Then show its peer...
-			if veth, ok := netif.(network.Veth); ok {
-				veth := veth.Veth()
-				peer := veth.Peer.(network.Veth).Veth()
+			// Is this a VETH or netkit? Then show its peer...
+			if netkit, ok := netif.(network.Netkit); ok {
+				nk := netkit.Netkit()
+				primary := ""
+				if nk.Single {
+					primary = ", single device"
+				} else if nk.Primary {
+					primary = ", primary"
+				}
+				_, _ = fmt.Fprintf(out, "      %s mode, policy %s%s\n",
+					nk.Mode.String(), nk.Policy.String(), primary)
+			}
+			if peer := network.PeerOf(netif); peer != nil {
+				peer := peer.Nif()
 				_, _ = fmt.Fprintf(out, "        ↔ %s(%d) in %s\n",
 					peer.Name, peer.Index, peer.Netns.DisplayName())
 			}

@@ -55,7 +55,7 @@ require (
 	github.com/thediveo/success v1.4.0
 	github.com/thediveo/testily v0.11.0
 	github.com/thediveo/whalewatcher/v2 v2.1.1
-	github.com/vishvananda/netlink v1.3.2-0.20260610182031-c05a276ed0e0
+	github.com/vishvananda/netlink v1.3.2-0.20261015184244-3fdd74264153
 	github.com/vishvananda/netns v0.0.5
 	golang.org/x/sys v0.49.0
 	golang.org/x/text v0.43.0

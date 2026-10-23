@@ -47,7 +47,7 @@ export interface NetworkInterface {
     master?: NetworkInterface /** if enslaved, the bridge interface */
     macvlan?: NetworkInterface /** if macvlan this is our "master" interface */
     ipvlan?: NetworkInterface /** if ipvlan this is our "master" interface */
-    peer?: NetworkInterface /** veth peer network interface */
+    peer?: NetworkInterface /** veth or netkit peer network interface */
     underlay?: NetworkInterface /** vxlan underlay network interface */
 
     addresses: IpAddress[] /** IP addresses assigned to this network interface */
@@ -55,6 +55,7 @@ export interface NetworkInterface {
     tuntapDetails?: TunTapDetails
     vxlanDetails?: VxlanDetails
     vlanDetails?: VlanDetails
+    netkitDetails?: NetkitDetails
 }
 
 export interface NifDriverInfo {
@@ -104,6 +105,14 @@ export interface VxlanDetails {
 export interface VlanDetails {
     vid: number
     vlanProtocol: number,
+}
+
+export interface NetkitDetails {
+    mode: string /** "L2" or "L3" */
+    policy: string /** "forward" or "blackhole" */
+    peerPolicy?: string /** not present in single-device mode */
+    primary: boolean
+    single: boolean /** single-device mode without any peer */
 }
 
 /**

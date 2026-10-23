@@ -234,15 +234,11 @@ func (n *NetworkNamespace) WhereIs(destIP net.IP) (*NetworkNamespace, Interface)
 			return nil, nil
 		}
 		return nif.Nif().Netns.WhereIs(destIP)
-	case "veth":
-		// It's a directly connected VETH, for what that is worth. The other
-		// VETH end must be either the next hop or the ultimate destination,
+	case "veth", "netkit":
+		// It's a directly connected VETH or netkit, for what that is worth. The
+		// other end must be either the next hop or the ultimate destination,
 		// otherwise we know it's a complete and utter miss.
-		veth, ok := bestRoute.Nif.(Veth)
-		if !ok {
-			return nil, nil
-		}
-		peer := veth.Veth().Peer
+		peer := PeerOf(bestRoute.Nif)
 		if peer == nil {
 			return nil, nil
 		}
@@ -262,11 +258,7 @@ func (n *NetworkNamespace) NifInBridgedNetwork(bridge Interface, addr net.IP) In
 		return nil
 	}
 	for _, port := range br.Bridge().Ports {
-		veth, ok := port.Interface().(Veth)
-		if !ok {
-			continue
-		}
-		peer := veth.Veth().Peer
+		peer := PeerOf(port.Interface())
 		if peer == nil {
 			continue
 		}

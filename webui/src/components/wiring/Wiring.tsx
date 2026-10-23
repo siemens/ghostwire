@@ -431,6 +431,9 @@ const WireArea = styled('svg')(({ theme }) => ({
     '& .wire.veth': {
         stroke: theme.palette.wire.veth,
     },
+    '& .wire.netkit': {
+        stroke: theme.palette.wire.netkit,
+    },
     '& .wire.macvlan': {
         stroke: theme.palette.wire.maclvan,
         strokeDasharray: '2.5ex 0.5ex 1ex 0.5ex',

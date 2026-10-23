@@ -48,55 +48,78 @@ func (n *VethAttrs) Init(nlh *netlink.Handle, netns *NetworkNamespace, link netl
 // ResolveRelations resolves relations to the other peer network interface.
 func (n *VethAttrs) ResolveRelations(allns NetworkNamespaces) {
 	n.NifAttrs.ResolveRelations(allns)
-	attrs := n.Link.Attrs()
-	if n.Peer == nil {
-		// Find out who our peer interface is and then relate us to our peer and
-		// vice versa. Please note that RTNETLINK has the ugly behavior to drop
-		// the IFLA_LINK attribute (=attrs.ParentIndex) if the peer network
-		// interface index happens to be the same as our index. However,
-		// IFLA_LINK_NETNSID must be present in such cases (as VETH cannot be
-		// its own peer) so we can detect and properly handle this WTF.
-		netnsid := NSID(attrs.NetNsID)
-		if idx := attrs.ParentIndex; idx != 0 || netnsid != NSID_NONE {
-			if idx == 0 {
-				idx = n.Index // rtnetlink idio(t)syncrasy
-			}
-			netns := n.Netns
-			if netnsid != NSID_NONE {
-				netns = netns.related(netnsid)
-			}
-			if netns == nil {
-				slog.Warn("unknown NSID in netns",
-					slog.Uint64("nsid", uint64(netnsid)),
-					slog.Uint64("netns", n.Netns.ID().Ino))
-				return
-			}
-			peer := netns.Nifs[idx]
-			if peer == nil {
-				return
-			}
-			n.Peer = peer
-			self := n.Interface()
-			peerpeer := peer.(Veth).Veth().Peer
-			if peerpeer == nil || peerpeer == self {
-				peer.(*VethAttrs).Peer = self
-				return
-			}
-			// There's already a different peer set for our peer, so our
-			// peer's peer isn't us.
-			slog.Warn("VETH peer inconsistency with different peer already set",
-				slog.String("interface", n.Name),
-				slog.Uint64("netns", n.Netns.Namespace.ID().Ino),
-				slog.Group("peer",
-					slog.String("interface", peer.Nif().Name),
-					slog.Uint64("netns", peer.Nif().Netns.Namespace.ID().Ino),
-				),
-				slog.Group("existing-peer",
-					slog.String("interface", peerpeer.Nif().Name),
-					slog.Uint64("netns", peerpeer.Nif().Netns.Namespace.ID().Ino),
-				))
-		}
+	if n.Peer != nil {
+		return
 	}
+	peer := n.peerNif()
+	if peer == nil {
+		return
+	}
+	n.Peer = peer
+	self := n.Interface()
+	peerpeer := peer.(Veth).Veth().Peer
+	if peerpeer == nil || peerpeer == self {
+		peer.(*VethAttrs).Peer = self
+		return
+	}
+	warnPeerInconsistency(n.Interface(), peer, peerpeer)
+}
+
+// peerNif returns the peer network interface of a VETH or netkit pair end, or
+// nil if the peer cannot be found. Please note that RTNETLINK has the ugly
+// behavior to drop the IFLA_LINK attribute (=attrs.ParentIndex) if the peer
+// network interface index happens to be the same as our index. However,
+// IFLA_LINK_NETNSID must be present in such cases (as a pair end cannot be its
+// own peer) so we can detect and properly handle this WTF.
+func (n *NifAttrs) peerNif() Interface {
+	attrs := n.Link.Attrs()
+	netnsid := NSID(attrs.NetNsID)
+	idx := attrs.ParentIndex
+	if idx == 0 && netnsid == NSID_NONE {
+		return nil
+	}
+	if idx == 0 {
+		idx = n.Index // rtnetlink idio(t)syncrasy
+	}
+	netns := n.Netns
+	if netnsid != NSID_NONE {
+		netns = netns.related(netnsid)
+	}
+	if netns == nil {
+		slog.Warn("unknown NSID in netns",
+			slog.Uint64("nsid", uint64(netnsid)),
+			slog.Uint64("netns", n.Netns.ID().Ino))
+		return nil
+	}
+	return netns.Nifs[idx]
+}
+
+// warnPeerInconsistency logs that the peer of nif already has a different peer
+// set.
+func warnPeerInconsistency(nif, peer, peerpeer Interface) {
+	slog.Warn("peer inconsistency with different peer already set",
+		slog.String("interface", nif.Nif().Name),
+		slog.Uint64("netns", nif.Nif().Netns.Namespace.ID().Ino),
+		slog.Group("peer",
+			slog.String("interface", peer.Nif().Name),
+			slog.Uint64("netns", peer.Nif().Netns.Namespace.ID().Ino),
+		),
+		slog.Group("existing-peer",
+			slog.String("interface", peerpeer.Nif().Name),
+			slog.Uint64("netns", peerpeer.Nif().Netns.Namespace.ID().Ino),
+		))
+}
+
+// PeerOf returns the peer network interface of a VETH or netkit network
+// interface, or nil if nif isn't a pair end or its peer is unknown.
+func PeerOf(nif Interface) Interface {
+	switch pairend := nif.(type) {
+	case Veth:
+		return pairend.Veth().Peer
+	case Netkit:
+		return pairend.Netkit().Peer
+	}
+	return nil
 }
 
 // Register our NifMaker for the "veth" kind.

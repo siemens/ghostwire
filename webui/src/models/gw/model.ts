@@ -230,6 +230,16 @@ export const fromjson = (jsondata: JSONObject) => {
                         vlanProtocol: vlan['vlan-protocol'] as number
                     }
                 }
+                if (jnif.netkit) {
+                    const netkit = jnif.netkit as JSONObject
+                    nif.netkitDetails = {
+                        mode: netkit.mode as string,
+                        policy: netkit.policy as string,
+                        peerPolicy: netkit['peer-policy'] as string | undefined,
+                        primary: netkit.primary as boolean,
+                        single: !!netkit.single,
+                    }
+                }
                 nifmap[jnif.id as string] = nif
 
                 // Read in all network addresses assigned to this interface...

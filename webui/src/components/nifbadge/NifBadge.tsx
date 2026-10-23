@@ -193,6 +193,7 @@ const nifKindTips: { [key: string]: string } = {
     'dummy': 'all packets swallowing dummy',
     'ipvlan': 'IPVLAN',
     'macvlan': 'MACVLAN',
+    'netkit': 'BPF-programmable netkit',
     'tap': 'layer 2 TAP',
     'tun': 'layer 3 TUNnel',
     'veth': 'virtual peer-to-peer Ethernet',
@@ -272,7 +273,9 @@ export interface NifBadgeProps {
  *     rendered next to the interface badge.
  *   - **`macvlan`** or **`ipvlan`** master: the interface type icon changes from the generic
  *       "Ethernet" plug type with a single cable to one with two cables.
- * - **`veth`** peer: the interface type icon shows a pair of plugs.
+ * - **`veth`** peers: the interface type icon shows a pair of plugs.
+ * - **`netkit`** peers: the interface type icon shows a pair of plugs with a
+ *   (simplified) eBPF bee; a single-device netkit shows only a single plug.
  * - **`macvlan`** and **`ipvlan`**: the type icon shows a down-pointing plug.
  *
  * `NifBadge`s automatically get (additional) CSS class names reflecting their
@@ -285,7 +288,7 @@ export interface NifBadgeProps {
  * in these situations:
  * - "physical" network interface (which has a relation to the external
  *   "world").
- * - veth pair.
+ * - veth or netkit pair.
  * - MACVLAN network interface and its MACVLAN master.
  * - IPVLAN network interface and its IPVLAN master.
  * - VXLAN.
@@ -345,13 +348,16 @@ export const NifBadge = ({
     const withIpvlans = (tooltipBase && nif.ipvlans && ' with additional IPVLAN interface(s)') || ''
     const withOverlays = (tooltipBase && nif.overlays && ' with VXLAN overlay(s)') || ''
     const vxlanDetails = (nif.vxlanDetails && ` ID ${nif.vxlanDetails.vid}`) || ''
+    const netkitDetails = (nif.netkitDetails &&
+        ` (${nif.netkitDetails.mode} mode${nif.netkitDetails.single ? ', single device'
+            : nif.netkitDetails.primary ? ', primary' : ''})`) || ''
     const nifAddrs = nif.addresses
         .filter(addr => addr.family !== AddressFamily.MAC)
         .filter(addr => families.includes(addr.family))
         .sort(orderAddresses)
         .map(addr => <span key={addr.address}>{addr.address}<br /></span>)
     const tooltip = <>
-        {(tooltipBase ? tooltipInternalNetwork + tooltipBase + ' network interface' : '')}{vxlanDetails}{[withOverlays, withMacvlans, withIpvlans].filter(s => s).join(' and')}<br />
+        {(tooltipBase ? tooltipInternalNetwork + tooltipBase + ' network interface' : '')}{vxlanDetails}{netkitDetails}{[withOverlays, withMacvlans, withIpvlans].filter(s => s).join(' and')}<br />
         {nifAddrs}
     </>
 
@@ -379,7 +385,7 @@ export const NifBadge = ({
     if (nif.overlays) { // ...and have some overlays.
         relationClasses.push(...nif.overlays.map(vxlan => relationClassName(domIdBase, nif, vxlan)))
     }
-    if (nif.peer) { // ...peer-to-peer virtual Ethernet cable relationship.
+    if (nif.peer) { // ...peer-to-peer virtual Ethernet cable or netkit relationship.
         relationClasses.push(relationClassName(domIdBase, nif, nif.peer))
     }
     if (nif.underlay) { // ...we're the VXLAN overlay, because we have an underlay :)

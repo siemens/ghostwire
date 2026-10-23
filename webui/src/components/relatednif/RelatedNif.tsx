@@ -62,8 +62,8 @@ export interface RelatedNifProps {
  *
  * Network interfaces with related interfaces are:
  *
- * - **`veth`**: the corresponding peer network interface; this is always a
- *   one-to-one relationship.
+ * - **`veth`** and **`netkit`**: the corresponding peer network interface;
+ *   this is always a one-to-one relationship.
  *
  * - **`macvlan`**: the "master" network interface; this is a one-to-many
  *   relationship, where each macvlan network interface has exactly one master
@@ -107,6 +107,7 @@ export const RelatedNif = ({
                     othernif = nif.ipvlan
                     break
                 case 'veth':
+                case 'netkit':
                     othernif = nif.peer
                     break
                 case 'vxlan':

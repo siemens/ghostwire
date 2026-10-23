@@ -103,10 +103,8 @@ func attachedNetworks(m network.NetworkNamespaces, cntr *model.Container) ([]net
 	return networks, nil
 }
 
-// theOtherEnd returns the peer side of a veth network interface, otherwise nil.
+// theOtherEnd returns the peer side of a veth or netkit network interface,
+// otherwise nil.
 func theOtherEnd(nif network.Interface) network.Interface {
-	if nif.Nif().Kind != "veth" {
-		return nil
-	}
-	return nif.(network.Veth).Veth().Peer
+	return network.PeerOf(nif)
 }

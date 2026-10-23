@@ -34,6 +34,7 @@ type networkInterface struct {
 	Ipvlans       []*nifRef             `json:"ipvlans,omitempty"`
 	Slaves        []*nifRef             `json:"slaves,omitempty"`
 	Peer          *peerNifRef           `json:"peer,omitempty"`
+	Netkit        *netkitConfig         `json:"netkit,omitempty"`
 	TunTap        *tuntapConfig         `json:"tuntap,omitempty"`
 	Vxlan         *vxlanConfig          `json:"vxlan,omitempty"`
 	Vlan          *vlanConfig           `json:"vlan,omitempty"`
@@ -88,6 +89,16 @@ type vlanConfig struct {
 	VlanProtocol int    `json:"vlan-protocol"`
 }
 
+// netkitConfig is optional and carries netkit-specific network interface
+// information.
+type netkitConfig struct {
+	Mode       string `json:"mode"`
+	Policy     string `json:"policy"`
+	PeerPolicy string `json:"peer-policy,omitempty"`
+	Primary    bool   `json:"primary"`
+	Single     bool   `json:"single"`
+}
+
 // newNif returns a properly set up JSON networkInterface, given a discovered
 // network.NetworkInterface.
 func newNif(nif network.Interface) networkInterface {
@@ -96,15 +107,26 @@ func newNif(nif network.Interface) networkInterface {
 	if nif.Nif().Bridge != nil {
 		master = newNifRef(nif.Nif().Bridge)
 	}
-	// Handle a VETH peer, if present.
+	// Handle a VETH or netkit peer, if present.
 	var peer *peerNifRef
-	if veth, ok := nif.(network.Veth); ok {
-		if p := veth.Veth().Peer; p != nil {
-			peer = &peerNifRef{
-				ID:    nifID(p),
-				Index: p.Nif().Index,
-				Name:  p.Nif().Name,
-			}
+	if p := network.PeerOf(nif); p != nil {
+		peer = &peerNifRef{
+			ID:    nifID(p),
+			Index: p.Nif().Index,
+			Name:  p.Nif().Name,
+		}
+	}
+	var netkitcfg *netkitConfig
+	if netkit, ok := nif.(network.Netkit); ok {
+		nk := netkit.Netkit()
+		netkitcfg = &netkitConfig{
+			Mode:    nk.Mode.String(),
+			Policy:  nk.Policy.String(),
+			Primary: nk.Primary,
+			Single:  nk.Single,
+		}
+		if !nk.Single {
+			netkitcfg.PeerPolicy = nk.PeerPolicy.String()
 		}
 	}
 	// Handle a MACVLAN master.
@@ -229,6 +251,7 @@ func newNif(nif network.Interface) networkInterface {
 		IpvlanMaster:  ipvlanmaster,
 		Ipvlans:       ipvlans,
 		Peer:          peer,
+		Netkit:        netkitcfg,
 		Slaves:        slaves,
 		Vxlan:         vxlancfg,
 		TunTap:        tuntapcfg,
