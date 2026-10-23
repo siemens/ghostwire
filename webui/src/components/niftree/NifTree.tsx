@@ -103,7 +103,7 @@ interface SubordinateNifsProps {
 }
 
 /**
- * Component `SubordinateNifs`, given a bridge or macvlan master network
+ * Component `SubordinateNifs`, given a bridge, macvlan, or ipvlan master network
  * interface, then renders a list of "subordinate" network interfaces. If the
  * specified network interface doesn't have subordinate interfaces, then this
  * component renders nothing.
@@ -123,6 +123,7 @@ const SubordinateNifs = ({
 
     const subnifs = (nif.slaves || [])
         .concat(nif.macvlans || [])
+        .concat(nif.ipvlans || [])
         .concat(nif.overlays || [])
         .sort(orderNifByName)
 
@@ -138,7 +139,7 @@ const SubordinateNifs = ({
             <TransitionGroup className="subniflist">
                 {subnifs.map(subnif => {
                     const brport = !!subnif.master && subnif.master.kind === 'bridge'
-                    const othernif = subnif.macvlan || subnif.underlay || subnif.pf
+                    const othernif = subnif.macvlan || subnif.ipvlan || subnif.underlay || subnif.pf
                     return <Collapse
                         className="nif"
                         key={`${subnif.netns.netnsid}-${subnif.name}`}
@@ -242,10 +243,10 @@ export interface NifTreeProps {
  *   interfaces; in consequence, their network addresses also shown in the
  *   sub-hierarchy.
  *
- * - **macvlan master** interfaces also open a sub-hierarchy, consisting of
- *   the macvlan interfaces attached to them. However, this sub-hierarchy
- *   consists only of references, so interface addresses are **not shown** for
- *   such references.
+ * - **macvlan master** and **ipvlan master** interfaces also open a
+ *   sub-hierarchy, consisting of the macvlan or ipvlan interfaces attached to
+ *   them. However, this sub-hierarchy consists only of references, so
+ *   interface addresses are **not shown** for such references.
  *
  * (\*) Please note that "*enslaved*" is official Linux kernel terminology
  * with regard to network interfaces and their use as "(software) bridge
@@ -314,7 +315,7 @@ export const NifTree = ({ netns, filterLo, filterMAC, families: fam, onNavigatio
 
                             {/* 
                               * show enslaved bridge network interfaces,
-                              * MACVLANs, overlay VXLANs, et cetera only
+                              * MACVLANs, IPVLANs, overlay VXLANs, et cetera only
                               * after the address list of the current 
                               * network interface.
                               */}

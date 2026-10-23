@@ -84,12 +84,10 @@ var _ = Describe("MACVAN network interfaces", func() {
 		By("ensuring castability")
 		macvlans := master.Nif().Slaves.OfKind("macvlan")
 		Expect(macvlans).NotTo(BeEmpty())
-		Expect(func() {
-			for _, slave := range macvlans {
-				_ = AssignableTo[Macvlan](slave)
-				_ = AssignableTo[*MacvlanAttrs](slave)
-			}
-		}).NotTo(Panic())
+		for _, slave := range macvlans {
+			_ = AssignableTo[Macvlan](slave)
+			_ = AssignableTo[*MacvlanAttrs](slave)
+		}
 	})
 
 })

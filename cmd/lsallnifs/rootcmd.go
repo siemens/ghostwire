@@ -175,6 +175,12 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 						macvlan.Name, macvlan.Index, macvlan.Netns.DisplayName())
 				}
 			}
+			// Is this an IPVLAN master? Then list its IPVLANs...
+			for _, ipvlan := range nif.Slaves.OfKind("ipvlan") {
+				ipvlan := ipvlan.Nif()
+				_, _ = fmt.Fprintf(out, "       ↳ IPVLAN: %s(%d) in %s\n",
+					ipvlan.Name, ipvlan.Index, ipvlan.Netns.DisplayName())
+			}
 			// Has it VXLAN overlays? Then list its VXLANs...
 			if vxlans := nif.Slaves.OfKind("vxlan"); len(vxlans) != 0 {
 				for _, vxlan := range vxlans {
@@ -199,6 +205,16 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 				_, _ = fmt.Fprintf(out, "      %s mode\n", macvlan.Mode.String())
 				_, _ = fmt.Fprintf(out, "       ☝  master %s(%d) in %s\n",
 					master.Name, master.Index, master.Netns.DisplayName())
+			}
+			// Is this an IPVLAN? Then show its master...
+			if ipvlan, ok := netif.(network.Ipvlan); ok {
+				ipvlan := ipvlan.Ipvlan()
+				_, _ = fmt.Fprintf(out, "      %s mode, %s\n", ipvlan.Mode.String(), ipvlan.Flag.String())
+				if ipvlan.Master != nil {
+					master := ipvlan.Master.Nif()
+					_, _ = fmt.Fprintf(out, "       ☝  master %s(%d) in %s\n",
+						master.Name, master.Index, master.Netns.DisplayName())
+				}
 			}
 			// Is this a VETH? Then show its peer...
 			if veth, ok := netif.(network.Veth); ok {

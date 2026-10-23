@@ -65,6 +65,7 @@ export const gwLightTheme = {
             external: `${rgba(indigo[500], 0.5)}`,
             pfvf: orange[300],
             maclvan: '#008b8b',
+            ipvlan: '#6a5acd',
             veth: '#008800', // Profinepp green ;)
             vxlan: '#b8860b',
         },

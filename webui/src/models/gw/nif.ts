@@ -39,12 +39,14 @@ export interface NetworkInterface {
     labels: { [key: string]: string }
 
     macvlans?: NetworkInterface[] /* attached macvlan interface(s) */
+    ipvlans?: NetworkInterface[] /* attached ipvlan interface(s) */
     slaves?: NetworkInterface[]
     overlays?: NetworkInterface[]
 
     pf?: NetworkInterface /** if a VF where we found its PF */
     master?: NetworkInterface /** if enslaved, the bridge interface */
     macvlan?: NetworkInterface /** if macvlan this is our "master" interface */
+    ipvlan?: NetworkInterface /** if ipvlan this is our "master" interface */
     peer?: NetworkInterface /** veth peer network interface */
     underlay?: NetworkInterface /** vxlan underlay network interface */
 

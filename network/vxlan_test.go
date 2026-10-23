@@ -73,14 +73,12 @@ var _ = Describe("VXLAN network interfaces", func() {
 		Expect(vxlan.DestinationPort).To(Equal(uint16(4789)))
 
 		By("ensuring castability")
-		Expect(func() {
-			vxlans := master.Nif().Slaves.OfKind("vxlan")
-			Expect(vxlans).NotTo(BeEmpty())
-			for _, vxlan := range vxlans {
-				_ = AssignableTo[Vxlan](vxlan)
-				_ = AssignableTo[*VxlanAttrs](vxlan)
-			}
-		}).NotTo(Panic())
+		vxlans := master.Nif().Slaves.OfKind("vxlan")
+		Expect(vxlans).NotTo(BeEmpty())
+		for _, vxlan := range vxlans {
+			_ = AssignableTo[Vxlan](vxlan)
+			_ = AssignableTo[*VxlanAttrs](vxlan)
+		}
 	})
 
 })

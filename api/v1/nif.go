@@ -30,6 +30,8 @@ type networkInterface struct {
 	Master        *nifRef               `json:"master,omitempty"`
 	MacvlanMaster *nifRef               `json:"macvlan,omitempty"` // admittedly stupid naming.
 	Macvlans      []*nifRef             `json:"macvlans,omitempty"`
+	IpvlanMaster  *nifRef               `json:"ipvlan,omitempty"`
+	Ipvlans       []*nifRef             `json:"ipvlans,omitempty"`
 	Slaves        []*nifRef             `json:"slaves,omitempty"`
 	Peer          *peerNifRef           `json:"peer,omitempty"`
 	TunTap        *tuntapConfig         `json:"tuntap,omitempty"`
@@ -110,6 +112,10 @@ func newNif(nif network.Interface) networkInterface {
 	if macvlan, ok := nif.(network.Macvlan); ok {
 		macvlanmaster = newNifRef(macvlan.Macvlan().Master)
 	}
+	var ipvlanmaster *nifRef
+	if ipvlan, ok := nif.(network.Ipvlan); ok {
+		ipvlanmaster = newNifRef(ipvlan.Ipvlan().Master)
+	}
 	// Handle slaves of bridges, but also of other masters, and even of PFs.
 	var slaves []*nifRef
 	if bridge, ok := nif.(network.Bridge); ok {
@@ -117,13 +123,16 @@ func newNif(nif network.Interface) networkInterface {
 			slaves = append(slaves, newNifRef(port))
 		}
 	}
-	var macvlans []*nifRef
+	var macvlans, ipvlans []*nifRef
 	for _, nif := range nif.Nif().Slaves {
-		if nif.Nif().Kind == "macvlan" {
+		switch nif.Nif().Kind {
+		case "macvlan":
 			macvlans = append(macvlans, newNifRef(nif))
-			continue
+		case "ipvlan":
+			ipvlans = append(ipvlans, newNifRef(nif))
+		default:
+			slaves = append(slaves, newNifRef(nif))
 		}
-		slaves = append(slaves, newNifRef(nif))
 	}
 	// Handle a VF.
 	var pf *nifRef
@@ -217,6 +226,8 @@ func newNif(nif network.Interface) networkInterface {
 		Master:        master,
 		MacvlanMaster: macvlanmaster,
 		Macvlans:      macvlans,
+		IpvlanMaster:  ipvlanmaster,
+		Ipvlans:       ipvlans,
 		Peer:          peer,
 		Slaves:        slaves,
 		Vxlan:         vxlancfg,

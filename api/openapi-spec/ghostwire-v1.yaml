@@ -394,6 +394,9 @@ components:
                         of capability bit numbers.
                     type: string
                 status:
+                    description: |-
+                        The container or process status; empty in case of a
+                        bind-mount.
                     enum:
                         - created
                         - running
@@ -402,6 +405,7 @@ components:
                         - removing
                         - exited
                         - dead
+                        - ''
                     type: string
                 type:
                     type: string
@@ -629,6 +633,60 @@ components:
                                     The name of the master interface; please note
                                     that this name might (usually) belong to a
                                     different network namespace!
+                                type: string
+                ipvlan:
+                    description: 'Only for kind="ipvlan" interfaces: the master interface.'
+                    required:
+                        - idref
+                        - name
+                        - index
+                    type: object
+                    properties:
+                        idref:
+                            description: |-
+                                The JSON document-internal reference identifier
+                                of the IPVLAN master interface.
+                            type: string
+                        index:
+                            description: |-
+                                The interface index of the master interface;
+                                please note that this index might (usually)
+                                belong to a different network namespace!
+                            type: integer
+                        name:
+                            description: |-
+                                The name of the master interface; please note
+                                that this name might (usually) belong to a
+                                different network namespace!
+                            type: string
+                ipvlans:
+                    description: |-
+                        The list of "slave" network interfaces that are IPVLAN
+                        network interfaces.
+                    type: array
+                    items:
+                        required:
+                            - idref
+                            - name
+                            - index
+                        type: object
+                        properties:
+                            idref:
+                                description: |-
+                                    The JSON document-internal reference identifier
+                                    of the IPVLAN interface.
+                                type: string
+                            index:
+                                description: |-
+                                    The interface index of the IPVLAN interface;
+                                    please note that this index might (usually)
+                                    belong to a different network namespace!
+                                type: integer
+                            name:
+                                description: |-
+                                    The name of the IPVLAN interface; please
+                                    note that this name might (usually) belong
+                                    to a different network namespace!
                                 type: string
                 peer:
                     description: |-

@@ -78,12 +78,10 @@ var _ = Describe("VLAN network interfaces", func() {
 		By("ensuring castability")
 		vlans := master.Nif().Slaves.OfKind("vlan")
 		Expect(vlans).NotTo(BeEmpty())
-		Expect(func() {
-			for _, slave := range vlans {
-				_ = AssignableTo[Vlan](slave)
-				_ = AssignableTo[*VlanAttrs](slave)
-			}
-		}).NotTo(Panic())
+		for _, slave := range vlans {
+			_ = AssignableTo[Vlan](slave)
+			_ = AssignableTo[*VlanAttrs](slave)
+		}
 	})
 
 })

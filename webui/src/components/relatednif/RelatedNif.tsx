@@ -74,6 +74,9 @@ export interface RelatedNifProps {
  *   the Linux kernel automatically will attach the macvlan interface to the
  *   master hardware interface instead, so there never will be cascades of
  *   macvlans.
+ *
+ * - **`ipvlan`**: the "master" network interface; this is a one-to-many
+ *   relationship, same as with macvlans.
  * 
  * - **`vxlan`**: the "underlay" network interface; this is a one-to-many
  *   relationship, where each vxlan network interface has exactly one underlay
@@ -99,6 +102,9 @@ export const RelatedNif = ({
             switch (nif.kind) {
                 case 'macvlan':
                     othernif = nif.macvlan
+                    break
+                case 'ipvlan':
+                    othernif = nif.ipvlan
                     break
                 case 'veth':
                     othernif = nif.peer

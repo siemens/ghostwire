@@ -191,6 +191,7 @@ const nifKindTips: { [key: string]: string } = {
 
     'bridge': 'virtual bridge',
     'dummy': 'all packets swallowing dummy',
+    'ipvlan': 'IPVLAN',
     'macvlan': 'MACVLAN',
     'tap': 'layer 2 TAP',
     'tun': 'layer 3 TUNnel',
@@ -269,10 +270,10 @@ export interface NifBadgeProps {
  *   "Ethernet" plug icon being shown.
  *   - **hardware**: an additionally "NIC" (network interface card) is
  *     rendered next to the interface badge.
- *   - **`macvlan`** master: the interface type icon changes from the generic
+ *   - **`macvlan`** or **`ipvlan`** master: the interface type icon changes from the generic
  *       "Ethernet" plug type with a single cable to one with two cables.
  * - **`veth`** peer: the interface type icon shows a pair of plugs.
- * - **`macvlan`**: the type icon shows a down-pointing plug.
+ * - **`macvlan`** and **`ipvlan`**: the type icon shows a down-pointing plug.
  *
  * `NifBadge`s automatically get (additional) CSS class names reflecting their
  * relationships with other network interfaces (making use of the
@@ -286,6 +287,7 @@ export interface NifBadgeProps {
  *   "world").
  * - veth pair.
  * - MACVLAN network interface and its MACVLAN master.
+ * - IPVLAN network interface and its IPVLAN master.
  * - VXLAN.
  * - TODO: TAPTUN.
  */
@@ -340,6 +342,7 @@ export const NifBadge = ({
     ])
     const tooltipInternalNetwork = (nif.labels[GHOSTWIRE_LABEL_ROOT + 'bridge/internal'] === 'True') ? 'internal ' : ''
     const withMacvlans = (tooltipBase && nif.macvlans && ' with additional MACVLAN interface(s)') || ''
+    const withIpvlans = (tooltipBase && nif.ipvlans && ' with additional IPVLAN interface(s)') || ''
     const withOverlays = (tooltipBase && nif.overlays && ' with VXLAN overlay(s)') || ''
     const vxlanDetails = (nif.vxlanDetails && ` ID ${nif.vxlanDetails.vid}`) || ''
     const nifAddrs = nif.addresses
@@ -348,7 +351,7 @@ export const NifBadge = ({
         .sort(orderAddresses)
         .map(addr => <span key={addr.address}>{addr.address}<br /></span>)
     const tooltip = <>
-        {(tooltipBase ? tooltipInternalNetwork + tooltipBase + ' network interface' : '')}{vxlanDetails}{withOverlays}{withOverlays && withMacvlans ? ' and' : ''}{withMacvlans}<br />
+        {(tooltipBase ? tooltipInternalNetwork + tooltipBase + ' network interface' : '')}{vxlanDetails}{[withOverlays, withMacvlans, withIpvlans].filter(s => s).join(' and')}<br />
         {nifAddrs}
     </>
 
@@ -366,6 +369,12 @@ export const NifBadge = ({
     }
     if (nif.macvlans) { // ...we're the master of some MACVLANs.
         relationClasses.push(...nif.macvlans.map(macvlan => relationClassName(domIdBase, nif, macvlan)))
+    }
+    if (nif.ipvlan) { // ...we're one of the IPVLANs.
+        relationClasses.push(relationClassName(domIdBase, nif, nif.ipvlan))
+    }
+    if (nif.ipvlans) { // ...we're the master of some IPVLANs.
+        relationClasses.push(...nif.ipvlans.map(ipvlan => relationClassName(domIdBase, nif, ipvlan)))
     }
     if (nif.overlays) { // ...and have some overlays.
         relationClasses.push(...nif.overlays.map(vxlan => relationClassName(domIdBase, nif, vxlan)))

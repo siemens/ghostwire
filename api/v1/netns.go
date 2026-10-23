@@ -232,6 +232,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 		// Ghostwire v1 emits a bind-mount "container" instead.
 		cntrs = append(cntrs, container{
 			ID:       "bmnt-" + strconv.FormatUint(n.ID().Ino, 10),
+			DNS:      dns{EtcHosts: []namedIP{}},
 			Type:     "bindmount",
 			TypeText: "Bind-mounted",
 			Name:     strings.Join(n.Ref(), ":"),

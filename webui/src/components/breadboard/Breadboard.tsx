@@ -209,12 +209,24 @@ const extractWiring = (
                     }
                     break;
                 case 'macvlan':
-                    wires.set(nif, {
-                        kind: nif.kind,
-                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.macvlan!.operstate === OperationalState.Down),
-                        nif1Id: domIdBase + nifId(nif),
-                        nif2Id: domIdBase + nifId(nif.macvlan!),
-                    } as Wire)
+                    if (nif.macvlan) {
+                        wires.set(nif, {
+                            kind: nif.kind,
+                            operStateDown: (nif.operstate === OperationalState.Down) || (nif.macvlan.operstate === OperationalState.Down),
+                            nif1Id: domIdBase + nifId(nif),
+                            nif2Id: domIdBase + nifId(nif.macvlan),
+                        } as Wire)
+                    }
+                    break;
+                case 'ipvlan':
+                    if (nif.ipvlan) {
+                        wires.set(nif, {
+                            kind: nif.kind,
+                            operStateDown: (nif.operstate === OperationalState.Down) || (nif.ipvlan.operstate === OperationalState.Down),
+                            nif1Id: domIdBase + nifId(nif),
+                            nif2Id: domIdBase + nifId(nif.ipvlan),
+                        } as Wire)
+                    }
                     break;
                 case 'vlan':
                     wires.set(nif, {

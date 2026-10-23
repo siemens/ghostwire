@@ -68,10 +68,11 @@ func makePodmanNetworks(ctx context.Context, engine *model.ContainerEngine, alln
 	return
 }
 
-// Decorate decorates bridge and macvlan master network interfaces with alias
-// names that are the names of their corresponding Docker “bridge” or “macvlan”
-// networks, where applicable (a copy is stored also in the labels in Gostwire's
-// key namespace). Additionally, it copies over any user-defined network labels.
+// Decorate decorates bridge, macvlan, and ipvlan master network interfaces with
+// alias names that are the names of their corresponding podman “bridge”,
+// “macvlan”, or “ipvlan” networks, where applicable (a copy is stored also in
+// the labels in Gostwire's key namespace). Additionally, it copies over any
+// user-defined network labels.
 func Decorate(
 	ctx context.Context,
 	allnetns network.NetworkNamespaces,
@@ -99,7 +100,7 @@ func Decorate(
 		for _, netw := range podmannet.networks {
 			var nifname string
 			switch netw.Driver {
-			case "bridge", "macvlan":
+			case "bridge", "macvlan", "ipvlan":
 				nifname = netw.NetworkInterface
 			default:
 				continue

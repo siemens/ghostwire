@@ -22,6 +22,7 @@ import { NifHWIcon } from 'components/nifhwicon'
 const nifTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'bridge': BridgeIcon,
     'dummy': DummyIcon,
+    'ipvlan': MacvlanIcon,
     'macvlan': MacvlanIcon,
     'tap': TapIcon,
     'tun': TunIcon,
@@ -38,10 +39,10 @@ export interface NifIconProps extends SvgIconProps {
 
 /**
  * Renders the type icon of a network interface, such as bridge, veth, macvlan
- * (master), TAP/TUN, VXLAN overlay, or a generic NIC as the fallback. Bridges
- * marked as internal get their own icon, and hardware NICs optionally get their
- * SR-IOV-specific hardware icon. Renders nothing if no network interface is
- * specified.
+ * or ipvlan (master), TAP/TUN, VXLAN overlay, or a generic NIC as the
+ * fallback. Bridges marked as internal get their own icon, and hardware NICs
+ * optionally get their SR-IOV-specific hardware icon. Renders nothing if no
+ * network interface is specified.
  */
 export const NifIcon = ({ nif, considerPhysical, ...props }: NifIconProps) => {
     if (!nif) {
@@ -54,7 +55,7 @@ export const NifIcon = ({ nif, considerPhysical, ...props }: NifIconProps) => {
         return <BridgeInternalIcon {...props} />
     }
     const Icon = (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) ||
-        (nif.macvlans && MacvlanMasterIcon) ||
+        ((nif.macvlans || nif.ipvlans) && MacvlanMasterIcon) ||
         nifTypeIcons[nif.kind] || NicIcon
     return <Icon {...props} />
 }

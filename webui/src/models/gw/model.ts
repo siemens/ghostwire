@@ -275,6 +275,9 @@ export const fromjson = (jsondata: JSONObject) => {
             if (jnif.macvlans) {
                 nif.macvlans = (jnif.macvlans as JSONObject[]).map(nif => nifmap[nif.idref as string])
             }
+            if (jnif.ipvlans) {
+                nif.ipvlans = (jnif.ipvlans as JSONObject[]).map(nif => nifmap[nif.idref as string])
+            }
             if (jnif.slaves) {
                 // Nota bene: while the discovery service classifies VXLAN
                 // overlays as slaves, we now sort it out; instead, we are
@@ -287,6 +290,7 @@ export const fromjson = (jsondata: JSONObject) => {
             if (jnif.pf) nif.pf = nifmap[(jnif.pf as JSONObject).idref as string]
             if (jnif.master) nif.master = nifmap[(jnif.master as JSONObject).idref as string]
             if (jnif.macvlan) nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string]
+            if (jnif.ipvlan) nif.ipvlan = nifmap[(jnif.ipvlan as JSONObject).idref as string]
             if (jnif.peer) nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string]
             if (jnif.vxlan) {
                 // this VXLAN is the overlay, resolve our underlay reference,

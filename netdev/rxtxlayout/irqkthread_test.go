@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("IRQ kthreads", func() {
@@ -85,12 +86,11 @@ var _ = Describe("IRQ kthreads", func() {
 	})
 
 	It("accepts correctly formed IRQ kthread names", func() {
-		irq, kt, ok := kvOfIRQKthread(&model.Process{
+		irq, kt := Allright2R(kvOfIRQKthread(&model.Process{
 			ProTaskCommon: model.ProTaskCommon{Name: irqKthreadnamePrefix + "42-abc"},
-		})
+		}))
 		Expect(irq).To(Equal(uint(42)))
 		Expect(kt).NotTo(BeNil())
-		Expect(ok).To(BeTrue())
 	})
 
 	It("skips malformed IRQ kthread names", func() {
