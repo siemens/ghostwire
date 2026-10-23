@@ -1,0 +1,34 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf8" />
+  <title>{{title}}</title>
+  <!-- needed for adaptive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    /* !important to win over Redoc's later :root and :root.dark token definitions */
+    :root {
+      --color-primary-base: #009999 !important;
+      --color-primary-hover: #007a7a !important;
+      --color-primary-active: #006666 !important;
+      --color-primary-text: #007a7a !important;
+      --color-primary-text-hover: #006666 !important;
+      --color-primary-text-active: #006666 !important;
+      --link-color-primary: #009999 !important;
+      --sidebar-logo-max-width: 5ex !important;
+      --sidebar-logo-max-height: 5ex !important;
+    }
+  </style>
+  {{{redocHead}}}
+</head>
+
+<body>
+  {{{redocHTML}}}
+</body>
+
+</html>

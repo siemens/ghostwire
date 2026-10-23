@@ -9,9 +9,10 @@ GOSTATIC = -ldflags="-s -w -extldflags=-static" \
 
 GOGEN = go generate .
 
-GETGITVERSION = export GIT_VERSION=$$(awk -n 'match($$0, /^const SemVersion = "(.*)"$$/, v) { print v[1]; }' defs_version.go)
+GETGITVERSION = export GIT_VERSION=$$(sed -n 's/^const SemVersion = "\(.*\)"$$/\1/p' defs_version.go)
 
-GENAPIDOC = npm_config_yes=true npx @redocly/cli build-docs -o docs/api/index.html api/openapi-spec/ghostwire-v1.yaml
+# Drops the unconditional "now renders docs with Redoc 3" banner, keeping the exit code.
+GENAPIDOC = out=$$(npm_config_yes=true npx @redocly/cli build-docs -t api/openapi-spec/redoc.hbs -o docs/api/index.html api/openapi-spec/ghostwire-v1.yaml 2>&1); rc=$$?; printf '%s\n' "$$out" | sed '/╔/,/╚/d;/^\s*$$/d'; exit $$rc
 
 tools := gostwire gostdump lsallnifs
 
@@ -40,8 +41,8 @@ docsify: ## run a docsify HTTP server on port 3300 (and 3301)
 	@$(GENAPIDOC)
 	@scripts/docsify.sh ./docs
 
-redocsify: ## run redoc-cli in serve mode on port 3400
-	@(cd docs/api && npx @redocly/openapi-cli preview-docs --port 3400 --config=../../redoc-theme.json ../../api/openapi-spec/ghostwire-v1.yaml)
+redocsify: ## generate the API docs in docs/api
+	@$(GENAPIDOC)
 report: ## run goreportcard on this module
 	@./scripts/goreportcard.sh
 
