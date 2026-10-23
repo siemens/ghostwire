@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { styled, Tooltip } from '@mui/material'
 

@@ -40,9 +40,9 @@ export const Navi = () => {
           event.stopPropagation()
           event.preventDefault()
       }}>
-        <Grid container direction="column">
-          <Grid item>Containees</Grid>
-          <Grid item>
+        <Grid container sx={{ flexDirection: "column" }}>
+          <Grid>Containees</Grid>
+          <Grid>
               <FilterInput
                   filterPattern={{
                       pattern: filterPattern,

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import type { ForwardedPort } from 'models/gw/forwardedports'
-import React, { useEffect, useState } from 'react'
+import React, { type JSX, useState } from 'react'
 
 import {
     styled,
@@ -19,7 +19,7 @@ import {
 import ProcessIcon from 'icons/Process'
 
 import { AddressFamily, type AddressFamilySet, type Containee, containeeDisplayName, isContainer, isPod, netnsId, type NetworkNamespace, orderAddresses, type PortUser, type PrimitiveContainee } from 'models/gw'
-import { ContaineeIcon } from 'utils/containeeicon'
+import { ContaineeTypeIcon } from 'utils/containeetypeicon'
 import { ContaineeBadge } from 'components/containeebadge'
 import { scrollIdIntoView } from 'utils'
 import { useNavigate, useMatch } from 'react-router-dom'
@@ -220,10 +220,10 @@ const userDetails = (user: PortUser) => {
     if (containee) {
         if (isContainer(containee) && containee.pod) {
             // This is a "pot'ed" container...
-            info.push([ContaineeIcon(containee.pod)({ key: 'pod', fontSize: 'inherit' }), containee.pod.name])
+            info.push([<ContaineeTypeIcon key="pod" containee={containee.pod} fontSize="inherit" />, containee.pod.name])
         }
         // Add the container details...
-        info.push([ContaineeIcon(containee)({ key: 'containee', fontSize: 'inherit' }), containeeDisplayName(containee)])
+        info.push([<ContaineeTypeIcon key="containee" containee={containee} fontSize="inherit" />, containeeDisplayName(containee)])
     }
     // And finally: the process details ... cmdline and PID.
     info.push(
@@ -408,17 +408,15 @@ const PortsTable = ({ initialRows }: PortsTableProps) => {
 
     // When the externally supplied row data updates, we need to update our
     // sorted table rows for display too ... of course ... erm, well, yes ;)
-    useEffect(() => {
+    const [prevInitialRows, setPrevInitialRows] = useState(initialRows)
+    if (initialRows !== prevInitialRows) {
+        setPrevInitialRows(initialRows)
         setTableRows(sortTableRows(initialRows, [orderBy]))
-        // Please note that we must NOT depend on "orderBy" here on purpose, as
-        // we're otherwise resetting the table rows state each time the user
-        // clicks on a table header column to change sorting ... and that's
-        // ain't a good idea, sir!
-    }, [initialRows])
+    }
 
     // User clicks on a column header in order to sort the table rows by this
     // column. So, let's sort...
-    const handleColumnSort = (event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
+    const handleColumnSort = (_event: React.MouseEvent<unknown>, colHeader: ColHeader) => {
         if (colHeader.id !== orderBy) {
             // Different row to be sorted: start with an ascending sort of the
             // new column.

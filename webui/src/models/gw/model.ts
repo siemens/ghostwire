@@ -284,10 +284,10 @@ export const fromjson = (jsondata: JSONObject) => {
                 nif.slaves = (jnif.slaves as JSONObject[]).map(nif => nifmap[nif.idref as string])
                     .filter(slave => !slave.vxlanDetails || nif.kind === 'bridge')
             }
-            jnif.pf && (nif.pf = nifmap[(jnif.pf as JSONObject).idref as string])
-            jnif.master && (nif.master = nifmap[(jnif.master as JSONObject).idref as string])
-            jnif.macvlan && (nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string])
-            jnif.peer && (nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string])
+            if (jnif.pf) nif.pf = nifmap[(jnif.pf as JSONObject).idref as string]
+            if (jnif.master) nif.master = nifmap[(jnif.master as JSONObject).idref as string]
+            if (jnif.macvlan) nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string]
+            if (jnif.peer) nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string]
             if (jnif.vxlan) {
                 // this VXLAN is the overlay, resolve our underlay reference,
                 // and then backlink the underlay to us (the overlay).

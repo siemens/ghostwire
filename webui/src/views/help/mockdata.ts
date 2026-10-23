@@ -1,15 +1,15 @@
 import JSBI from 'jsbi'
-import { AddressFamily, type Busybox, type Container, ContainerState, type HostAddressBinding, type IpAddress, type NetworkInterface, type NetworkNamespace, OperationalState, type Pod, type Process, type Sandbox, SRIOVRole } from 'models/gw'
+import { AddressFamily, type Busybox, type Container, ContainerState, type DNSSettings, type HostAddressBinding, type IpAddress, type NetworkInterface, type NetworkNamespace, OperationalState, type Pod, type Process, type Sandbox, SRIOVRole } from 'models/gw'
 
 // Mock data needed here solely for illustrational purposes, to explain
 // Ghostwire's display to unsuspecting users.
 export const standaloneBox: Busybox = {
     name: 'init (1)',
     turtleNamespace: '',
-    netns: null,
+    netns: null as unknown as NetworkNamespace, // set below
     ealdorman: {} as Process,
     leaders: [],
-    dns: null,
+    dns: null as unknown as DNSSettings,
 }
 
 export const containerBoxProcess: Process = {
@@ -18,12 +18,16 @@ export const containerBoxProcess: Process = {
     pid: 12345,
     pidnsid: 40961234,
     capbnd: JSBI.BigInt(0),
+    affinity: null,
+    policy: null,
+    priority: null,
+    nice: null,
 }
 
 export const containerBox: Container = {
     name: 'Morbid_Moby_1',
     turtleNamespace: '',
-    netns: null,
+    netns: null as unknown as NetworkNamespace, // set below
     ealdorman: containerBoxProcess,
     leaders: [containerBoxProcess],
     flavor: 'docker',
@@ -62,7 +66,7 @@ export const containerBox: Container = {
 export const boundBox: Sandbox = {
     name: '1234567890',
     turtleNamespace: '',
-    netns: null,
+    netns: null as unknown as NetworkNamespace,
 }
 
 export const initNetns: NetworkNamespace = {
@@ -113,6 +117,7 @@ export const veth1Nif: NetworkInterface = {
     } as IpAddress],
     peer: undefined,
     labels: {},
+    driverinfo: { driver: 'veth' },
 }
 
 initNetns.nifs['1'] = veth1Nif
@@ -133,6 +138,7 @@ export const veth2Nif: NetworkInterface = {
     } as IpAddress],
     peer: veth1Nif,
     labels: {},
+    driverinfo: { driver: 'veth' },
 }
 
 veth1Nif.peer = veth2Nif
@@ -166,4 +172,5 @@ export const eth0: NetworkInterface = {
         prefixlen: 32,
     } as IpAddress],
     labels: {},
+    driverinfo: { driver: 'e1000' },
 }

@@ -42,7 +42,7 @@ const MarkableNetnsDetailCard = styled(NetnsDetailCard)(({ theme }) => ({
 /**
  * Renders a full, detailed view of all discovered network namespaces.
  */
-export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((props, ref) => {
+export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((_props, ref) => {
 
     const [showLoopbacks] = useAtom(showLoopbackAtom)
     const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
@@ -77,7 +77,7 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
     const netnsesAndProjs = sortedNetnsProjects(netnses)
 
     return (
-        <Box m={0} flex={1} overflow="auto">
+        <Box sx={{ m: 0, flex: 1, overflow: 'auto' }}>
             {(netnses.length &&
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />
@@ -123,7 +123,7 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                     </CardTray>
                 </div>)
                 || (orignetnses.length &&
-                    <Typography m={1} variant="body1" color="textSecondary" ref={ref}>
+                    <Typography sx={{ m: 1 }} variant="body1" color="textSecondary" ref={ref}>
                         <FilterAltIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
                         no matches, please check the filter settings in the sidebar.
                     </Typography>)

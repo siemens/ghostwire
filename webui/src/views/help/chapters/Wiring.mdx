@@ -29,10 +29,10 @@ stack (network namespace), <Brand/> also shows the ["containees"](containees)
 (pods, containers, stand-alone processes, et cetera) using that particular IP
 stack. For example:
 
-<Box m={2} style={{width: '25em'}}>
+<Box sx={{ m: 2 }} style={{width: '25em'}}>
   <Breadboard netns={[initNetns, morbidNetns]}>
     <NetnsPlainCard netns={initNetns} />
-    <Box m={1}/>
+    <Box sx={{ m: 1 }}/>
     <NetnsPlainCard netns={morbidNetns} />
   </Breadboard>
 </Box>

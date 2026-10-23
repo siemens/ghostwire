@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import { Box, Button, styled, Tooltip } from '@mui/material'
 
 import { containeeDescription, containeeState, ContainerState, containerStateString, type Containee, containeeFullName, isPrivilegedContainer, isElevatedContainer, isContainer, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
-import { ContaineeIcon } from 'utils/containeeicon'
+import { ContaineeTypeIcon } from 'utils/containeetypeicon'
 import { TargetCapture } from 'components/targetcapture'
 import { PrivilegedIcon } from 'icons/containeestates/Privileged'
 import { IEAppDebuggableStateIcon } from 'icons/containeestates/IEAppDebuggableState'
@@ -220,8 +220,6 @@ export const ContaineeBadge = ({
         appdebuggable && 'ieapp-debuggable',
     )
 
-    const CeeIcon = ContaineeIcon(containee)
-
     const shark = capture && (!hideCapture
         ? <CaptureButton target={containee} />
         : <Box sx={{width: '30px', display:'inline-block'}} />)
@@ -249,13 +247,13 @@ export const ContaineeBadge = ({
                 className={classNames}
                 onClick={handleClick}
             >
-                <CeeIcon className="typeicon" />{kingOfBoxIcon}{bugMeIcon}{containeeFullName(containee)}{endIcon}
+                <ContaineeTypeIcon containee={containee} className="typeicon" />{kingOfBoxIcon}{bugMeIcon}{containeeFullName(containee)}{endIcon}
             </CeeBadge>
             {shark}
         </Badge>
     ) || <Badge>
             <CeeBadge as="div" className={classNames}>
-                <CeeIcon className="typeicon" />{kingOfBoxIcon}{bugMeIcon}{containeeFullName(containee)}{endIcon}
+                <ContaineeTypeIcon containee={containee} className="typeicon" />{kingOfBoxIcon}{bugMeIcon}{containeeFullName(containee)}{endIcon}
             </CeeBadge>
             {shark}
         </Badge>

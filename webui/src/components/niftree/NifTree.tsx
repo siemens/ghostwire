@@ -8,7 +8,7 @@ import { TransitionGroup } from 'react-transition-group'
 import { Collapse, IconButton, Tooltip, styled } from '@mui/material'
 import InfoIcon from '@mui/icons-material/Info'
 
-import { AddressFamily, AddressFamilySet, PrimitiveContainee, NetworkInterface, NetworkNamespace, orderNifByName } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, type PrimitiveContainee, type NetworkInterface, type NetworkNamespace, orderNifByName } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { RelatedNif } from 'components/relatednif'
 import { NifAddressList } from 'components/nifadresslist'

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo, type LegacyRef, useEffect, type RefObject } from 'react'
+import React, { useState, useRef, useMemo, type RefObject } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
@@ -292,8 +292,12 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
 
     const breadboardref = useRef<HTMLDivElement>(null)
 
-    const prevnetnsref = useRef<NetworkNamespaces | NetworkNamespace[] | NetworkNamespace | null>(null)
+    const [prevNetns, setPrevNetns] = useState(netns)
     const [generation, setGeneration] = useState(0)
+    if (netns !== prevNetns) {
+        setPrevNetns(netns)
+        setGeneration(generation + 1)
+    }
 
     // beautiful react hooks to the (layouting) rescue, as they offer us a slick
     // resize observer with integrated debouncing/throttling. We need to
@@ -314,11 +318,6 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
             {children}
         </ContentPane>
     ), [nifContainerDomId, children])
-
-    useEffect(() => {
-        prevnetnsref.current = netns
-        setGeneration(generation + 1)
-    }, [netns])
 
     const wires = extractWiring(netns, domIdBase)
 

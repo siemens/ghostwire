@@ -2,12 +2,13 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useNavigate, useMatch } from 'react-router-dom'
 import clsx from 'clsx'
 
-import useWebSocket, { ReadyState } from 'react-use-websocket'
+// CJS-only package: its default export doesn't survive Vite 8's CommonJS interop.
+import { useWebSocket } from 'react-use-websocket/dist/lib/use-websocket'
 
 import { Button, styled, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import { Label as LabelIcon, HourglassTop, LocalHospital, QuestionMark, Verified, VerifiedOutlined } from '@mui/icons-material'
@@ -161,24 +162,19 @@ export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps
 
     const seenbyName = (seenby.find(cntr => cntr !== undefined) as Container).name
     const [runCheck, setRunCheck] = useState(false)
-    const { lastJsonMessage, readyState } = useWebSocket(url, {
-        queryParams: { target: seenbyName },
-        shouldReconnect: () => false,
-    }, runCheck)
 
-    useEffect(() => {
-        console.log("websocket ready state", readyState)
-        if (readyState === ReadyState.CLOSED || readyState === ReadyState.UNINSTANTIATED) {
-            setRunCheck(false)
-        }
-    }, [readyState])
-
-    useEffect(() => {
-        if (!lastJsonMessage) {
+    const handleMessage = (event: MessageEvent) => {
+        let msg: JSONObject
+        try {
+            msg = JSON.parse(event.data)
+        } catch {
             return
         }
-        const fqdn = ((lastJsonMessage as JSONObject)['fqdn'] as string).slice(0, -1) // -"."
-        const addr = (lastJsonMessage as JSONObject)['address'] as string
+        if (!msg) {
+            return
+        }
+        const fqdn = (msg['fqdn'] as string).slice(0, -1) // -"."
+        const addr = msg['address'] as string
         if (addr) {
             setFqdnAddrs((fqdnAddrs) => {
                 const updatedFqdnAddrs = {
@@ -192,12 +188,19 @@ export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps
                         family: fam,
                         prefixlen: fam === AddressFamily.IPv6 ? 128 : 32,
                     },
-                    quality: (lastJsonMessage as JSONObject)['quality'] as string,
+                    quality: msg['quality'] as string,
                 } as QualifiedServiceAddress
                 return updatedFqdnAddrs
             })
         }
-    }, [lastJsonMessage])
+    }
+
+    useWebSocket(url, {
+        queryParams: { target: seenbyName },
+        shouldReconnect: () => false,
+        onMessage: handleMessage,
+        onClose: () => setRunCheck(false),
+    }, runCheck)
 
     const handleCheck = () => {
         setFqdnAddrs({})
@@ -286,5 +289,5 @@ export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps
                 </Table>
             </ServiceTable>
         </div>
-        : <Typography variant="body2" color="textSecondary" paragraph />
+        : <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }} />
 }

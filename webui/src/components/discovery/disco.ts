@@ -26,7 +26,7 @@ const initialRefreshInterval = (() => {
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
-    } catch (e) { /* empty */ }
+    } catch { /* empty */ }
     return 5000;
 })()
 
@@ -89,7 +89,7 @@ const fetchDiscoveryData = (set: Setter, query: string) => {
             try {
                 return httpresult.json()
             } catch (e) {
-                throw Error('malformed discovery API response')
+                throw Error('malformed discovery API response', { cause: e })
             }
         })
         .then(jsondata => fromjson(jsondata))

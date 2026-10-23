@@ -121,7 +121,6 @@ RUN yarn config set nodeLinker node-modules
 COPY --from=webappsrc \
     package.json \
     yarn.lock \
-    .eslintignore \
     eslint.config.js \
     tsconfig.json \
     tsconfig.app.json \

@@ -2,11 +2,10 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
-import { Process } from 'models/gw/process'
+import { type Process } from 'models/gw/process'
 import { HistoryToggleOff } from '@mui/icons-material'
 import { rgba } from 'utils/rgba'
 

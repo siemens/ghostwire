@@ -2,34 +2,13 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { Box, IconButton, TextField, ToggleButton, ToggleButtonGroup, debounce } from '@mui/material'
 import CaseIcon from 'icons/Case'
 import RegexpIcon from 'icons/Regexp'
 import { Clear } from '@mui/icons-material'
-
-export interface FilterPattern {
-    pattern: string
-    isCaseSensitive: boolean
-    isRegexp: boolean
-}
-
-export const getFilterFn = (fp: FilterPattern) => {
-    if (!fp.isRegexp) {
-        if (fp.isCaseSensitive) {
-            return (s: string) => s.includes(fp.pattern)
-        }
-        const filter = fp.pattern.toLocaleLowerCase()
-        return (s: string) => s.toLocaleLowerCase().includes(filter)
-    }
-    try {
-        const re = new RegExp(fp.pattern, fp.isCaseSensitive ? "" : "i")
-        return (s: string) => re.test(s)
-    } catch (e) {
-        return () => false
-    }
-}
+import { type FilterPattern } from './filter'
 
 export interface FilterInputProps {
     /**
@@ -61,35 +40,30 @@ export interface FilterInputProps {
     focusRef?: React.RefObject<HTMLDivElement | null>
 }
 
-export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, onEnter }: FilterInputProps) => {
-
-    debounceWait = debounceWait || 300
+export const FilterInput = ({ filterPattern, onChange, debounceWait = 300, focusRef, onEnter }: FilterInputProps) => {
 
     const [pattern, setPattern] = useState('')
     const [filterOptions, setFilterOptions] = useState<string[]>([])
 
-    useEffect(() => {
+    const [prevFilterPattern, setPrevFilterPattern] = useState<FilterPattern>()
+    if (filterPattern !== prevFilterPattern) {
+        setPrevFilterPattern(filterPattern)
         setPattern(filterPattern?.pattern || '')
         setFilterOptions((filterPattern?.isCaseSensitive ? ["case"] : []).concat(filterPattern?.isRegexp ? ["regexp"] : []))
-    }, [filterPattern])
-
-    const onChangeHandler = (pattern: string, options: string[]) => {
-        if (!onChange) {
-            return
-        }
-        const isCaseSensitive = options.includes('case')
-        const isRegexp = options.includes('regexp')
-        const fp = {
-            pattern: pattern,
-            isCaseSensitive: isCaseSensitive,
-            isRegexp: isRegexp,
-        } as FilterPattern
-        onChange(fp)
     }
 
     const debouncedOnChange = useMemo(
-        () => debounce(onChangeHandler, debounceWait),
-        [onChange])
+        () => debounce((pattern: string, options: string[]) => {
+            if (!onChange) {
+                return
+            }
+            onChange({
+                pattern: pattern,
+                isCaseSensitive: options.includes('case'),
+                isRegexp: options.includes('regexp'),
+            })
+        }, debounceWait),
+        [onChange, debounceWait])
 
     const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newPattern = event.target.value
@@ -122,7 +96,7 @@ export const FilterInput = ({ filterPattern, onChange, debounceWait, focusRef, o
     if (filterOptions.includes('regexp')) {
         try {
             new RegExp(pattern)
-        } catch (e) {
+        } catch {
             regexpError = true
         }
     }

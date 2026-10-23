@@ -22,7 +22,7 @@ import OpenHouseIcon from 'icons/views/OpenHouse'
  * Renders the discovered port forwardings and open ports from the host's
  * (=initial) network namespace.
  */
-export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((props, ref) => {
+export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((_props, ref) => {
 
     const [showIpFamilies] = useAtom(showIpFamiliesAtom)
 
@@ -31,7 +31,7 @@ export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribut
     const netns = netnses.filter(netns => netns.isInitial).shift()
 
     return (
-        <Box m={1}>
+        <Box sx={{ m: 1 }}>
             {(netnses.length !== 0 &&
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />

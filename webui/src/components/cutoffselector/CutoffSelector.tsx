@@ -21,15 +21,15 @@ export interface CutoffSelectorProps {
     em?: number
 }
 
-export const CutoffSelector = ({ atom, element, elements, em }: CutoffSelectorProps) => {
+export const CutoffSelector = ({ atom, element, elements: elems, em: ems }: CutoffSelectorProps) => {
 
     const [cutoff, setCutoff] = useAtom(atom)
     const id = useId()
 
     // Yeah, very poor I18N.
-    elements = elements || `${element}s`
+    const elements = elems || `${element}s`
 
-    em = (em && em >= 5) ? em : 5
+    const em = (ems && ems >= 5) ? ems : 5
 
     const handleChange = (event: SelectChangeEvent<number>) => {
         setCutoff(event.target.value as number)

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import clsx from 'clsx'
-import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import React, { type JSX, type ReactElement, useLayoutEffect, useState } from 'react'
 
 import { styled, useTheme } from '@mui/material'
 
@@ -282,7 +282,7 @@ const markerSpace = 'marker-'
 const TwoEndedWire = (slw: SwimlaneWire, laneWidth: number, domIdBase: string, wireClass: string, ghostwireClass: string) => {
     const width = (slw.lane + 0.5) * laneWidth
     const radius = laneWidth / 2
-    let path = ''
+    let path: string
     switch (slw.kind) {
         case 'macvlan':
         case 'vxlan':
@@ -475,7 +475,7 @@ const WireArea = styled('svg')(({ theme }) => ({
  * @param cnamedown CSS class name for marker in operstate "down".
  * @param m marker SVG element acting as template.
  */
-const marker = (id: string, cname: string, cnamedown: string, m: ReactElement) =>
+const marker = (id: string, cname: string, cnamedown: string, m: ReactElement<React.SVGProps<SVGMarkerElement>>) =>
     [
         React.cloneElement(m, { id: id, className: cname, key: id }),
         React.cloneElement(m, { id: `${id}down`, className: cnamedown, key: `${id}down` }),
@@ -560,6 +560,8 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
         const [p2pw, lc] = layoutWires(p2pWires, nifContainerDomId)
         const extw = layoutExternals(externalWires, nifContainerDomId)
 
+        // Layout depends on measuring the rendered DOM, so state must be set here.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSvgWires(
             sortHotJSXElements(
                 extw.map(ew => ExternallyFacingWire(ew, lc, laneWidth, domIdBase, 'wire', 'ghostwire'))
@@ -579,6 +581,7 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
         // ... except that in real life even things don't break all the time.
         // How often do we expect classes and classes.wire to change?!!
         // Seriously!
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layoutToken,
         // These are breaking our necks: p2pWires, externalWires, 
         hotWires,

@@ -6,7 +6,7 @@ import React from 'react'
 
 import { Menu, MenuItem, styled } from '@mui/material'
 
-import { AddressFamilySet, firstContainee, NetworkInterface, nifId, orderNifByNameAndContainee } from 'models/gw'
+import { type AddressFamilySet, firstContainee, type NetworkInterface, nifId, orderNifByNameAndContainee } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { ContaineeBadge } from 'components/containeebadge'
 
@@ -27,7 +27,7 @@ const AliasName = styled('span')(() => ({
 const relatedItem = (nif: NetworkInterface) => {
     const containee = firstContainee(nif.netns)
     let nifname = nif.name
-    let alias = ''
+    let alias: string
     // Do we want to show an alias or a container engine network name instead of
     // some incomprehensible interface name?
     if (nif.master && nif.master.kind === 'bridge') {

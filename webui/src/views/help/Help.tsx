@@ -2,17 +2,17 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 
-import { Provider, WritableAtom } from 'jotai'
+import { Provider, type WritableAtom } from 'jotai'
 
 import { Box, Card, useTheme } from '@mui/material'
 
 import { Brand } from 'components/brand'
 import { BrandIcon } from 'components/brandicon'
-import { HelpViewer, HelpViewerChapter } from 'components/helpviewer'
+import { HelpViewer, type HelpViewerChapter } from 'components/helpviewer'
 import { GwMarkdown } from 'components/gwmarkdown'
-import { MuiMarkdownProps } from 'components/muimarkdown'
+import { type MuiMarkdownProps } from 'components/muimarkdown'
 
 import { containeesCutoffAtom, filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, nifsCutoffAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
 import { useHydrateAtoms } from 'jotai/utils'
@@ -68,9 +68,9 @@ interface ExampleProps {
  */
 const Example = ({ children, p, card, ...otherprops }: ExampleProps) => {
     return (
-        <Box m={2} {...otherprops}>
+        <Box sx={{ m: 2 }} {...otherprops}>
             <Card {...card}>
-                <Box p={p || 0}>
+                <Box sx={{ p: p || 0 }}>
                     {children}
                 </Box>
             </Card>

@@ -142,11 +142,11 @@ export type OperationalState = (typeof OperationalState)[keyof typeof Operationa
  * @param nif network interface object
  */
 export const isOperational = (nif: NetworkInterface) => (
-    ![
+    !([
         OperationalState.Down,
         OperationalState.NotPresent,
         OperationalState.Testing
-    ].includes(nif.operstate)
+    ] as OperationalState[]).includes(nif.operstate)
 )
 
 /**

@@ -2,15 +2,15 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { type JSX } from 'react'
 import clsx from 'clsx'
 
-import { Button, styled, SvgIconProps } from '@mui/material'
+import { Button, styled, type SvgIconProps } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
 import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
 
-import { AddressFamily, AddressFamilySet, GHOSTWIRE_LABEL_ROOT, NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, GHOSTWIRE_LABEL_ROOT, type NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
 import { OperationalState } from 'models/gw'
 import { useContextualId } from 'components/idcontext'
 import { TooltipWrapper } from 'utils/tooltipwrapper'

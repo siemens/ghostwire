@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { styled, Tooltip } from '@mui/material'
 
@@ -74,7 +73,7 @@ export const Route = ({ route, onNavigation, className }: RouteProps) => {
     // the route, that is, how many destination(s) are covered. Also determine
     // the tooltip title which reflects the type of route in text instead of a
     // graphical depiction, effectively complementing it.
-    let tooltip = ''
+    let tooltip: string
     let RouteIcon
     if (route.type === 'multicast' || route.type === 'broadcast') {
         tooltip = route.type + ' route'

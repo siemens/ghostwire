@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
-import { AddressFamilySet, PrimitiveContainee, NetworkInterface, SRIOVRole } from 'models/gw'
+import { type AddressFamilySet, type PrimitiveContainee, type NetworkInterface, SRIOVRole } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { NamespaceContainees } from 'components/namespacecontainees'
 import { styled } from '@mui/material'

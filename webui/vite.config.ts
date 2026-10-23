@@ -17,6 +17,9 @@ const srcs = [
     'views',
 ]
 
+// Ghostwire service to proxy API calls to; use http://localhost:5001 for Edgeshark.
+const backend = process.env.GHOSTWIRE_BACKEND || 'http://localhost:5000'
+
 export default defineConfig({
     base: './',
     build: {
@@ -27,10 +30,10 @@ export default defineConfig({
         host: "0.0.0.0",
         port: 3400,
         proxy: {
-            '/json': 'http://localhost:5001',
-            '/mobyshark': 'http://localhost:5001',
-            '/discover/mobyshark': 'http://localhost:5001',
-            '/mobydig': 'http://localhost:5001',
+            '/json': backend,
+            '/mobyshark': backend,
+            '/discover/mobyshark': backend,
+            '/mobydig': { target: backend, ws: true },
         },
     },
     resolve: {

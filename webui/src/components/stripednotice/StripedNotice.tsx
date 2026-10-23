@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { styled } from '@mui/material'
 import { rgba } from 'utils/rgba'
 

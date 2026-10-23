@@ -332,11 +332,9 @@ const ThemedApp = () => {
                 <CssBaseline />
                 <SnackbarProvider maxSnack={3}>
                     <Discovery />
-                    <Router basename={basename}>
-                        <ScreenShooter basename={snapshotbasename}>
-                            <GhostwireApp />
-                        </ScreenShooter>
-                    </Router>
+                    <ScreenShooter basename={snapshotbasename}>
+                        <GhostwireApp />
+                    </ScreenShooter>
                 </SnackbarProvider>
             </ThemeProvider>
         </StyledEngineProvider>
