@@ -19,6 +19,7 @@ export interface NetworkInterface {
     netns: NetworkNamespace /** network namespace we belong to. */
     name: string /** name of network interface. */
     alias?: string /** some user-space assigned name for this interface. */
+    altnames?: string[] /** alternate names of this interface, if any. */
     index: number /** nif index within network namespace. */
     /**
      * kind of (virtual) network interface, or "" if this is a loopback
@@ -31,6 +32,7 @@ export interface NetworkInterface {
     operstate: OperationalState /** operational state of network interface. */
     /** true if not a virtual interface, but has (maybe virtual) hardware attached. */
     isPhysical: boolean
+    isLoopback: boolean /** true if IFF_LOOPBACK is set. */
     driverinfo: NifDriverInfo
     isPromiscuous: boolean /** true if in promiscuous mode. */
     sriovrole: SRIOVRole /** SR-IOV role PF or VF, if applicable. */

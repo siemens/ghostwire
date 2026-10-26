@@ -108,6 +108,7 @@ export const veth1Nif: NetworkInterface = {
     kind: 'veth',
     operstate: OperationalState.Up,
     isPhysical: false,
+    isLoopback: false,
     isPromiscuous: false,
     sriovrole: SRIOVRole.None,
     addresses: [{
@@ -129,6 +130,7 @@ export const veth2Nif: NetworkInterface = {
     kind: 'veth',
     operstate: OperationalState.Up,
     isPhysical: false,
+    isLoopback: false,
     isPromiscuous: false,
     sriovrole: SRIOVRole.None,
     addresses: [{
@@ -164,6 +166,7 @@ export const eth0: NetworkInterface = {
     kind: '',
     operstate: OperationalState.Up,
     isPhysical: true,
+    isLoopback: false,
     isPromiscuous: false,
     sriovrole: SRIOVRole.None,
     addresses: [{

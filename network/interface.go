@@ -46,9 +46,11 @@ type NifAttrs struct {
 	Kind        string            // kind of interface.
 	Name        string            // interface name.
 	Alias       string            // alias name.
+	AltNames    []string          // alternate names, if any.
 	Index       int               // interface index.
 	State       OperState         // operational state.
 	Physical    bool              // or more metaphorical: it has an associated driver.
+	Loopback    bool              // IFF_LOOPBACK flag set.
 	DriverInfo  NifDriverInfo     // ethtool-derived nif driver information.
 	Promiscuous bool              // does snoop all traffic?
 	Labels      model.Labels      // optional labels attached by Gostwire decorators.
@@ -208,9 +210,11 @@ func (n *NifAttrs) Init(nlh *netlink.Handle, netns *NetworkNamespace, link netli
 		Kind:        kind,
 		Name:        attrs.Name,
 		Alias:       attrs.Alias,
+		AltNames:    attrs.AltNames,
 		Index:       attrs.Index,
 		State:       OperState(attrs.OperState),
 		Physical:    link.Type() == "device" && (attrs.Flags&net.FlagLoopback == 0),
+		Loopback:    attrs.Flags&net.FlagLoopback != 0,
 		Promiscuous: attrs.Flags&unix.IFF_PROMISC != 0,
 		Labels:      model.Labels{},
 		L2Addr:      l2addr,

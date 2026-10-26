@@ -20,10 +20,12 @@ type networkInterface struct {
 	Kind          string                `json:"kind"`
 	Name          string                `json:"name"`
 	Alias         string                `json:"alias,omitempty"`
+	AltNames      []string              `json:"altnames,omitempty"`
 	Index         int                   `json:"index"`
 	Addresses     addresses             `json:"addresses"`
 	Operstate     string                `json:"operstate"`
 	Physical      bool                  `json:"physical"`
+	Loopback      bool                  `json:"loopback,omitempty"`
 	DriverInfo    network.NifDriverInfo `json:"driverinfo"`
 	Promiscuous   bool                  `json:"promisc"`
 	Labels        model.Labels          `json:"labels,omitempty"`
@@ -230,17 +232,19 @@ func newNif(nif network.Interface) networkInterface {
 
 	nifattrs := nif.Nif()
 	return networkInterface{
-		ID:    nifID(nif),
-		Name:  nifattrs.Name,
-		Alias: nifattrs.Alias,
-		Index: nifattrs.Index,
-		Kind:  nifattrs.Kind,
+		ID:       nifID(nif),
+		Name:     nifattrs.Name,
+		Alias:    nifattrs.Alias,
+		AltNames: nifattrs.AltNames,
+		Index:    nifattrs.Index,
+		Kind:     nifattrs.Kind,
 		Addresses: addresses{
 			MAC:  nifattrs.L2Addr.String(),
 			IPv4: nifattrs.Addrsv4,
 			IPv6: nifattrs.Addrsv6,
 		},
 		Physical:      nifattrs.Physical,
+		Loopback:      nifattrs.Loopback,
 		DriverInfo:    nifattrs.DriverInfo,
 		Promiscuous:   nifattrs.Promiscuous,
 		Operstate:     nifattrs.State.Name(),

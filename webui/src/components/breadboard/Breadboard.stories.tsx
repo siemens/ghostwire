@@ -35,6 +35,7 @@ const newNif = (
         netns, index, name, kind,
         operstate: OperationalState.Up,
         isPhysical: false,
+        isLoopback: false,
         isPromiscuous: false,
         sriovrole: SRIOVRole.None,
         driverinfo: { driver: kind },

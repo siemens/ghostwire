@@ -513,6 +513,13 @@ components:
                         optional alias name assigned to this network interface.
                         For instance, a Docker network name.
                     type: string
+                altnames:
+                    description: |-
+                        optional list of alternate names assigned to this
+                        network interface.
+                    type: array
+                    items:
+                        type: string
                 id:
                     description: |-
                         The JSON document-internal identifier for this network
@@ -535,6 +542,11 @@ components:
                         parlance) of virtual interface, such as "bridge",
                         "veth", "macvlan", and so on.
                     type: string
+                loopback:
+                    description: |-
+                        Indicates if this is a loopback interface, that is, the
+                        IFF_LOOPBACK flag is set. Omitted if not a loopback.
+                    type: boolean
                 master:
                     description: 'The related "master" network interface, if any.'
                     required:

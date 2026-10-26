@@ -51,6 +51,10 @@ export interface NifInfoProps {
 export const NifInfo = ({ nif, className }: NifInfoProps) => {
     const [snackbarOpen, setSnackbarOpen] = useState(false)
 
+    const kind = nif.kind
+        ? `virtual ${nif.kind}`
+        : nif.isLoopback ? 'loopback' : '(virtualized) hardware'
+
     // Render a single property with value row in the property grid.
     let row = 0
     const prop = (name: string, value: ReactNode) => {
@@ -71,7 +75,8 @@ export const NifInfo = ({ nif, className }: NifInfoProps) => {
     const handleCopyToClipboard = () => {
         let s = ''
         s = add(s, 'interface name', nif.name)
-        s = add(s, 'type/kind', nif.kind || '(virtual) hardware')
+        nif.altnames?.forEach(altname => { s = add(s, 'alternate name', altname) })
+        s = add(s, 'type/kind', kind)
         s = add(s, 'driver', nif.driverinfo.driver)
         s = add(s, 'firmware version', (nif.driverinfo.fwversion || '') !== 'N/A' ? nif.driverinfo.fwversion : '')
         s = add(s, 'ext ROM version', nif.driverinfo.eromversion)
@@ -84,7 +89,8 @@ export const NifInfo = ({ nif, className }: NifInfoProps) => {
         <div className={className}>
             <Details>
                 {prop('interface name', nif.name)}
-                {prop('type/kind', nif.kind ? `virtual ${nif.kind}` : '(virtualized) hardware')}
+                {nif.altnames?.flatMap(altname => prop('alternate name', altname))}
+                {prop('type/kind', kind)}
                 {prop('driver', nif.driverinfo.driver)}
                 {prop('firmware version', nif.driverinfo.fwversion !== 'N/A' && nif.driverinfo.fwversion)}
                 {prop('ext ROM version', nif.driverinfo.eromversion)}
