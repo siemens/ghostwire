@@ -30,7 +30,7 @@ const SchedInformation = styled('span')(({ theme }) => ({
         color: theme.palette.sched.prio,
     },
     '& > .MuiSvgIcon-root': {
-        color: rgba(theme.palette.text.primary, 0.1),
+        color: rgba(theme.palette.text.primary, 0.2),
         verticalAlign: 'text-top',
         position: 'relative',
         top: '-0.15ex',

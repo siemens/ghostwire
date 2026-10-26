@@ -105,8 +105,8 @@ declare module '@mui/material/styles' {
             nice?: string
             notnice?: string
             prio?: string
-            relaxedsched?: string
-            stressedsched?: string
+            relaxed?: string
+            stressed?: string
         },
     }
     

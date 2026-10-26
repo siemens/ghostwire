@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { NetnsPlainCard } from 'components/netnsplaincard'
-import { type Container, GHOSTWIRE_LABEL_ROOT, isContainer, type Project, ProjectFlavors } from 'models/gw'
+import { type Container, GHOSTWIRE_LABEL_ROOT, isContainer, loFiNetns, type Project, ProjectFlavors } from 'models/gw'
 import { crowdedNetns } from 'models/gw/mock'
 
 import ProjectCard from './ProjectCard'
@@ -36,7 +36,7 @@ const meta: Meta<typeof ProjectCard> = {
     component: ProjectCard,
     args: {
         project: composerProject,
-        children: <NetnsPlainCard netns={netns} />,
+        children: <NetnsPlainCard netns={loFiNetns(netns, true)} />,
     },
     argTypes: {
         project: { control: false },

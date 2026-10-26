@@ -61,5 +61,5 @@ export default meta
 
 type Story = StoryObj<typeof Metadata>
 
-// Click the expand button to show the discovery metadata.
+/** Click the expand button to show the discovery metadata. */
 export const Standard: Story = {}

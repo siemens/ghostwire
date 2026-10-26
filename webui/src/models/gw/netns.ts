@@ -98,3 +98,17 @@ export const emptyNonContainerNetns = (netns: NetworkNamespace) =>
  */
 export const emptyContainerNetns = (netns: NetworkNamespace) =>
     emptyNetns(netns) && netns.containers.some(isContainer)
+
+/**
+ * Returns a network namespace with the lo interface filtered out, if told so.
+ * Otherwise returns the original network namespace. Lo-only container network
+ * namespaces always keep their lo interface.
+ */
+export const loFiNetns = (netns: NetworkNamespace, noLo: boolean): NetworkNamespace =>
+    !noLo || emptyContainerNetns(netns)
+        ? netns
+        : {
+            ...netns,
+            nifs: Object.fromEntries(
+                Object.entries(netns.nifs).filter(([, nif]) => nif.name !== 'lo')),
+        }

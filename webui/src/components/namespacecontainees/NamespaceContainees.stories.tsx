@@ -28,7 +28,7 @@ type Story = StoryObj<typeof NamespaceContainees>
 
 export const Crowded: Story = {}
 
-// The list is cut short and an ellipsis indicates left out containees.
+/** The list is cut short and an ellipsis indicates left out containees. */
 export const Limited: Story = {
     args: {
         limit: 2,

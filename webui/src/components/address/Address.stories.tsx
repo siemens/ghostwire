@@ -28,12 +28,14 @@ export default meta
 type Story = StoryObj<typeof Address>
 
 export const IPv4Loopback: Story = {
+    name: 'IPv4 Loopback',
     args: {
         address: loIPv4,
     },
 }
 
 export const IPv6Loopback: Story = {
+    name: 'IPv6 Loopback',
     args: {
         address: loIPv6,
     },
@@ -45,7 +47,7 @@ export const MAC: Story = {
     },
 }
 
-// Loopback interfaces have an all-zero MAC address, which isn't rendered.
+/** Loopback interfaces have an all-zero MAC address, which isn't rendered. */
 export const AllZeroMAC: Story = {
     args: {
         address: loMAC,

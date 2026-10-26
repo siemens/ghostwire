@@ -16,6 +16,7 @@ const meta: Meta<typeof NifTree> = {
     component: NifTree,
     args: {
         netns: initialNetns,
+        filterLo: true,
         onNavigation: fn(),
         onContaineeNavigation: fn(),
     },
@@ -34,9 +35,14 @@ type Story = StoryObj<typeof NifTree>
 
 export const InitialNamespace: Story = {}
 
+export const WithLo: Story = {
+    args: {
+        filterLo: false,
+    },
+}
+
 export const Filtered: Story = {
     args: {
-        filterLo: true,
         filterMAC: true,
         families: [AddressFamily.IPv4],
     },
@@ -48,10 +54,9 @@ export const Container: Story = {
     },
 }
 
-// "network:none" containers keep their lo even when filtering lo.
+/** "network:none" containers keep their lo even when filtering lo. */
 export const LoOnlyContainer: Story = {
     args: {
         netns: loOnlyContainerNetns,
-        filterLo: true,
     },
 }

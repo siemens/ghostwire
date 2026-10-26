@@ -63,7 +63,7 @@ export const InComposerProjectContainer: Story = {
     },
 }
 
-// The project isn't repeated inside its own project card.
+/** The project isn't repeated inside its own project card. */
 export const InsideProjectCard: Story = {
     args: InComposerProjectContainer.args,
     decorators: [

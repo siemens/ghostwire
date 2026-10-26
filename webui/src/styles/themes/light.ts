@@ -75,8 +75,8 @@ export const gwLightTheme = {
             nice: lightGreen[700],
             notnice: orange[900],
             prio: red[400],
-            relaxedsched: lightGreen[400],
-            stressedsched: red[400],
+            relaxed: lightGreen[400],
+            stressed: red[400],
         },
     },
 }

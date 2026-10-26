@@ -37,5 +37,5 @@ export default meta
 
 type Story = StoryObj<typeof NifInfoModalProvider>
 
-// Descendants open the modal using the setter returned by useNifInfoModal().
+/** Descendants open the modal using the setter returned by `useNifInfoModal()`. */
 export const Standard: Story = {}

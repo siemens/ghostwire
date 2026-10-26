@@ -14,6 +14,7 @@ const meta: Meta<typeof NetnsDetailCard> = {
     component: NetnsDetailCard,
     args: {
         netns: initialNetns,
+        filterLo: true,
     },
     argTypes: {
         netns: { control: false },
@@ -33,23 +34,27 @@ export const Crowded: Story = {
     },
 }
 
+export const WithLo: Story = {
+    args: {
+        filterLo: false,
+    },
+}
+
 export const Filtered: Story = {
     args: {
-        filterLo: true,
         filterMAC: true,
         families: [AddressFamily.IPv4],
     },
 }
 
-// "network:none" containers keep their lo even when filtering lo.
+/** "network:none" containers keep their lo even when filtering lo. */
 export const LoOnlyContainer: Story = {
     args: {
         netns: loOnlyContainerNetns,
-        filterLo: true,
     },
 }
 
-// The maximize and minimize buttons only work inside a view route.
+/** The maximize and minimize buttons only work inside a view route. */
 export const MaximizeMinimize: Story = {
     parameters: {
         routerProps: { initialEntries: ['/details'] },

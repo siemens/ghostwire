@@ -37,7 +37,7 @@ export default meta
 
 type Story = StoryObj<typeof NifNavigator>
 
-// Click on the badge to pop up a menu with the related network interfaces.
+/** Click on the badge to pop up a menu with the related network interfaces. */
 export const Veth: Story = {}
 
 export const VethPeer: Story = {
@@ -52,7 +52,7 @@ export const MacvlanMaster: Story = {
     },
 }
 
-// Nothing to navigate to.
+/** Nothing to navigate to. */
 export const Unrelated: Story = {
     args: {
         nif: nifLo,

@@ -41,7 +41,7 @@ type Story = StoryObj<typeof Ghost>
 
 export const Idle: Story = {}
 
-// Keeps the discovery refresh going forever by never answering the fetch.
+/** Keeps the discovery refresh going forever by never answering the fetch. */
 export const Refreshing: Story = {
     beforeEach: () => {
         const origFetch = globalThis.fetch
