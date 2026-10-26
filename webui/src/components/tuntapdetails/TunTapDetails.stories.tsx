@@ -41,7 +41,7 @@ export const Tap: Story = {
     },
 }
 
-// Renders nothing, as there are no processes serving the TUN.
+/** Renders nothing, as there are no processes serving the TUN. */
 export const Unserved: Story = {
     args: {
         nif: {

@@ -124,6 +124,17 @@ const Nif = styled(Button)(({ theme }) => ({
         textAlign: 'right',
     },
 
+    '&.bridge': {
+        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(
+            `<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6'>`
+            + `<path d='M0 3 Q3 1 6 3 T12 3 V6 H0 Z' fill='${theme.palette.bridgewater}' fill-opacity='0.1'/>`
+            + `<path d='M0 3 Q3 1 6 3 T12 3' fill='none' stroke='${theme.palette.bridgewater}' stroke-opacity='0.35'/>`
+            + `</svg>`)}")`,
+        backgroundRepeat: 'repeat-x',
+        backgroundPosition: 'left bottom',
+        backgroundSize: '12px 6px',
+    },
+
     [`&.${OperationalState.Unknown.toLowerCase()}`]: {
         borderColor: theme.palette.mode === 'light' ?
             rgba(theme.palette.operstate.unknown, 0.23) : 'rgba(155, 255, 155, 0.23)',
@@ -431,6 +442,8 @@ export const NifBadge = ({
         }
     }
 
+    const bridgeClass = nif.kind === 'bridge' && nif.operstate !== OperationalState.Down && 'bridge'
+
     // With lots of information prepared we can finally render the badge,
     // optionally wrapped into a tooltip with some detail information about
     // the network interface.
@@ -457,13 +470,13 @@ export const NifBadge = ({
             {(button &&
                 <Nif
                     variant="outlined"
-                    className={clsx('reference', stretchBadgeClass, alignRightClass)}
+                    className={clsx('reference', bridgeClass, stretchBadgeClass, alignRightClass)}
                     onClick={handleBadgeClick}
                 >{content}{endIcon}</Nif>
             ) ||
                 <Nif
                     as="span"
-                    className={clsx(nif.operstate.toLowerCase(), stretchBadgeClass, alignRightClass)}
+                    className={clsx(nif.operstate.toLowerCase(), bridgeClass, stretchBadgeClass, alignRightClass)}
                 >{content}{endIcon}</Nif>
             }
             {(capture || nifCheck) && !alignRight &&

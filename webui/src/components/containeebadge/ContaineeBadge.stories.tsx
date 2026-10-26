@@ -55,12 +55,12 @@ type Story = StoryObj<typeof ContaineeBadge>
 
 export const Standard: Story = {}
 
-// The tooltips reflect the type of containee.
+/** The tooltips reflect the type of containee. */
 export const Types: Story = {
     render: () => badges(types),
 }
 
-// The tooltips reflect the container state.
+/** The tooltips reflect the container state. */
 export const DockerStates: Story = {
     render: () => badges(dockerStates),
 }
@@ -78,6 +78,7 @@ export const Angled: Story = {
     },
 }
 
+/** The capture "fin" button is rendered next to the containee badge. */
 export const Capture: Story = {
     args: {
         capture: true,

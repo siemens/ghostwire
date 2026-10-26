@@ -28,7 +28,7 @@ export default meta
 
 type Story = StoryObj<typeof RelatedNif>
 
-// The related nif is in a different netns, so its containees are shown too.
+/** The related nif is in a different netns, so its containees are shown too. */
 export const Veth: Story = {}
 
 export const VethPeer: Story = {
@@ -43,7 +43,7 @@ export const Macvlan: Story = {
     },
 }
 
-// Renders nothing, as there are no related network interfaces.
+/** Renders nothing, as there are no related network interfaces. */
 export const Unrelated: Story = {
     args: {
         nif: { ...nifHw, macvlans: undefined },

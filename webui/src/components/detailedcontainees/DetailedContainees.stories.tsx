@@ -28,6 +28,7 @@ type Story = StoryObj<typeof DetailedContainees>
 export const Standard: Story = {}
 
 export const IPv4Only: Story = {
+    name: 'IPv4 Only',
     args: {
         families: [AddressFamily.IPv4],
     },

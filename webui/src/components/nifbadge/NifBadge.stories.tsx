@@ -11,6 +11,7 @@ import { DynVarsProvider } from 'components/dynvars'
 import { useContextualId } from 'components/idcontext'
 import { type NetworkInterface, nifId, OperationalState, TapTunMode } from 'models/gw'
 import { initialNetns, nifHw, nifLo, nifMacvlan } from 'models/gw/mock'
+import { Tile, Tiles } from 'stories'
 import { scrollIdIntoView } from 'utils'
 
 import { NifBadge } from './NifBadge'
@@ -38,7 +39,7 @@ const kindNifs: [string, NetworkInterface][] = [
     ['hardware interface', { ...nifHw, macvlans: undefined }],
     ['MACVLAN master', { ...nifHw, macvlans: [nifMacvlan] }],
     ['loopback', nifLo],
-    ['bridge', { ...virtualNif, kind: 'bridge' }],
+    ['bridge', { ...virtualNif, kind: 'bridge', operstate: OperationalState.Up }],
     ['VETH', { ...virtualNif, kind: 'veth' }],
     ['MACVLAN', { ...virtualNif, kind: 'macvlan' }],
     ['VXLAN', { ...virtualNif, kind: 'vxlan' }],
@@ -71,27 +72,31 @@ export const Promiscuous: Story = {
     },
 }
 
-// "Unknown" renders the same as "up": the driver doesn't report any status.
+/** "Unknown" renders the same as "up": the driver doesn't report any status. */
 export const OperationalStates: Story = {
-    render: () => <>
-        {opstateNifs.map(nif => (
-            <Box sx={{ py: 1 }} key={nif.operstate}>
-                <Typography variant="body2" color="textSecondary">{nif.operstate}:</Typography>
-                <NifBadge nif={nif} />
-            </Box>
-        ))}
-    </>,
+    render: () => (
+        <Tiles>
+            {opstateNifs.map(nif => (
+                <Tile key={nif.operstate}>
+                    <Typography variant="body2" color="textSecondary">{nif.operstate}:</Typography>
+                    <NifBadge nif={nif} />
+                </Tile>
+            ))}
+        </Tiles>
+    ),
 }
 
 export const Kinds: Story = {
-    render: () => <>
-        {kindNifs.map(([description, nif]) => (
-            <Box sx={{ py: 1 }} key={description}>
-                <Typography variant="body2" color="textSecondary">{description}:</Typography>
-                <NifBadge nif={nif} />
-            </Box>
-        ))}
-    </>,
+    render: () => (
+        <Tiles>
+            {kindNifs.map(([description, nif]) => (
+                <Tile key={description}>
+                    <Typography variant="body2" color="textSecondary">{description}:</Typography>
+                    <NifBadge nif={nif} />
+                </Tile>
+            ))}
+        </Tiles>
+    ),
 }
 
 export const ButtonAndAnchors: Story = {
@@ -150,7 +155,7 @@ export const Checkbox: Story = {
     },
 }
 
-// Capture buttons need the "enableMonolith" dynamic variable.
+/** Capture buttons need the "enableMonolith" dynamic variable. */
 export const Capture: Story = {
     args: {
         capture: true,

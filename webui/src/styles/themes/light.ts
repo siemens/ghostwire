@@ -30,6 +30,7 @@ export const gwLightTheme = {
             iid: purple[700],
         },
         bridgepaper: rgba(blue[900], 0.03),
+        bridgewater: blue[700],
         capture: blue[900],
         containee: {
             exited: red[800],
@@ -75,8 +76,8 @@ export const gwLightTheme = {
             nice: lightGreen[700],
             notnice: orange[900],
             prio: red[400],
-            relaxedsched: lightGreen[400],
-            stressedsched: red[400],
+            relaxed: lightGreen[400],
+            stressed: red[400],
         },
     },
 }

@@ -24,6 +24,7 @@ export const gwDarkTheme = mergeDeep(
                 iid: pink[200],
             },
             bridgepaper: rgba(blue[800], 0.03),
+            bridgewater: blue[400],
             capture: indigo[300],
             containee: {
                 pod: blue[500],

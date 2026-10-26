@@ -23,6 +23,10 @@ type Story = StoryObj<typeof CPUList>
 
 export const Standard: Story = {}
 
+/**
+ * A CPU icon is rendered before the CPU ranges; hovering shows the custom
+ * tooltip "CPUs online" instead of the default "CPU list".
+ */
 export const WithIcon: Story = {
     args: {
         showIcon: true,
@@ -30,11 +34,15 @@ export const WithIcon: Story = {
     },
 }
 
+/**
+ * The CPU list doesn't wrap after the commas, so it overflows the narrow
+ * dashed box instead of breaking into multiple lines.
+ */
 export const NoWrap: Story = {
     args: {
         noWrap: true,
     },
     decorators: [
-        (Story) => <Box sx={{ width: '4em' }}><Story /></Box>,
+        (Story) => <Box sx={{ width: '6em', outline: '1px dashed', outlineColor: 'text.secondary' }}><Story /></Box>,
     ],
 }

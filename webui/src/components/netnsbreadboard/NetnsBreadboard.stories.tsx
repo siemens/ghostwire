@@ -41,6 +41,7 @@ type Story = StoryObj<typeof NetnsBreadboard>
 export const Everything: Story = {}
 
 export const IPv4Only: Story = {
+    name: 'IPv4 Only',
     args: {
         families: [AddressFamily.IPv4],
     },
@@ -52,12 +53,13 @@ export const WithLo: Story = {
     },
 }
 
-// Hides lo interfaces as well as non-container network namespaces with only lo;
-// the "network:none" container stays visible including its lo.
+/**
+ * Hides lo interfaces as well as non-container network namespaces with only lo;
+ * the "network:none" container stays visible including its lo.
+ */
 export const Filtered: Story = {
     args: {
         netns: somenetnses,
-        filterLo: true,
         filterEmpty: true,
     },
 }

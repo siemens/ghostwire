@@ -37,14 +37,14 @@ export const Veth: Story = {
     },
 }
 
-// A firmware version of "N/A" isn't shown.
+/** A firmware version of "N/A" isn't shown. */
 export const Bridge: Story = {
     args: {
         nif: nifBr,
     },
 }
 
-// Missing information is rendered as crossed out.
+/** Missing information is rendered as crossed out. */
 export const Loopback: Story = {
     args: {
         nif: nifLo,

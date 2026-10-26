@@ -21,6 +21,7 @@ declare module '@mui/material/styles' {
             iid: string,
         },
         bridgepaper: string,
+        bridgewater: string,
         capture: string,
         containee: {
             exited: string,
@@ -69,6 +70,7 @@ declare module '@mui/material/styles' {
             iid?: string,
         },
         bridgepaper?: string,
+        bridgewater?: string,
         capture?: string,
         containee?: {
             exited?: string,
@@ -105,8 +107,8 @@ declare module '@mui/material/styles' {
             nice?: string
             notnice?: string
             prio?: string
-            relaxedsched?: string
-            stressedsched?: string
+            relaxed?: string
+            stressed?: string
         },
     }
     

@@ -48,5 +48,5 @@ export default meta
 
 type Story = StoryObj<typeof Neighborhood>
 
-// "Check" needs a Ghostwire service's mobydig websocket, so it fails here.
+/** "Check" needs a Ghostwire service's mobydig websocket, so it fails here. */
 export const Standard: Story = {}
