@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { MemoryRouter } from 'react-router'
 import type { Meta, StoryObj } from '@storybook/react'
 import { MuiMarkdown, type MuiMarkdownProps } from 'components/muimarkdown'
 
@@ -31,12 +30,13 @@ export default meta
 type Story = StoryObj<typeof HelpViewer>
 
 export const Standard: Story = {
-    render: () => <MemoryRouter initialEntries={['/help']}>
-        <HelpViewer
-            chapters={chapters}
-            baseroute='/help'
-            style={{ height: '30ex', maxHeight: '30ex' }}
-            markdowner={MyMarkdowner}
-        />
-    </MemoryRouter>
+    parameters: {
+        routerProps: { initialEntries: ['/help'] },
+    },
+    render: () => <HelpViewer
+        chapters={chapters}
+        baseroute='/help'
+        style={{ height: '30ex', maxHeight: '30ex' }}
+        markdowner={MyMarkdowner}
+    />
 }

@@ -66,7 +66,7 @@ export const gwLightTheme = {
             pfvf: orange[300],
             maclvan: '#008b8b',
             ipvlan: '#6a5acd',
-            netkit: '#c71585',
+            netkit: '#ffb300', // bee-like stripes together with black
             veth: '#008800', // Profinepp green ;)
             vxlan: '#b8860b',
         },

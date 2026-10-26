@@ -36,8 +36,5 @@
     "src/**/*",
     "vite.config.ts",
     ".storybook/*"
-  ],
-  "exclude": [
-    "src/**/*.spec.tsx"
   ]
 }

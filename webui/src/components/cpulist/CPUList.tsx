@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
+import { Fragment } from 'react'
+
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
@@ -10,6 +12,9 @@ import { rgba } from 'utils/rgba'
 
 
 const CPURangeList = styled('span')(({ theme }) => ({
+    '&.nowrap, & .cpurange': {
+        whiteSpace: 'nowrap',
+    },
     '&.cpulist > .MuiSvgIcon-root': {
         color: rgba(theme.palette.text.primary, 0.1),
         verticalAlign: 'text-top',
@@ -24,7 +29,7 @@ export interface CPUListProps {
     cpus: number[][] | null
     /* show/hide a CPU icon before the CPU ranges */
     showIcon?: boolean
-    /* allow line breaks after range (after the comma) */
+    /* disallow line breaks after ranges (after the commas) */
     noWrap?: boolean
     /** optional tooltip override */
     tooltip?: string
@@ -36,19 +41,19 @@ export interface CPUListProps {
  * The `CPUList` component renders a list of CPU ranges.
  */
 export const CPUList = ({ cpus, showIcon, noWrap, tooltip, className }: CPUListProps) => {
-    const sep = noWrap ? ',' : ',\u200b'
     tooltip = tooltip || 'CPU list'
     return !!cpus && (
         <Tooltip title={tooltip}>
-            <CPURangeList className={clsx('cpulist', className)}>
+            <CPURangeList className={clsx('cpulist', noWrap && 'nowrap', className)}>
                 {!!showIcon && <CPUIcon fontSize="small" />}
                 {
-                    cpus.map((cpurange, index) => {
-                        if (cpurange[0] === cpurange[1]) {
-                            return <span key={index}>{index > 0 && sep}{cpurange[0]}</span>
-                        }
-                        return <span key={index}>{index > 0 && sep}{cpurange[0]}–{cpurange[1]}</span>
-                    })
+                    cpus.map((cpurange, index) =>
+                        <Fragment key={index}>
+                            {index > 0 && ',\u200b'}
+                            <span className="cpurange">
+                                {cpurange[0] === cpurange[1] ? cpurange[0] : `${cpurange[0]}–${cpurange[1]}`}
+                            </span>
+                        </Fragment>)
                 }
             </CPURangeList>
         </Tooltip>

@@ -14,6 +14,7 @@ import { MemoryRouter } from "react-router-dom"
 import { gwDarkTheme, gwLightTheme } from 'styles/themes'
 import { StyledEngineProvider, ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { IdContext } from 'components/idcontext'
 
 // For themes:Themes exported constant, see:
 // https://github.com/storybookjs/storybook/blob/514890e4cdd4e344c43f3dd03e03e9aaa626b7d9/code/core/src/theming/create.ts#L20
@@ -27,8 +28,15 @@ const darkTheme = createTheme(
     { palette: { mode: 'dark' } }, gwDarkTheme)
 
 export const parameters: Parameters = {
+    options: {
+        // sort components by title, but keep the stories in their file order.
+        storySort: (a: { title: string }, b: { title: string }) =>
+            a.title === b.title ? 0 : a.title.localeCompare(b.title, undefined, { numeric: true }),
+    },
     docs: {
         theme: themes.normal, // use same theme as the surrounding parts
+        // args often are huge cyclic discovery model graphs: never serialize them.
+        source: { type: 'code' },
     },
 }
 
@@ -54,7 +62,10 @@ const preview: Preview = {
                         <CssBaseline enableColorScheme />
                         <MemoryRouter {...routerProps}>
                             <div style={{background: theme.palette.background.paper}}>
-                                <Story />
+                                {/* separate DOM element ids of stories sharing the same docs page */}
+                                <IdContext>
+                                    <Story />
+                                </IdContext>
                             </div>
                         </MemoryRouter>
                     </ThemeProvider>

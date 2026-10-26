@@ -13,6 +13,8 @@ import ComposerProjectIcon from 'icons/groups/ComposerProject'
 import { ContainerFlavors, GHOSTWIRE_LABEL_ROOT, type Project, projectDescription } from 'models/gw'
 import { lighten } from '@mui/material'
 
+import { ProjectContext } from './context'
+
 
 const ProjCard = styled(Card)(({ theme }) => ({
     backgroundColor: theme.palette.background.default,
@@ -88,7 +90,9 @@ const ProjectCard = ({ project, children }: ProjectCardProps) => {
                 }
             />
             <CardContent>
-                {children}
+                <ProjectContext.Provider value={project}>
+                    {children}
+                </ProjectContext.Provider>
             </CardContent>
         </ProjCard>
     )

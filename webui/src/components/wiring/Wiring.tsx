@@ -273,6 +273,8 @@ const sortHotJSXElements = (els: JSX.Element[], hotWires: string[], domIdBase: s
 // element ID context, to separate them from other element IDs.
 const markerSpace = 'marker-'
 
+const netkitStripes = 'netkit-stripes'
+
 /**
  * Renders the SVG path of a (virtual) wire connecting two network interfaces.
  *
@@ -337,6 +339,9 @@ l ${-(slw.toInset + width - radius)} 0`
         <path
             key={`${slw.nif1Element.id}-${slw.nif2Element.id}`}
             className={clsx(wireClass, slw.kind, relation, down)}
+            style={slw.kind === 'netkit'
+                ? { '--netkit-stripes': `url(#${domIdBase}${netkitStripes})` } as React.CSSProperties
+                : undefined}
             markerStart={slw.reverse ? marker : undefined}
             markerEnd={slw.reverse ? undefined : marker}
             d={path}
@@ -432,7 +437,14 @@ const WireArea = styled('svg')(({ theme }) => ({
         stroke: theme.palette.wire.veth,
     },
     '& .wire.netkit': {
-        stroke: theme.palette.wire.netkit,
+        // the pattern id is per wiring instance, so it's passed in per wire.
+        stroke: 'var(--netkit-stripes)',
+    },
+    '& .netkit-stripe': {
+        fill: theme.palette.wire.netkit,
+    },
+    '& .netkit-band': {
+        fill: '#000',
     },
     '& .wire.macvlan': {
         stroke: theme.palette.wire.maclvan,
@@ -472,6 +484,13 @@ const WireArea = styled('svg')(({ theme }) => ({
         fill: theme.palette.wire.ipvlan,
     },
     '& .ipvlan-marker-down': {
+        fill: `${theme.palette.text.disabled} !important`,
+    },
+
+    '& .vxlan-marker': {
+        fill: theme.palette.wire.vxlan,
+    },
+    '& .vxlan-marker-down': {
         fill: `${theme.palette.text.disabled} !important`,
     },
 }))
@@ -613,6 +632,15 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
     return (
         <WireArea className={className} width={lanesCount * laneWidth}>
             <defs>
+                <pattern
+                    id={`${domIdBase}${netkitStripes}`}
+                    patternUnits="userSpaceOnUse"
+                    width="16" height="16"
+                    patternTransform="rotate(45)"
+                >
+                    <rect className="netkit-stripe" width="8" height="16" />
+                    <rect className="netkit-band" x="8" width="8" height="16" />
+                </pattern>
                 {marker(
                     `${domIdBase}${markerSpace}external`,
                     'ext-marker', 'ext-marker-down',
@@ -631,6 +659,11 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
                 {marker(
                     `${domIdBase}${markerSpace}ipvlan`,
                     'ipvlan-marker', 'ipvlan-marker-down',
+                    macvlanMarker
+                )}
+                {marker(
+                    `${domIdBase}${markerSpace}vxlan`,
+                    'vxlan-marker', 'vxlan-marker-down',
                     macvlanMarker
                 )}
             </defs>

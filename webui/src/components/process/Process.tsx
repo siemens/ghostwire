@@ -5,8 +5,11 @@
 import type { JSX } from 'react'
 
 import { styled } from '@mui/material'
+import AppProjectIcon from 'icons/groups/AppProject'
+import ComposerProjectIcon from 'icons/groups/ComposerProject'
 import { ProcessDetails } from "components/procdetails"
-import { type PrimitiveContainee, containeeDisplayName, isContainer } from "models/gw"
+import { useEnclosingProject } from 'components/projectcard'
+import { type PrimitiveContainee, containeeDisplayName, isContainer, ProjectFlavors } from "models/gw"
 import { ContaineeTypeIcon } from "utils/containeetypeicon"
 
 const Details = styled('span')(({ theme }) => ({
@@ -42,15 +45,23 @@ export interface ProcessProps {
  */
 export const Process = ({ cmdline, containee, pid }: ProcessProps) => {
     const info: (string | JSX.Element | (string | JSX.Element)[])[] = []
+    const enclosingProject = useEnclosingProject()
 
     // Good gracious! That took a long time to figure out that this seemingly
     // function is a source of non-unique keys, grmpf. Adding keys to each and
     // every array item finally silences the warnings.
 
     if (containee) {
-        if (isContainer(containee) && containee.pod) {
-            // This is a "pot'ed" container...
-            info.push([<ContaineeTypeIcon key="pod" containee={containee.pod} fontSize="inherit" />, containee.pod.name])
+        if (isContainer(containee)) {
+            if (containee.project && containee.project.name !== enclosingProject?.name) {
+                const ProjectIcon = containee.project.flavor === ProjectFlavors.IEAPP
+                    ? AppProjectIcon : ComposerProjectIcon
+                info.push([<ProjectIcon key="project" fontSize="inherit" />, containee.project.name])
+            }
+            if (containee.pod) {
+                // This is a "pot'ed" container...
+                info.push([<ContaineeTypeIcon key="pod" containee={containee.pod} fontSize="inherit" />, containee.pod.name])
+            }
         }
         // Add the container details...
         info.push([<ContaineeTypeIcon key="containee" containee={containee} fontSize="inherit" />, containeeDisplayName(containee)])
