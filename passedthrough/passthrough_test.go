@@ -29,6 +29,7 @@ var _ = Describe("passthrough original ifnames", func() {
 			defer netns.EnterTransient()()
 			dmy := dummy.NewTransient()
 			Expect(netlink.LinkAddAltName(dmy, "colorofmagic=twoflower")).To(Succeed())
+			dmy = Successful(netlink.LinkByName(dmy.Attrs().Name))
 			actual, ok := AltnameValueOk(dmy, prefix)
 			Expect(ok).To(Equal(expectedok))
 			Expect(actual).To(Equal(expected))

@@ -59,9 +59,7 @@ func DockernetID(nif netlink.Link) string {
 	if !ok {
 		return ""
 	}
-	if idx := strings.Index(id, "."); idx != -1 {
-		return id[:idx]
-	}
+	id, _, _ = strings.Cut(id, ".")
 	return id
 }
 
