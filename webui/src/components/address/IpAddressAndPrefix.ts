@@ -7,7 +7,7 @@ export const infiniteLifetime = 4294967295
 /**
  * Renders the lifetime of an IP address in the format "d hh:mm:ss", or the
  * infinity symbol for infinite address lifetimes. Here, "d" denotes days. And
- * we won't support the Maya calender cycles, ever.
+ * we won't support the Maya calendar cycles, ever.
  *
  * @param lifetime address lifetime in seconds.
  */
@@ -29,11 +29,15 @@ export const IpAddressAndPrefix = (addr: string, prefixlen: number) => {
 }
 
 /**
- * Renders an textual IPv4 address into separate prefix and host address
- * parts, based on the given prefix length.
+ * Renders a textual IPv4 address into separate prefix and host address
+ * parts, based on the given prefix length. The split happens at octet
+ * granularity, so an octet only partially covered by the prefix counts as host
+ * part.
  *
  * @param addr IPv4 address in dotted notation.
  * @param prefixlen length of IPv4 address prefix (0 ≤ prefixlen ≤ 32)
+ * @returns tuple of prefix part, host part (including the leading "." if
+ * there is a prefix part), and prefix length.
  */
 const IPv4AddressAndPrefix = (addr: string, prefixlen: number) => {
     // The textual representation of IPv4 addresses bases on octets, so we can
@@ -68,19 +72,25 @@ const trimZero = (s: string) => {
 }
 
 /**
- * Renders an textual IPv46 address into separate prefix and host address
- * parts, based on the given prefix length.
+ * Renders a textual IPv6 address into separate prefix and host address
+ * parts, based on the given prefix length. The split happens at nibble
+ * granularity, so a nibble only partially covered by the prefix counts as host
+ * part. Leading zeros of a group are dropped across the whole group even if
+ * the group is split between prefix and host part; an all-zero split group
+ * renders as a single "0" in the host part. The concatenated parts always
+ * form a valid textual representation of the address.
  *
  * @param addr IPv6 address in textual notation, optionally including
  * collapsed regions using a single "::".
  * @param prefixlen length of IPv6 address prefix (0 ≤ prefixlen ≤ 128)
+ * @returns tuple of prefix part, host part, and prefix length.
  */
 const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
     // The textual representation of IPv6 addresses bases on groups of hex
     // nibbles, where each group consists of up to four nibbles. And then,
     // there is the "::" shorthand notation, so we need to "explode" the
     // textual representation first, if necessary.
-    let exploded: string // ...without delemiters
+    let exploded: string // ...without delimiters
     if (addr.includes('::')) {
         const parts = addr.split("::")
         if (parts.length > 2) {
@@ -94,7 +104,18 @@ const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
     }
     let prefixNibbles = (prefixlen / 4) >> 0
     const prefixDigits = exploded.slice(0, prefixNibbles)
-    const iidDigits = exploded.slice(prefixNibbles)
+    // A group split between prefix and IID needs its leading zeros trimmed as
+    // a whole, otherwise we would render, for instance, "0005" as "05".
+    const partialNibbles = prefixNibbles % 4
+    let partialPrefix = ''
+    let partialIid = ''
+    if (partialNibbles) {
+        const start = prefixNibbles - partialNibbles
+        const group = trimZero(exploded.slice(start, start + 4))
+        const split = Math.max(0, partialNibbles - (4 - group.length))
+        partialPrefix = group.slice(0, split)
+        partialIid = group.slice(split)
+    }
     // First part: render the prefix (nibbles), not using zero-group
     // compression, but dropping leading nibble zeros *inside* groups. The
     // prefix nibbles can later be visually differentiated from the IID
@@ -103,8 +124,11 @@ const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
     let prefix: string
     if (prefixNibbles) {
         const p = []
-        for (let idx = 0; idx < prefixDigits.length; idx += 4) {
+        for (let idx = 0; idx < prefixDigits.length - partialNibbles; idx += 4) {
             p.push(trimZero(prefixDigits.slice(idx, idx + 4)))
+        }
+        if (partialNibbles) {
+            p.push(partialPrefix)
         }
         // Are there leading 0 groups we could collapse?
         let zeroGroupCount = p.findIndex(group => group !== '0')
@@ -137,9 +161,9 @@ const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
     // the next group boundary, before we start working on IID details and
     // optionally IID group compression.
     let iid = ''
-    if (prefixNibbles % 4) {
-        iid = iidDigits.slice(0, 4 - (prefixNibbles % 4))
-        prefixNibbles += 4 - (prefixNibbles % 4)
+    if (partialNibbles) {
+        iid = partialIid
+        prefixNibbles += 4 - partialNibbles
     }
     // Now take the remaining IID nibbles, taking zero-group compression
     // ("::") and dropping leading zero nibbles in a group into consideration.
@@ -165,7 +189,8 @@ const IPv6AddressAndPrefix = (addr: string, prefixlen: number) => {
         if (zeroGroupCount) {
             iid += '::' + i.slice(zeroGroupCount).join(':')
         } else {
-            if (prefix.slice(-1) !== ':') {
+            const head = prefix + iid
+            if (head && !head.endsWith(':')) {
                 iid += ':'
             }
             iid += i.join(':')

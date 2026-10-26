@@ -11,7 +11,6 @@ import {
     Grid,
     List,
     ListItem,
-    ListItemSecondaryAction,
     ListItemText,
     MenuItem,
     Select,
@@ -40,6 +39,10 @@ const SettingsGrid = styled(Grid)(({ theme }) => ({
 
     '& .MuiCard-root + .MuiTypography-subtitle1': {
         marginTop: theme.spacing(4),
+    },
+
+    '& .MuiListItem-root': {
+        gap: theme.spacing(2),
     },
 }))
 
@@ -89,13 +92,11 @@ export const Settings = () => {
                         <List>
                             <ListItem>
                                 <ListItemText primary="Theme" />
-                                <ListItemSecondaryAction>
-                                    <Select size="small" value={theme} onChange={handleThemeChange}>
-                                        <MenuItem value={THEME_USERPREF}>user preference</MenuItem>
-                                        <MenuItem value={THEME_LIGHT}>light</MenuItem>
-                                        <MenuItem value={THEME_DARK}>dark</MenuItem>
-                                    </Select>
-                                </ListItemSecondaryAction>
+                                <Select size="small" value={theme} onChange={handleThemeChange}>
+                                    <MenuItem value={THEME_USERPREF}>user preference</MenuItem>
+                                    <MenuItem value={THEME_LIGHT}>light</MenuItem>
+                                    <MenuItem value={THEME_DARK}>dark</MenuItem>
+                                </Select>
                             </ListItem>
                         </List>
                     </Card>
@@ -105,24 +106,20 @@ export const Settings = () => {
                         <List>
                             <ListItem>
                                 <ListItemText primary="Show IP address families" />
-                                <ListItemSecondaryAction>
-                                    <Select size="small" value={showIpFamilies.toString()} onChange={handleFamilyChange}>
-                                        <MenuItem value={[AddressFamily.IPv4].toString()}>IPv4 only</MenuItem>
-                                        <MenuItem value={[AddressFamily.IPv4, AddressFamily.IPv6].toString()}>IPv4 and IPv6</MenuItem>
-                                        <MenuItem value={[AddressFamily.IPv6].toString()}>IPv6 only</MenuItem>
-                                    </Select>
-                                </ListItemSecondaryAction>
+                                <Select size="small" value={showIpFamilies.toString()} onChange={handleFamilyChange}>
+                                    <MenuItem value={[AddressFamily.IPv4].toString()}>IPv4 only</MenuItem>
+                                    <MenuItem value={[AddressFamily.IPv4, AddressFamily.IPv6].toString()}>IPv4 and IPv6</MenuItem>
+                                    <MenuItem value={[AddressFamily.IPv6].toString()}>IPv6 only</MenuItem>
+                                </Select>
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Show multicast and broadcast routes" />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showMultiBroadcastRoutes}
-                                        onChange={() => setShowMultiBroadcastRoutes(!showMultiBroadcastRoutes)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showMultiBroadcastRoutes}
+                                    onChange={() => setShowMultiBroadcastRoutes(!showMultiBroadcastRoutes)}
+                                    color="primary"
+                                />
                             </ListItem>
                         </List>
                     </Card>
@@ -133,35 +130,29 @@ export const Settings = () => {
 
                             <ListItem>
                                 <ListItemText primary='Show "isolated" network namespaces with only "lo"' />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showEmptyNetns}
-                                        onChange={() => setShowEmptyNetns(!showEmptyNetns)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showEmptyNetns}
+                                    onChange={() => setShowEmptyNetns(!showEmptyNetns)}
+                                    color="primary"
+                                />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary='Show "lo" interfaces' />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showLoopbacks}
-                                        onChange={() => setShowLoopbacks(!showLoopbacks)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showLoopbacks}
+                                    onChange={() => setShowLoopbacks(!showLoopbacks)}
+                                    color="primary"
+                                />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary='Show MAC addresses unless 00:00:00:00:00:00' />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showMAC}
-                                        onChange={() => setShowMAC(!showMAC)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showMAC}
+                                    onChange={() => setShowMAC(!showMAC)}
+                                    color="primary"
+                                />
                             </ListItem>
                         </List>
                     </Card>
@@ -171,24 +162,20 @@ export const Settings = () => {
                         <List>
                             <ListItem>
                                 <ListItemText primary="Show &quot;sandbox&quot; containers" />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showSandboxes}
-                                        onChange={() => setShowSandboxes(!showSandboxes)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showSandboxes}
+                                    onChange={() => setShowSandboxes(!showSandboxes)}
+                                    color="primary"
+                                />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Show namespace identifiers" />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showNamespaceIds}
-                                        onChange={() => setShowNamespaceIds(!showNamespaceIds)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showNamespaceIds}
+                                    onChange={() => setShowNamespaceIds(!showNamespaceIds)}
+                                    color="primary"
+                                />
                             </ListItem>
                         </List>
                     </Card>
@@ -198,44 +185,32 @@ export const Settings = () => {
                         <List>
                             <ListItem>
                                 <ListItemText primary="Expand containees section" />
-                                <ListItemSecondaryAction>
-                                    <CutoffSelector atom={containeesCutoffAtom} element="containee" em={cutOffEm} />
-                                </ListItemSecondaryAction>
+                                <CutoffSelector atom={containeesCutoffAtom} element="containee" em={cutOffEm} />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Expand neighborhood services section" />
-                                <ListItemSecondaryAction>
-                                    <CutoffSelector atom={neighborhoodCutoffAtom} element="service" em={cutOffEm} />
-                                </ListItemSecondaryAction>
+                                <CutoffSelector atom={neighborhoodCutoffAtom} element="service" em={cutOffEm} />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Expand forwarded transport ports section" />
-                                <ListItemSecondaryAction>
-                                    <CutoffSelector atom={forwardedPortsCutoffAtom} element="port" em={cutOffEm} />
-                                </ListItemSecondaryAction>
+                                <CutoffSelector atom={forwardedPortsCutoffAtom} element="port" em={cutOffEm} />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Expand transport ports section" />
-                                <ListItemSecondaryAction>
-                                    <CutoffSelector atom={portsCutoffAtom} element="port" em={cutOffEm} />
-                                </ListItemSecondaryAction>
+                                <CutoffSelector atom={portsCutoffAtom} element="port" em={cutOffEm} />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Expand routes section" />
-                                <ListItemSecondaryAction>
-                                    <CutoffSelector atom={routesCutoffAtom} element="route" em={cutOffEm} />
-                                </ListItemSecondaryAction>
+                                <CutoffSelector atom={routesCutoffAtom} element="route" em={cutOffEm} />
                             </ListItem>
                             <Divider />
                             <ListItem>
                                 <ListItemText primary="Expand network interfaces section" />
-                                <ListItemSecondaryAction>
-                                    <CutoffSelector atom={nifsCutoffAtom} element="interface" em={cutOffEm} />
-                                </ListItemSecondaryAction>
+                                <CutoffSelector atom={nifsCutoffAtom} element="interface" em={cutOffEm} />
                             </ListItem>
                         </List>
                     </Card>
@@ -245,13 +220,11 @@ export const Settings = () => {
                         <List>
                             <ListItem>
                                 <ListItemText primary="Experimental: Show IE Apps icons and titles" />
-                                <ListItemSecondaryAction>
-                                    <Toggle
-                                        checked={showIEAppIcons}
-                                        onChange={() => setShowIEAppIcons(!showIEAppIcons)}
-                                        color="primary"
-                                    />
-                                </ListItemSecondaryAction>
+                                <Toggle
+                                    checked={showIEAppIcons}
+                                    onChange={() => setShowIEAppIcons(!showIEAppIcons)}
+                                    color="primary"
+                                />
                             </ListItem>
                         </List>
                     </Card>

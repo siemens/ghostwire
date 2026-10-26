@@ -278,7 +278,7 @@ export const fromjson = (jsondata: JSONObject) => {
             ).flat()
         })
     // Resolve the references between network interfaces ... now these
-    // references are one of the truely unique features of Ghostwire!
+    // references are one of the truly unique features of Ghostwire!
     Object.values(jsondata['network-namespaces']).forEach(jnetns =>
         (jnetns['network-interfaces'] as JSONObject[]).forEach(jnif => {
             const nif = nifmap[jnif.id as string]

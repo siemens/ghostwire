@@ -18,7 +18,7 @@ const Density = styled(DensityIcon)(({ theme }) => ({
 }))
 
 const Contents = styled(DialogContent)(({ theme }) => ({
-    paddingTop: `${theme.spacing(1)} !important`, // override overtight padding to preceeding title.
+    paddingTop: `${theme.spacing(1)} !important`, // override overtight padding to preceding title.
 }))
 
 
@@ -27,7 +27,7 @@ const generateFilename = (basename: string) => {
     const now = new Date()
     const d = now.getFullYear()
         + (now.getMonth() + 1).toString().padStart(2, '0')
-        + now.getDay().toString().padStart(2, '0')
+        + now.getDate().toString().padStart(2, '0')
     const tod = now.getHours().toString().padStart(2, '0')
         + now.getMinutes().toString().padStart(2, '0')
         + now.getSeconds().toString().padStart(2, '0')
@@ -58,7 +58,7 @@ export const ScreenShooter = ({ basename = 'screenshot', children }: ScreenShoot
 
     const [htmlElement, setHtmlElement] = useState<HTMLElement|null>(null)
     const [density, setDensity] = useAtom(snapshotDensityAtom)
-    const safeDensity = [1, 2, 4].find(setting => Math.max(Math.floor(density), 1) <= setting)
+    const safeDensity = [1, 2, 4].find(setting => Math.max(Math.floor(density), 1) <= setting) ?? 4
 
     const { enqueueSnackbar } = useSnackbar() || {}
 

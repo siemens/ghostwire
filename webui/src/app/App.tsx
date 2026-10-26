@@ -213,7 +213,7 @@ const GhostwireApp = () => {
 
     const nmatch1 = useMatch('/n')
     const nmatch2 = useMatch('/n/:slug')
-    const isDetails = nmatch1 !== null || nmatch2 != null
+    const isDetails = nmatch1 !== null || nmatch2 !== null
 
     const listContainees = isWiring || isDetails
 

@@ -14,7 +14,7 @@ import { HelpViewer, type HelpViewerChapter } from 'components/helpviewer'
 import { GwMarkdown } from 'components/gwmarkdown'
 import { type MuiMarkdownProps } from 'components/muimarkdown'
 
-import { containeesCutoffAtom, filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, nifsCutoffAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
+import { containeesCutoffAtom, filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, nifsCutoffAtom, persistSettingsAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
 import { useHydrateAtoms } from 'jotai/utils'
 
 
@@ -123,6 +123,7 @@ const shortcodes = { Brand, BrandIcon, Example, FakeAppBar }
 export const Help = () => {
     return <Provider>
         <HydrateAtoms initialValues={[
+            [persistSettingsAtom, false],
             [showLoopbackAtom, false],
             [showEmptyNetnsAtom, false],
             [showMACAtom, true],

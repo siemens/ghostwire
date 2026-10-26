@@ -61,7 +61,7 @@ export const isNetworkNamespace = (netns: unknown): netns is NetworkNamespace =>
  * @param netns network namespace object.
  */
 export const firstContainee = (netns: NetworkNamespace) => {
-    const containee = netns.containers.sort(sortContaineesByName)[0]
+    const containee = [...netns.containers].sort(sortContaineesByName)[0]
     return (isContainer(containee) && containee.pod) || containee
 }
 

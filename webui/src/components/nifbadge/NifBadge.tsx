@@ -44,7 +44,7 @@ const Badge = styled('span')(({ theme }) => ({
     },
 }))
 
-// (Optional) "hardware" NIC icon preceeding the network interface badge,
+// (Optional) "hardware" NIC icon preceding the network interface badge,
 // if a network interface has been marked as "physical". Whatever
 // "physical" is worth in our virtualized world...
 const HWNif = styled('span')(({ theme }) => ({

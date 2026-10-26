@@ -130,7 +130,7 @@ const DNSServerAddress = styled('div')(() => ({
 const Capabilities = styled('div')(({ theme }) => ({
     display: 'grid',
     // As we cannot use max-content with repeat() we need to specify a fixed
-    // maximum column width: this should fit with the choosen Roboto
+    // maximum column width: this should fit with the chosen Roboto
     // thickness and maximum capability name.
     gridTemplateColumns: 'repeat(auto-fill, 14em)',
     columnGap: theme.spacing(2),

@@ -80,17 +80,15 @@ const fetchDiscoveryData = (set: Setter, query: string) => {
             // we've converted the result into our internal representation and
             // just right before we set the result.
 
-            // fetch() doesn't throw an error for non-2xx reponse status codes, so
+            // fetch() doesn't throw an error for non-2xx response status codes, so
             // we throw up here instead, so we can catch below later in the promise
             // chain.
             if (!httpresult.ok) {
                 throw Error(httpresult.status + " " + httpresult.statusText)
             }
-            try {
-                return httpresult.json()
-            } catch (e) {
+            return httpresult.json().catch((e: unknown) => {
                 throw Error('malformed discovery API response', { cause: e })
-            }
+            })
         })
         .then(jsondata => fromjson(jsondata))
         .then(discovery => {
@@ -110,7 +108,7 @@ const fetchDiscoveryData = (set: Setter, query: string) => {
             // shown.
             set(discoveryErrorAtom, '')
             set(discoveryErrorAtom,
-                'refreshing failed: ' + error.toString().replace(/^[E|e]rror: /, ''))
+                'refreshing failed: ' + error.toString().replace(/^[Ee]rror: /, ''))
             console.log(error)
         })
 }

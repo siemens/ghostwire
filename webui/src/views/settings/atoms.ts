@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { atom } from 'jotai'
+import { atom, type PrimitiveAtom, type SetStateAction } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
 import { AddressFamily } from 'models/gw'
@@ -38,19 +38,48 @@ const filterCaseSensitiveKey = 'ghostwire.filter.case'
 const filterRegexpKey = 'ghostwire.filter.regexp'
 
 
+/**
+ * Settings changes are persisted to local storage only in stores where this is
+ * true; the help viewer turns it off for its own deterministic settings.
+ */
+export const persistSettingsAtom = atom(true)
+
+const settingAtom = <T>(key: string, initialValue: T): PrimitiveAtom<T> => {
+    // getOnInit, as otherwise unmounted settings read in other atoms' write
+    // methods would always yield the initial value instead of the stored one.
+    const persisted = atomWithStorage(key, initialValue, undefined, { getOnInit: true })
+    const transient = atom<{ value: T } | null>(null)
+    const setting: PrimitiveAtom<T> = atom(
+        (get) => {
+            const t = get(transient)
+            return t ? t.value : get(persisted)
+        },
+        (get, set, update: SetStateAction<T>) => {
+            const value = typeof update === 'function'
+                ? (update as (prev: T) => T)(get(setting))
+                : update
+            if (get(persistSettingsAtom)) {
+                set(persisted, value)
+            } else {
+                set(transient, { value })
+            }
+        })
+    return setting
+}
+
 export const THEME_USERPREF = 0
 export const THEME_LIGHT = 1
 export const THEME_DARK = -1
-export const themeAtom = atomWithStorage(themeKey, THEME_USERPREF)
+export const themeAtom = settingAtom(themeKey, THEME_USERPREF)
 
-export const showLoopbackAtom = atomWithStorage(showLoopbackKey, false)
-export const showEmptyNetnsAtom = atomWithStorage(showEmptyNetnsKey, false)
-export const showMACAtom = atomWithStorage(showMACKey, false)
+export const showLoopbackAtom = settingAtom(showLoopbackKey, false)
+export const showEmptyNetnsAtom = settingAtom(showEmptyNetnsKey, false)
+export const showMACAtom = settingAtom(showMACKey, false)
 
 // The "IP families" setting actually consists of separate IPv4 and IPv6 boolean
 // settings.
-export const showIpv4Atom = atomWithStorage(showIpv4Key, true)
-export const showIpv6Atom = atomWithStorage(showIpv6Key, false) // this default is PAINFUL!
+export const showIpv4Atom = settingAtom(showIpv4Key, true)
+export const showIpv6Atom = settingAtom(showIpv6Key, false) // this default is PAINFUL!
 export const showIpFamiliesAtom = atom((get) => {
     const families: AddressFamily[] = get(showIpv4Atom) ? [AddressFamily.IPv4] : []
     if (get(showIpv6Atom)) {
@@ -59,23 +88,23 @@ export const showIpFamiliesAtom = atom((get) => {
     return families
 })
 
-export const containeesCutoffAtom = atomWithStorage(cutoffContaineesKey, 3)
-export const neighborhoodCutoffAtom = atomWithStorage(cutoffNeighborhoodKey, 10)
-export const portsCutoffAtom = atomWithStorage(cutoffPortsKey, 10)
-export const forwardedPortsCutoffAtom = atomWithStorage(cutoffForwardedPortsKey, 10)
-export const routesCutoffAtom = atomWithStorage(cutoffRoutesKey, 10)
-export const nifsCutoffAtom = atomWithStorage(cutoffNifsKey, NEVER)
+export const containeesCutoffAtom = settingAtom(cutoffContaineesKey, 3)
+export const neighborhoodCutoffAtom = settingAtom(cutoffNeighborhoodKey, 10)
+export const portsCutoffAtom = settingAtom(cutoffPortsKey, 10)
+export const forwardedPortsCutoffAtom = settingAtom(cutoffForwardedPortsKey, 10)
+export const routesCutoffAtom = settingAtom(cutoffRoutesKey, 10)
+export const nifsCutoffAtom = settingAtom(cutoffNifsKey, NEVER)
 
-export const showSandboxesAtom = atomWithStorage(showSandboxesKey, false)
+export const showSandboxesAtom = settingAtom(showSandboxesKey, false)
 
-export const showNamespaceIdsAtom = atomWithStorage(showNamespaceIds, false)
+export const showNamespaceIdsAtom = settingAtom(showNamespaceIds, false)
 
-export const snapshotDensityAtom = atomWithStorage(snapshotDensityKey, 1)
+export const snapshotDensityAtom = settingAtom(snapshotDensityKey, 1)
 
-export const showIEAppIconsAtom = atomWithStorage(showIEAppIconsKey, false)
+export const showIEAppIconsAtom = settingAtom(showIEAppIconsKey, false)
 
-export const showMultiBroadcastRoutesAtom = atomWithStorage(showMultiBroadcastRoutesKey, false)
+export const showMultiBroadcastRoutesAtom = settingAtom(showMultiBroadcastRoutesKey, false)
 
-export const filterPatternAtom = atomWithStorage(filterPatternKey, '')
-export const filterCaseSensitiveAtom = atomWithStorage(filterCaseSensitiveKey, false)
-export const filterRegexpAtom = atomWithStorage(filterRegexpKey, false)
+export const filterPatternAtom = settingAtom(filterPatternKey, '')
+export const filterCaseSensitiveAtom = settingAtom(filterCaseSensitiveKey, false)
+export const filterRegexpAtom = settingAtom(filterRegexpKey, false)

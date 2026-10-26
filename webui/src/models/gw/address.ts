@@ -77,7 +77,7 @@ export const orderAddresses = (addr1: IpAddress, addr2: IpAddress) => {
     const ip6addr1 = parse(addr1.address).toByteArray()
     const ip6addr2 = parse(addr2.address).toByteArray()
     let order: number = 0
-    for (let idx = 0; idx < 15; idx++) {
+    for (let idx = 0; idx < ip6addr1.length; idx++) {
         order = ip6addr1[idx] - ip6addr2[idx]
         if (order) {
             break

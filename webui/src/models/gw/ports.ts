@@ -24,7 +24,7 @@ export interface TransportPort {
     remoteServicename?: string
     
     /**
-     * a truely unique feature of the Ghostwire discovery engine: Linux is not
+     * a truly unique feature of the Ghostwire discovery engine: Linux is not
      * only "dual stack" (IPv4 and IPv6), but it also decided on handling IPv4
      * communication in a unified manner via IPv6 address family sockets. In
      * this model, IPv4 is still IPv4 on the wire, but the same IPv6 socket
@@ -54,9 +54,16 @@ export interface PortUser {
  * state: listening ports first, connected ports later.
  * 
  * @param portA first transport port object
- * @param portA second transport port object
+ * @param portB second transport port object
  */
-export const orderByState = (portA: TransportPort, portB: TransportPort) => {
-    // "connected" comes before "listening"...
-    return portA.macroState[0].localeCompare(portB.macroState[0])
+export const orderByState = (portA: TransportPort, portB: TransportPort) =>
+    macroStateRank(portA.macroState) - macroStateRank(portB.macroState)
+
+const macroStateRanks: { [state: string]: number } = {
+    listening: 0,
+    connected: 1,
+    unconnected: 2,
 }
+
+// unknown states sort last.
+const macroStateRank = (state: string) => macroStateRanks[state] ?? 3

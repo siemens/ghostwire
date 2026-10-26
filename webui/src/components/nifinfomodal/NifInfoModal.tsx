@@ -156,9 +156,8 @@ export const NifInfoModalProvider = ({ children }: NifInfoModalProviderProps) =>
                     open={snackbarOpen}
                     onClose={() => setSnackbarOpen(false)}
                     autoHideDuration={2000}
-                    security="info"
                 >
-                    <Alert security="info">copied to clipboard</Alert>
+                    <Alert severity="info">copied to clipboard</Alert>
                 </Snackbar>
             </Dialog>}
         </NifInfoModalContext.Provider>

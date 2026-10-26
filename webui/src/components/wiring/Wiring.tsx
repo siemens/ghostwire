@@ -254,7 +254,7 @@ const layoutExternals = (wires: Wire[], nifContainerDomId: string): ExternalWire
 // be drawn on top of earlier SVG elements.
 const sortHotJSXElements = (els: JSX.Element[], hotWires: string[], domIdBase: string) => (
     // We need a stable sort and we want to sort "hot" elements near the end,
-    // but keep the order stable inbetween hot elements. So we first need to
+    // but keep the order stable in between hot elements. So we first need to
     // gather the needed additional properties and only then sort.
     els.map((el, idx) => [
         idx,
@@ -536,7 +536,7 @@ export interface WiringProps {
 
 /**
  * `Wiring` renders a wire "pane" as well as the wiring on top of it. The
- * wiring is described using `Wire` objects; bascially, the wire objects
+ * wiring is described using `Wire` objects; basically, the wire objects
  * describe two (one) network interface DOM element to wire with each other,
  * as well as the "kind" of wire (such as "veth", "macvlan", et cetera.)
  *

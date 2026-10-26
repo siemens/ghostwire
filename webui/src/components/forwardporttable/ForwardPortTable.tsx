@@ -60,7 +60,7 @@ type StableRow = [PortRow, number]
  * Stable sort of port rows that keeps the partial order of port rows intact for
  * rows where the sorting order function returns a tie.
  *
- * Please note that the standard ECMA array sort function does not guarantuee
+ * Please note that the standard ECMA array sort function does not guarantee
  * stable sorting, only specific implementations might do so. In the end, we
  * have to implement stable sorting ourselves, by simply using the original
  * array indices whenever we need to break the tie when two rows doesn't differ

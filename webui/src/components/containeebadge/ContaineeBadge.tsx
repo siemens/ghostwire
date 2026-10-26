@@ -29,7 +29,7 @@ const CeeBadge = styled(Button)(({ theme }) => ({
     // General+basis badge styling...
     display: 'inline-block',
 
-    paddingLeft: 'calc(0.5em + 8px)', // increase padding to accomodate left thick border.
+    paddingLeft: 'calc(0.5em + 8px)', // increase padding to accommodate left thick border.
     paddingRight: '0.5em',
     paddingTop: '0.1ex',
     paddingBottom: '0.1ex',

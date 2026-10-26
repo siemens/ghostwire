@@ -337,7 +337,7 @@ export const containeeDescription = (containee: Containee) => {
     }
     if (isPod(containee)) {
         return podFlavorDescriptions[containee.flavor]
-            || `${containee.flavor.charAt(0).toUpperCase}${containee.flavor.slice(1)} pod`
+            || `${containee.flavor.charAt(0).toUpperCase()}${containee.flavor.slice(1)} pod`
     }
     if (!isContainer(containee)) {
         return isBusybox(containee) ?
@@ -487,7 +487,7 @@ export const inProject = (containee: Containee) => (
 )
 
 /**
- * Returns allmost all containees, except for containers that are part of pods.
+ * Returns almost all containees, except for containers that are part of pods.
  *
  * @param netns network namespace object
  */

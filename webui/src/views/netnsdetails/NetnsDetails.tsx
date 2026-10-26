@@ -48,11 +48,11 @@ const SeeAlsoList = styled('ul')(({ theme }) => ({
  *
  * If no sufficiently good match was found, then a list of less good matches is
  * rendered; users can click on one of these results in order to navigate to it,
- * replacing the current browser history element with the choosen match.
+ * replacing the current browser history element with the chosen match.
  *
  * The idea here is that user can view the communication configuration details
  * of a specific container even across container restarts that often might
- * result otherwise in the network namepace identifiers to change. Identifying
+ * result otherwise in the network namespace identifiers to change. Identifying
  * network namespaces indirectly be the name of one of its containees instead of
  * ever-changing inode numbers thus results in a much better UX.
  */

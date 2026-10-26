@@ -135,7 +135,7 @@ make mockdata
 make kinddown down
 ```
 
-If successfull, this automatically updates
+If successful, this automatically updates
 `src/models/gw/mock/mockdata.json`.
 
 ### Note
