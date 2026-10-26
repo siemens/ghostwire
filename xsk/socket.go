@@ -124,6 +124,20 @@ func New(ifindex int, queueid int, opts ...Option) (xsk *Socket, err error) {
 		// create an umem on the fly, but without any umem fd. This allows implicit
 		// umem creation, but doesn't allow umem sharing; umem sharing always
 		// requires explicit umem fd creation.
+		//
+		// With memory overcommit, MAP_POPULATE would get OOM-killed instead of failing.
+		var sysinfo unix.Sysinfo_t
+		if err = unix.Sysinfo(&sysinfo); err != nil {
+			err = fmt.Errorf("cannot query total RAM, reason: %w", err)
+			return xsk, err
+		}
+		size := uint64(xsk.opts.ChunkAmount) * uint64(xsk.opts.ChunkSize)
+		if totalram := uint64(sysinfo.Totalram) * uint64(sysinfo.Unit); size > totalram {
+			err = fmt.Errorf(
+				"cannot implicitly create umem of %d bytes exceeding total RAM of %d bytes",
+				size, totalram)
+			return xsk, err
+		}
 		umemsl, err := unix.Mmap(
 			-1,
 			0,

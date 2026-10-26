@@ -8,6 +8,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/siemens/turtlefinder/v2"
@@ -19,6 +20,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("host metadata", func() {
@@ -54,8 +56,12 @@ var _ = Describe("host metadata", func() {
 		r := gostwire.Discover(ctx, cizer, nil)
 		m := Metadata(r)
 		Expect(m).To(HaveKeyWithValue("hostname", Not(BeEmpty())))
-		Expect(m).To(HaveKeyWithValue("osrel-name", Not(BeEmpty())))
-		Expect(m).To(HaveKeyWithValue("osrel-version", Not(BeEmpty())))
+		// WSL2 with Docker Desktop lacks os-release NAME and VERSION.
+		// WSL2 kernels identify as "Linux version x.y.z-microsoft-standard-WSL2 ...".
+		if !strings.Contains(AssignableTo[string](m["kernel-version"]), "WSL2") {
+			Expect(m).To(HaveKeyWithValue("osrel-name", Not(BeEmpty())))
+			Expect(m).To(HaveKeyWithValue("osrel-version", Not(BeEmpty())))
+		}
 		Expect(m).To(HaveKeyWithValue("kernel-version", ContainSubstring("Linux version")))
 	})
 

@@ -90,7 +90,15 @@ var _ = Describe("Creating XDP sockets", Ordered, func() {
 	It("rejects failing options when creating an XDP socket", func() {
 		Expect(New(0, 0, ForceCopy(), ForceZeroCopy())).Error().To(HaveOccurred())
 		Expect(New(0, 0, WithUmemFd(0))).Error().To(HaveOccurred())
-		Expect(New(0, 0, WithChunkAmount(^uint32(0)))).Error().To(HaveOccurred())
+		Expect(New(0, 0, WithChunkAmount(^uint32(0)))).Error().To(
+			MatchError(ContainSubstring("exceeding total RAM")))
+	})
+
+	It("reports failing implicit umem creation", func() {
+		// bypasses WithChunkAmount's validation; a zero-length mmap fails with EINVAL.
+		zeroChunks := func(o *Options) error { o.ChunkAmount = 0; return nil }
+		Expect(New(0, 0, zeroChunks)).Error().To(
+			MatchError(ContainSubstring("cannot implicitly create umem")))
 	})
 
 	It("rejects an released shared umem", func() {

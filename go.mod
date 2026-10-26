@@ -9,11 +9,11 @@ exclude (
 )
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.10.2
+	github.com/bmatcuk/doublestar/v4 v4.10.4
 	github.com/cilium/ebpf v0.22.0
 	github.com/containernetworking/cni v1.3.1
-	github.com/dustinkirkland/golang-petname v0.0.0-20260929120758-6e3915f1a6a8
-	github.com/getkin/kin-openapi v0.149.0
+	github.com/dustinkirkland/golang-petname v0.0.0-20261016130456-fdd95a3d0543
+	github.com/getkin/kin-openapi v0.152.0
 	github.com/google/nftables v0.3.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
@@ -24,9 +24,9 @@ require (
 	github.com/mdlayher/netlink v1.11.2
 	github.com/mdlayher/packet v1.2.0
 	github.com/moby/moby/api v1.56.1
-	github.com/moby/moby/client v0.6.1
-	github.com/ohler55/ojg v1.28.7
-	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/moby/moby/client v0.6.2
+	github.com/ohler55/ojg v1.28.8
+	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
 	github.com/siemens/ieddata v1.4.0
 	github.com/siemens/mobydig v1.2.0
@@ -64,7 +64,7 @@ require (
 
 require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
-	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20261006220739-8c912ac31dd4 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29 // indirect
@@ -87,7 +87,7 @@ require (
 	github.com/containerd/typeurl/v2 v2.3.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/cli v29.8.1+incompatible // indirect
-	github.com/docker/go-connections v0.8.1 // indirect
+	github.com/docker/go-connections v0.8.2 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
