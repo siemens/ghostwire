@@ -7,7 +7,7 @@ import { useNavigate, useLocation, useMatch } from 'react-router-dom'
 
 import { styled } from '@mui/material'
 
-import { type AddressFamilySet, type PrimitiveContainee, emptyNetns, type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
+import { type AddressFamilySet, type PrimitiveContainee, emptyContainerNetns, emptyNonContainerNetns, type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
 import { Breadboard } from 'components/breadboard/Breadboard'
 import { CardTray } from 'components/cardtray'
 import { NetnsPlainCard } from 'components/netnsplaincard'
@@ -86,11 +86,11 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
     } else if (netns) {
         netnses = Object.values(netns)
     }
-    // Drop all namespaces with only a lonely loopback network interface, to
-    // reduce noise. And yes, we even accept a network namespace without a
-    // loopback network interface, but a different network interface.
+    // Drop all non-container namespaces with only a lonely loopback network
+    // interface, to reduce noise. And yes, we even accept a network namespace
+    // without a loopback network interface, but a different network interface.
     if (filterEmpty) {
-        netnses = netnses.filter(netnsOrProj => isProject(netnsOrProj) || !emptyNetns(netnsOrProj as NetworkNamespace))
+        netnses = netnses.filter(netnsOrProj => isProject(netnsOrProj) || !emptyNonContainerNetns(netnsOrProj as NetworkNamespace))
     }
 
     // Navigate to another (related) network interface within the same
@@ -161,9 +161,10 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
 }
 
 // Returns a network namespace with the lo interface filtered out, if told so.
-// Otherwise returns the original network namespace.
+// Otherwise returns the original network namespace. Lo-only container network
+// namespaces always keep their lo interface.
 const loFilteredNetns = (netns: NetworkNamespace, filterLo: boolean) => {
-    if (!filterLo) {
+    if (!filterLo || emptyContainerNetns(netns)) {
         return netns
     }
     const newnetns = { ...netns, nifs: { ...netns.nifs } }

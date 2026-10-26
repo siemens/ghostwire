@@ -49,7 +49,7 @@ import { NetnsDetails as NetnsDetailsView } from 'views/netnsdetails'
 import { ContaineeNavigator } from 'components/containeenavigator'
 import { useScrollToHash } from 'hooks/scrolltohash'
 import { scrollIdIntoView } from 'utils'
-import { emptyNetns, type NetworkNamespace } from 'models/gw'
+import { emptyNonContainerNetns, type NetworkNamespace } from 'models/gw'
 import { Brand } from 'components/brand'
 import { BrandIcon } from 'components/brandicon'
 
@@ -199,7 +199,7 @@ const GhostwireApp = () => {
     const allnetns = Object.values(discovery.networkNamespaces)
     const IpStackCount = allnetns.length
     const visibleIpStackCount = allnetns
-        .filter(netns => !emptyNetns(netns as NetworkNamespace) || showEmptyNetns)
+        .filter(netns => !emptyNonContainerNetns(netns as NetworkNamespace) || showEmptyNetns)
         .length
     const badgeContent = visibleIpStackCount.toString()
         + (visibleIpStackCount !== IpStackCount ? '+' : '')

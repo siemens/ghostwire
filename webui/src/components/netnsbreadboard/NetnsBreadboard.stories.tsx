@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { AddressFamily, orderNetnsByContainees } from 'models/gw'
-import { discovery } from 'models/gw/mock'
+import { discovery, loOnlyContainerNetns } from 'models/gw/mock'
 
 import { NetnsBreadboard } from './NetnsBreadboard'
 
@@ -15,12 +15,18 @@ const somenetnses = Object.values(discovery.networkNamespaces)
     .sort(orderNetnsByContainees)
     .filter(netns => Object.values(netns.nifs).length === 1
         || ['init', 'ghostwire'].some(prefix => netns.containers[0].name.startsWith(prefix)))
+    .concat(loOnlyContainerNetns)
 
 const meta: Meta<typeof NetnsBreadboard> = {
     title: 'Ghostwire/NetnsBreadboard',
     component: NetnsBreadboard,
     args: {
-        netns: discovery.networkNamespaces,
+        netns: {
+            ...discovery.networkNamespaces,
+            [loOnlyContainerNetns.netnsid]: loOnlyContainerNetns,
+        },
+        // mirror the app's default of hiding lo.
+        filterLo: true,
     },
     argTypes: {
         netns: { control: false },
@@ -40,7 +46,14 @@ export const IPv4Only: Story = {
     },
 }
 
-// Hides lo interfaces as well as network namespaces with only lo.
+export const WithLo: Story = {
+    args: {
+        filterLo: false,
+    },
+}
+
+// Hides lo interfaces as well as non-container network namespaces with only lo;
+// the "network:none" container stays visible including its lo.
 export const Filtered: Story = {
     args: {
         netns: somenetnses,

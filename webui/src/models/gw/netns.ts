@@ -84,3 +84,17 @@ export const emptyNetns = (netns: NetworkNamespace) => {
     const nifs = Object.values(netns.nifs)
     return nifs.length === 1 && nifs[0].name === 'lo'
 }
+
+/**
+ * Returns true, if the given network namespace only has a single and lonely
+ * loopback "lo" network interface and isn't used by any (OCI) container.
+ */
+export const emptyNonContainerNetns = (netns: NetworkNamespace) =>
+    emptyNetns(netns) && !netns.containers.some(isContainer)
+
+/**
+ * Returns true, if the given network namespace only has a single and lonely
+ * loopback "lo" network interface and is used by at least one (OCI) container.
+ */
+export const emptyContainerNetns = (netns: NetworkNamespace) =>
+    emptyNetns(netns) && netns.containers.some(isContainer)

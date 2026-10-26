@@ -13,7 +13,7 @@ import MacvlanIcon from 'icons/nifs/Macvlan'
 import TapIcon from 'icons/nifs/Tap'
 import TunIcon from 'icons/nifs/Tun'
 import VethIcon from 'icons/nifs/Veth'
-import { BridgeInternalIcon, MacvlanMasterIcon, NetkitIcon, NetkitSingleIcon, NicIcon, OverlayIcon } from 'icons/nifs'
+import { BridgeInternalIcon, LoopbackIcon, MacvlanMasterIcon, NetkitIcon, NetkitSingleIcon, NicIcon, OverlayIcon } from 'icons/nifs'
 import { GHOSTWIRE_LABEL_ROOT } from 'models/gw/model'
 import { NifHWIcon } from 'components/nifhwicon'
 
@@ -58,7 +58,9 @@ export const NifIcon = ({ nif, considerPhysical, ...props }: NifIconProps) => {
     const Icon = (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) ||
         (nif.netkitDetails?.single && NetkitSingleIcon) ||
         ((nif.macvlans || nif.ipvlans) && MacvlanMasterIcon) ||
-        nifTypeIcons[nif.kind] || NicIcon
+        nifTypeIcons[nif.kind] ||
+        (nif.name === 'lo' && LoopbackIcon) ||
+        NicIcon
     return <Icon {...props} />
 }
 

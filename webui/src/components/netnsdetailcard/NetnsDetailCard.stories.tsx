@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { AddressFamily } from 'models/gw'
-import { crowdedNetns, initialNetns } from 'models/gw/mock'
+import { crowdedNetns, initialNetns, loOnlyContainerNetns } from 'models/gw/mock'
 
 import { NetnsDetailCard } from './NetnsDetailCard'
 
@@ -38,6 +38,14 @@ export const Filtered: Story = {
         filterLo: true,
         filterMAC: true,
         families: [AddressFamily.IPv4],
+    },
+}
+
+// "network:none" containers keep their lo even when filtering lo.
+export const LoOnlyContainer: Story = {
+    args: {
+        netns: loOnlyContainerNetns,
+        filterLo: true,
     },
 }
 

@@ -267,8 +267,9 @@ export interface NifBadgeProps {
  * gets shown.
  *
  * Supported kinds of network interfaces:
- * - **generic**: that is, `kind===""` or `kind==="lo"`, results in a generic
+ * - **generic**: that is, `kind===""`, results in a generic
  *   "Ethernet" plug icon being shown.
+ *   - **`lo`**: the plug's cable loops back into the plug itself.
  *   - **hardware**: an additionally "NIC" (network interface card) is
  *     rendered next to the interface badge.
  *   - **`macvlan`** or **`ipvlan`** master: the interface type icon changes from the generic

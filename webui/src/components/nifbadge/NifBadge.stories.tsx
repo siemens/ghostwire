@@ -10,7 +10,7 @@ import { Box, Typography } from '@mui/material'
 import { DynVarsProvider } from 'components/dynvars'
 import { useContextualId } from 'components/idcontext'
 import { type NetworkInterface, nifId, OperationalState, TapTunMode } from 'models/gw'
-import { initialNetns, nifHw, nifMacvlan } from 'models/gw/mock'
+import { initialNetns, nifHw, nifLo, nifMacvlan } from 'models/gw/mock'
 import { scrollIdIntoView } from 'utils'
 
 import { NifBadge } from './NifBadge'
@@ -37,6 +37,7 @@ const opstateNifs = Object.values(OperationalState)
 const kindNifs: [string, NetworkInterface][] = [
     ['hardware interface', { ...nifHw, macvlans: undefined }],
     ['MACVLAN master', { ...nifHw, macvlans: [nifMacvlan] }],
+    ['loopback', nifLo],
     ['bridge', { ...virtualNif, kind: 'bridge' }],
     ['VETH', { ...virtualNif, kind: 'veth' }],
     ['MACVLAN', { ...virtualNif, kind: 'macvlan' }],

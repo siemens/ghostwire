@@ -7,7 +7,7 @@ import { fn } from 'storybook/test'
 
 import { NifInfoModalProvider } from 'components/nifinfomodal'
 import { AddressFamily } from 'models/gw'
-import { crowdedNetns, initialNetns } from 'models/gw/mock'
+import { crowdedNetns, initialNetns, loOnlyContainerNetns } from 'models/gw/mock'
 
 import { NifTree } from './NifTree'
 
@@ -45,5 +45,13 @@ export const Filtered: Story = {
 export const Container: Story = {
     args: {
         netns: crowdedNetns!,
+    },
+}
+
+// "network:none" containers keep their lo even when filtering lo.
+export const LoOnlyContainer: Story = {
+    args: {
+        netns: loOnlyContainerNetns,
+        filterLo: true,
     },
 }

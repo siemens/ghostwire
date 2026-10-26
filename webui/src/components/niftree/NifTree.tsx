@@ -8,7 +8,7 @@ import { TransitionGroup } from 'react-transition-group'
 import { Collapse, IconButton, Tooltip, styled } from '@mui/material'
 import InfoIcon from '@mui/icons-material/Info'
 
-import { AddressFamily, type AddressFamilySet, type PrimitiveContainee, type NetworkInterface, type NetworkNamespace, orderNifByName } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, emptyContainerNetns, type PrimitiveContainee, type NetworkInterface, type NetworkNamespace, orderNifByName } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { RelatedNif } from 'components/relatednif'
 import { NifAddressList } from 'components/nifaddresslist'
@@ -262,10 +262,11 @@ export const NifTree = ({ netns, filterLo, filterMAC, families: fam, onNavigatio
     const toplevelnifs = Object.values(netns.nifs)
         .filter(nif => !nif.master)
         .sort(orderNifByName)
+    const hideLo = filterLo && !emptyContainerNetns(netns)
 
     return (
         <NifList>
-            {toplevelnifs.filter(nif => !filterLo || nif.name !== 'lo')
+            {toplevelnifs.filter(nif => !hideLo || nif.name !== 'lo')
                 .map(nif => (
                     <TransitionGroup key={nif.name} component={null}>
                         <Collapse

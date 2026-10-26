@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { GHOSTWIRE_LABEL_ROOT, type NetworkInterface, TapTunMode } from 'models/gw'
-import { nifBr, nifHw, nifMacvlan } from 'models/gw/mock'
+import { nifBr, nifHw, nifLo, nifMacvlan } from 'models/gw/mock'
 
 import { NifIcon } from './NifIcon'
 
@@ -43,6 +43,12 @@ export const ConsiderPhysical: Story = {
 export const GenericNic: Story = {
     args: {
         nif: virtualNif,
+    },
+}
+
+export const Loopback: Story = {
+    args: {
+        nif: nifLo,
     },
 }
 

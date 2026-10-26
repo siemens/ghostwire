@@ -129,7 +129,7 @@ export const Settings = () => {
                         <List>
 
                             <ListItem>
-                                <ListItemText primary='Show "isolated" network namespaces with only "lo"' />
+                                <ListItemText primary='Show non-container "isolated" network namespaces with only "lo"' />
                                 <Toggle
                                     checked={showEmptyNetns}
                                     onChange={() => setShowEmptyNetns(!showEmptyNetns)}

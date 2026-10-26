@@ -14,6 +14,7 @@ export const pf = { ...eth0, sriovrole: 1 }
 export const vf = { ...eth0, sriovrole: 2 }
 export const prometh0 = { ...eth0, isPromiscuous: true }
 export const pont0 = { ...eth0, name: 'pont0', isPhysical: false, kind: 'bridge' }
+export const lo = { ...pont0, name: 'lo', kind: '', operstate: OperationalState.Unknown }
 export const int0 = { ...eth0, name: 'internal0', isPhysical: false, kind: 'bridge', labels: {[GHOSTWIRE_LABEL_ROOT+'network.internal']: 'True'} }
 export const mcvlan0 = { ...pont0, name: 'mcvlan0', kind: 'macvlan' }
 export const eth0mcmaster = { ...eth0, macvlans: [eth0] }
@@ -95,6 +96,7 @@ on the type of virtual network interface:
 
 | Network Interface | Type | Description |
 | --- | --- | --- |
+| <NifBadge nif={lo} style={{whiteSpace: "nowrap"}} /> | **Loopback** | the "lo" loopback network interface of a network namespace: all traffic sent to it loops back into the same network namespace. |
 | <NifBadge nif={pont0} style={{whiteSpace: "nowrap"}} /> | **Bridge** | a virtual bridge: this is the network interface of the bridge itself and it always connects the bridge to the virtual IP stack, but never to anywhere else. Additional network interfaces will act as the (Ethernet) ports of the virtual bridge. |
 | <NifBadge nif={int0} style={{whiteSpace: "nowrap"}} /> | **Internal Bridge** | an "internal" Docker virtual bridge: this bridge has additional packet filters installed that block external traffic. Please note that the host itself is still reachable from containers on an internal bridge, as can the host reach the containers attached to this virtual bridge. |
 | <NifBadge nif={veth1Nif} style={{whiteSpace: "nowrap"}} /> | **VETH** | one of exactly two virtual Ethernet network interfaces connected to each other. |

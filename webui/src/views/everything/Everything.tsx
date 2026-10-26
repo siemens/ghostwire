@@ -16,7 +16,7 @@ import { CardTray } from 'components/cardtray'
 import { NetnsDetailCard } from 'components/netnsdetailcard'
 
 import { useDiscovery } from 'components/discovery'
-import { emptyNetns, isProject, orderNetnsByContainees, sortedNetnsProjects } from 'models/gw'
+import { emptyNonContainerNetns, isProject, orderNetnsByContainees, sortedNetnsProjects } from 'models/gw'
 import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, showEmptyNetnsAtom, showIpFamiliesAtom, showLoopbackAtom, showMACAtom } from 'views/settings'
 import { Ghost } from 'components/ghost'
 import RefreshButton from 'components/refreshbutton'
@@ -65,7 +65,7 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
 
     const discovery = useDiscovery()
     const orignetnses = Object.values(discovery.networkNamespaces)
-        .filter(netns => showEmptyNetns || !emptyNetns(netns))
+        .filter(netns => showEmptyNetns || !emptyNonContainerNetns(netns))
     const netnses = orignetnses
         .filter(ns => {
             if (ns.containers.find(primcntee => filterfn(primcntee.name))) {

@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { Link as RouterLink, type LinkProps as RouterLinkProps, useMatch } from 'react-router-dom'
 import { Avatar, List, ListItem, ListItemAvatar, ListItemButton, ListSubheader, styled, Typography } from '@mui/material'
 
-import { type Containee, containeeState, type Container, ContainerState, containerStateString, emptyNetns, isContainer, isElevatedContainer, isPod, isPodContainer, isPrivilegedContainer, netnsId, type NetworkNamespaces, type Pod, PodFlavors, sortContaineesByName } from 'models/gw'
+import { type Containee, containeeState, type Container, ContainerState, containerStateString, emptyNonContainerNetns, isContainer, isElevatedContainer, isPod, isPodContainer, isPrivilegedContainer, netnsId, type NetworkNamespaces, type Pod, PodFlavors, sortContaineesByName } from 'models/gw'
 import { ContaineeIcon } from 'utils/containeeicon'
 import { useContextualId } from 'components/idcontext'
 import PrivilegedIcon from 'icons/containeestates/Privileged'
@@ -200,7 +200,7 @@ export const ContaineeNavigator = ({ allnetns, filterEmpty, nolink }: ContaineeN
     // case a containee should appear multiple times, it is attached to multiple
     // network namespaces and we're fine with that.
     const allContainees = Object.values(allnetns)
-        .filter(netns => !emptyNetns(netns) || !filterEmpty)
+        .filter(netns => !emptyNonContainerNetns(netns) || !filterEmpty)
         .map(netns => {
             const primcontainees = netns.containers.filter(primcntee => filterfn(primcntee.name))
             const pods = netns.pods.filter(pod => filterfn(pod.name))
