@@ -183,7 +183,6 @@ export const fromjson = (jsondata: JSONObject) => {
                             }
                             cbox.project = project
                             project.containers.push(cbox)
-                            project.netnses[cbox.netns.netnsid] = cbox.netns
                         }
                     }
                     return primitiveBox
@@ -470,7 +469,7 @@ export const fromjson = (jsondata: JSONObject) => {
             .reduce((project, cntr) => {
                 if (isContainer(cntr)) {
                     if (project === undefined) {
-                        return cntr.project // either associated project or null
+                        return cntr.project ?? null
                     }
                     return cntr.project === project ? project : null
                 }
@@ -482,6 +481,9 @@ export const fromjson = (jsondata: JSONObject) => {
                 return null
             }, undefined as (Project | null | undefined))
         netns.project = project || undefined
+        if (netns.project) {
+            netns.project.netnses[netns.netnsid] = netns
+        }
     })
     // Fix composer project flavors; projects can only exist from our point of
     // view when there is at least a single, lone container in a project.

@@ -68,6 +68,7 @@ export const gwLightTheme = {
             ipvlan: '#6a5acd',
             netkit: '#ffb300', // bee-like stripes together with black
             veth: '#008800', // Profinepp green ;)
+            vlan: '#c71585',
             vxlan: '#b8860b',
         },
         sched: {

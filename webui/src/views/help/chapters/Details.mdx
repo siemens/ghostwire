@@ -98,7 +98,8 @@ among other things details about:
 ##### Section "Neighborhood Services"
 
 This section appears only when a Docker container is attached to at least one
-non-default ("custom") bridge network. Otherwise, this section is hidden.
+non-default ("custom") bridge, MACVLAN, or IPVLAN network. Otherwise, this
+section is hidden.
 
 Docker provides purely host-internal DNS names of services and their containers
 that are addressable from at least one of the Docker user-defined networks the

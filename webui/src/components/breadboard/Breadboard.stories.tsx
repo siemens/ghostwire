@@ -116,6 +116,27 @@ const macvlanNetnses = (masterDown = false, slaveDown = false) => {
     return [host, ...containers]
 }
 
+// A host with a hardware NIC serving as the lower device of two VLANs, one of
+// them in a container; optionally the lower device or the host's VLAN is down.
+const vlanNetnses = (masterDown = false, vlanDown = false) => {
+    const host = newNetns(4026531840, standaloneBox, true)
+    newNif(host, 1, 'lo', '', '127.0.0.1')
+    const eth0 = newNif(host, 2, 'eth0', '', '192.168.1.10', {
+        isPhysical: true, driverinfo: { driver: 'e1000e' }, slaves: [],
+        operstate: operstate(masterDown),
+    })
+    const vlanDetails = (vid: number) => ({ vid, vlanProtocol: 0x8100 })
+    eth0.slaves!.push(newNif(host, 3, 'eth0.10', 'vlan', '10.10.0.1', {
+        master: eth0, vlanDetails: vlanDetails(10), operstate: operstate(vlanDown),
+    }))
+    const container = newNetns(4026532501, { ...containerBox, name: 'vlan_moby' })
+    newNif(container, 1, 'lo', '', '127.0.0.1')
+    eth0.slaves!.push(newNif(container, 2, 'eth0', 'vlan', '10.20.0.2', {
+        master: eth0, vlanDetails: vlanDetails(20),
+    }))
+    return [host, container]
+}
+
 // A host with a hardware NIC serving as the underlay of a VXLAN in the host as
 // well as of a VXLAN in a container; optionally the underlay or the host's
 // VXLAN is down.
@@ -223,6 +244,18 @@ export const MacvlanDown: Story = {
 
 export const MacvlanMasterDown: Story = {
     render: () => wired(macvlanNetnses(true)),
+}
+
+export const Vlan: Story = {
+    render: () => wired(vlanNetnses()),
+}
+
+export const VlanDown: Story = {
+    render: () => wired(vlanNetnses(false, true)),
+}
+
+export const VlanMasterDown: Story = {
+    render: () => wired(vlanNetnses(true)),
 }
 
 export const Vxlan: Story = {

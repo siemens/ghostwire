@@ -14,7 +14,7 @@ import { AddressFamily, type AddressFamilySet, GHOSTWIRE_LABEL_ROOT, type Networ
 import { OperationalState } from 'models/gw'
 import { useContextualId } from 'components/idcontext'
 import { TooltipWrapper } from 'utils/tooltipwrapper'
-import { relationClassName } from 'utils/relclassname'
+import { passiveRelationClassName, relationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 import { TargetCapture } from 'components/targetcapture'
 import { NifCheckbox } from 'components/nifcheckbox'
@@ -391,6 +391,15 @@ export const NifBadge = ({
     }
     if (nif.underlay) { // ...we're the VXLAN overlay, because we have an underlay :)
         relationClasses.push(relationClassName(domIdBase, nif, nif.underlay))
+    }
+    // Hovering over a VLAN master doesn't light up its VLANs.
+    if (nif.kind === 'vlan' && nif.master) {
+        relationClasses.push(relationClassName(domIdBase, nif, nif.master))
+    }
+    if (nif.slaves) {
+        relationClasses.push(...nif.slaves
+            .filter(vlan => vlan.kind === 'vlan' && vlan.master === nif)
+            .map(vlan => passiveRelationClassName(relationClassName(domIdBase, nif, vlan))))
     }
     if (nif.isPhysical) { // ..."external" relation.
         switch (nif.sriovrole) {

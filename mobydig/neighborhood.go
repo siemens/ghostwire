@@ -9,6 +9,8 @@ import (
 	"fmt"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/sets"
+	"github.com/thediveo/nonstd/xslices"
 	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
@@ -22,19 +24,15 @@ const ComposerServiceLabel = "com.docker.compose.service"
 // specific container to be taken as the "viewpoint" doesn't exist, an error is
 // returned instead.
 func NeighborhoodServices(m network.NetworkNamespaces, startContainer *model.Container) (Services, error) {
-	bridgeNetworks, err := attachedNetworks(m, startContainer)
+	networks, err := attachedNetworks(m, startContainer)
 	if err != nil {
 		return nil, err
 	}
 	services := Services{}
-	// scan all attached networks (bridges) for services and containers attached
-	// to them. This even includes our starting point cntr.
-	for _, netw := range bridgeNetworks {
-		for _, port := range netw.(network.Bridge).Bridge().Ports {
-			cntrNif := theOtherEnd(port)
-			if cntrNif == nil {
-				continue // not a veth or "incomplete" veth where we didn't find the other end.
-			}
+	// scan all attached networks for services and containers attached to them.
+	// This even includes our starting point cntr.
+	for _, netw := range networks {
+		for _, cntrNif := range attachedNifs(netw) {
 			for _, tenant := range cntrNif.Nif().Netns.Tenants {
 				// Make sure to work only on the Docker container tenants; other
 				// tenants might be present due to network namespace sharing.
@@ -65,9 +63,9 @@ func NeighborhoodServices(m network.NetworkNamespaces, startContainer *model.Con
 }
 
 // attachedNetworks returns the (Docker) user-defined networks attached to the
-// specified container, in form of network interfaces. Returns an error if
-// specified container isn't a Docker container. Only non-default bridge Docker
-// networks are returned.
+// specified container, in form of their bridge or MACVLAN/IPVLAN master network
+// interfaces. Returns an error if specified container isn't a Docker container.
+// Docker's default bridge network is never returned.
 func attachedNetworks(m network.NetworkNamespaces, cntr *model.Container) ([]network.Interface, error) {
 	if cntr == nil {
 		return nil, errors.New("no Docker container identified to discover attached networks from")
@@ -82,25 +80,59 @@ func attachedNetworks(m network.NetworkNamespaces, cntr *model.Container) ([]net
 		//Docker is a real name.
 		return nil, fmt.Errorf("Docker container %q does not exist", cntr.Name)
 	}
-	bridges := map[network.Interface]struct{}{}
+	networks := sets.New[network.Interface]()
 	for _, nif := range netns.Nifs {
-		bridgeport := theOtherEnd(nif)
-		if bridgeport == nil {
+		netw := networkOf(nif)
+		if netw == nil ||
+			netw.Nif().Labels[dockernet.GostwireNetworkNameKey] == "" ||
+			netw.Nif().Labels[dockernet.GhostwireNetworkDefaultBridge] == "true" {
 			continue
 		}
-		bridge := bridgeport.Nif().Bridge
-		if bridge == nil ||
-			bridge.Nif().Labels[dockernet.GostwireNetworkNameKey] == "" ||
-			bridge.Nif().Labels[dockernet.GhostwireNetworkDefaultBridge] == "true" {
-			continue
-		}
-		bridges[bridge] = struct{}{}
+		networks.Add(netw)
 	}
-	networks := make([]network.Interface, 0, len(bridges))
-	for bridge := range bridges {
-		networks = append(networks, bridge)
+	return networks.Elements(), nil
+}
+
+// networkOf returns the network interface representing the Docker network the
+// specified container network interface is attached to: either the bridge of
+// its veth/netkit peer, or its MACVLAN/IPVLAN master. Otherwise, nil.
+func networkOf(nif network.Interface) network.Interface {
+	if peer := theOtherEnd(nif); peer != nil {
+		return peer.Nif().Bridge
 	}
-	return networks, nil
+	return masterOf(nif)
+}
+
+// masterOf returns the master of a MACVLAN or IPVLAN network interface,
+// otherwise nil. Returns nil as well when master and MACVLAN/IPVLAN are in the
+// same network namespace, as Docker always moves its MACVLANs/IPVLANs into
+// container network namespaces, so these are host-side "shim" interfaces
+// instead.
+func masterOf(nif network.Interface) network.Interface {
+	var master network.Interface
+	switch vlan := nif.(type) {
+	case network.Macvlan:
+		master = vlan.Macvlan().Master
+	case network.Ipvlan:
+		master = vlan.Ipvlan().Master
+	}
+	if master == nil || master.Nif().Netns == nif.Nif().Netns {
+		return nil
+	}
+	return master
+}
+
+// attachedNifs returns the container-side network interfaces attached to the
+// specified Docker network, given in form of its bridge or MACVLAN/IPVLAN master
+// network interface.
+func attachedNifs(netw network.Interface) []network.Interface {
+	if bridge, ok := netw.(network.Bridge); ok {
+		return xslices.Filter(
+			xslices.Map(bridge.Bridge().Ports, theOtherEnd),
+			func(nif network.Interface) bool { return nif != nil })
+	}
+	return xslices.Filter(netw.Nif().Slaves,
+		func(nif network.Interface) bool { return masterOf(nif) == netw })
 }
 
 // theOtherEnd returns the peer side of a veth or netkit network interface,

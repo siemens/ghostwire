@@ -55,3 +55,11 @@ export const relationClassNameFromIds = (domIdBase: string, nifIdA: string, nifI
 export const isRelationClassName = (domIdBase: string, className: string) => {
     return className.startsWith(`${domIdBase}rel-`)
 }
+
+/**
+ * Returns the CSS class name for an element taking part in a relation, but
+ * which doesn't trigger highlighting the relation itself when hovered.
+ *
+ * @param relClassName relation class name.
+ */
+export const passiveRelationClassName = (relClassName: string) => `passive-${relClassName}`

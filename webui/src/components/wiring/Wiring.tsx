@@ -288,6 +288,7 @@ const TwoEndedWire = (slw: SwimlaneWire, laneWidth: number, domIdBase: string, w
     switch (slw.kind) {
         case 'macvlan':
         case 'ipvlan':
+        case 'vlan':
         case 'vxlan':
             if (slw.reverse) {
                 // The master interface is located above the MACVLAN slave
@@ -457,6 +458,10 @@ const WireArea = styled('svg')(({ theme }) => ({
         stroke: theme.palette.wire.ipvlan,
         strokeDasharray: '2.5ex 0.5ex 1ex 0.5ex',
     },
+    '& .wire.vlan': {
+        stroke: theme.palette.wire.vlan,
+        strokeDasharray: '2ex 0.5ex 0.5ex 0.5ex 0.5ex 0.5ex',
+    },
     '& .wire.vxlan': {
         stroke: theme.palette.wire.vxlan,
         strokeDasharray: '1ex 0.5ex',
@@ -487,6 +492,13 @@ const WireArea = styled('svg')(({ theme }) => ({
         fill: theme.palette.wire.ipvlan,
     },
     '& .ipvlan-marker-down': {
+        fill: `${theme.palette.wire.down} !important`,
+    },
+
+    '& .vlan-marker': {
+        fill: theme.palette.wire.vlan,
+    },
+    '& .vlan-marker-down': {
         fill: `${theme.palette.wire.down} !important`,
     },
 
@@ -670,6 +682,11 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
                 {marker(
                     `${domIdBase}${markerSpace}ipvlan`,
                     'ipvlan-marker', 'ipvlan-marker-down',
+                    macvlanMarker
+                )}
+                {marker(
+                    `${domIdBase}${markerSpace}vlan`,
+                    'vlan-marker', 'vlan-marker-down',
                     macvlanMarker
                 )}
                 {marker(

@@ -11,7 +11,7 @@ import useResizeObserver from 'beautiful-react-hooks/useResizeObserver'
 import { useContextualId } from 'components/idcontext'
 import { type Wire, Wiring } from 'components/wiring'
 import { type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, OperationalState } from 'models/gw'
-import { isRelationClassName } from 'utils/relclassname'
+import { isRelationClassName, passiveRelationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 
 
@@ -232,7 +232,7 @@ const extractWiring = (
                 case 'vlan':
                     wires.set(nif, {
                         kind: nif.kind,
-                        operStateDown: nif.operstate === OperationalState.Down,
+                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.master?.operstate === OperationalState.Down),
                         nif1Id: domIdBase + nifId(nif),
                         nif2Id: domIdBase + nifId(nif.master!),
                     } as Wire)
@@ -336,14 +336,17 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
 
     // tag or untag the wires identified by their wire classes as "hot" (to
     // highlight) or "cold" (normal appearance).
-    const tagElementsWithClasses = (wireClasses: string[], hot: boolean) => {
-        const alreadyHotEls = hotWireClasses
-            .map(className => breadboardref.current ? [...breadboardref.current.getElementsByClassName(className)] : [])
-            .flat()
-        if (hot) {
-            const els = wireClasses
-                .map(className => breadboardref.current ? [...breadboardref.current.getElementsByClassName(className)] : [])
+    const relationElements = (wireClasses: string[]) => wireClasses
+        .map(className => breadboardref.current
+            ? [className, passiveRelationClassName(className)]
+                .map(cls => [...breadboardref.current!.getElementsByClassName(cls)])
                 .flat()
+            : [])
+        .flat()
+    const tagElementsWithClasses = (wireClasses: string[], hot: boolean) => {
+        const alreadyHotEls = relationElements(hotWireClasses)
+        if (hot) {
+            const els = relationElements(wireClasses)
             // cool down wires that shouldn't be hot anymore but where Firefox
             // incorrectly swallows the corresponding mouse out events.
             alreadyHotEls

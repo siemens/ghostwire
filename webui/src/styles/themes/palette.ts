@@ -50,6 +50,7 @@ declare module '@mui/material/styles' {
             ipvlan: string,
             netkit: string,
             veth: string,
+            vlan: string,
             vxlan: string,
         },
         sched: {
@@ -97,6 +98,7 @@ declare module '@mui/material/styles' {
             ipvlan?: string,
             netkit?: string,
             veth?: string,
+            vlan?: string,
             vxlan?: string,
         },
         sched?: {

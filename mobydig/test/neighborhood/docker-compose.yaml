@@ -32,6 +32,30 @@ services:
     command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
     network_mode: bridge # https://stackoverflow.com/a/43755216
 
+  service-m:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-m
+      - net-i
+
+  service-n:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-m
+
+  service-i:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    networks:
+      - net-i
+
+  service-h:
+    image: busybox:latest
+    command: ["/bin/sh", "-c", "--", "while true; do sleep 1; done;"]
+    network_mode: host
+
 networks:
   net-a:
     name: ghostwire-test-net-a
@@ -39,3 +63,13 @@ networks:
     name: ghostwire-test-net-b
   net-X:
     name: ghostwire-test-net-X
+  # parent is a transient dummy created by the test.
+  net-m:
+    name: ghostwire-test-net-m
+    driver: macvlan
+    driver_opts:
+      parent: ${GHOSTWIRE_TEST_MACVLAN_PARENT}
+  # without a parent, Docker creates a dummy master network interface.
+  net-i:
+    name: ghostwire-test-net-i
+    driver: ipvlan

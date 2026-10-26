@@ -12,20 +12,38 @@ export interface Service {
     networks: string[] /** names of networks on which this service is available */
 }
 
-// Given a container, find the Docker networks (in form of bridge network
-// interfaces) it is attached to.
+// Given a MACVLAN/IPVLAN network interface, returns its master, unless both are
+// in the same network namespace: Docker always moves its MACVLANs/IPVLANs into
+// container network namespaces, so these are host-side "shim" interfaces.
+const masterOf = (nif: NetworkInterface) => {
+    const master = nif.macvlan || nif.ipvlan
+    return master && master.netns.netnsid !== nif.netns.netnsid ? master : undefined
+}
+
+// Given a container network interface, returns the network interface
+// representing the Docker network it is attached to: either the bridge of its
+// veth peer, or its MACVLAN/IPVLAN master.
+const networkOf = (nif: NetworkInterface) =>
+    (nif.kind === 'veth' && nif.peer?.master) || masterOf(nif)
+
+// Given a Docker network in form of its bridge or MACVLAN/IPVLAN master network
+// interface, returns the attached container-side network interfaces.
+const attachedNifs = (net: NetworkInterface) =>
+    net.kind === 'bridge'
+        ? (net.slaves || []).filter(nif => nif.kind === 'veth' && nif.peer).map(nif => nif.peer!)
+        : [...(net.macvlans || []), ...(net.ipvlans || [])].filter(nif => masterOf(nif) === net)
+
+// Given a container, find the Docker networks (in form of bridge or
+// MACVLAN/IPVLAN master network interfaces) it is attached to.
 const attachedNetworks = (cntr: Container) => {
     if (cntr.engineType !== 'docker') {
         return []
     }
-    const bridges = Object.values(cntr.netns.nifs)
-        .filter(nif => nif.kind === 'veth'
-            && nif.peer && nif.peer.master
-            && !!nif.peer.master.labels[GHOSTWIRE_LABEL_ROOT + 'network/name'])
-        .map(nif => nif.peer?.master)
-        .filter((bridge, pos, arr) => arr.indexOf(bridge) === pos) as NetworkInterface[]
-    const networks = bridges.filter(br => br && !!br.labels[GHOSTWIRE_LABEL_ROOT + 'network/name'])
-    return networks
+    return Object.values(cntr.netns.nifs)
+        .map(networkOf)
+        .filter((net, pos, arr): net is NetworkInterface => !!net
+            && !!net.labels[GHOSTWIRE_LABEL_ROOT + 'network/name']
+            && arr.indexOf(net) === pos)
 }
 
 // Given a specific ("target") container and a deduplicated list of services,
@@ -82,9 +100,8 @@ export const neighborhoodServices = (start: Container) => {
         .map(net => {
             const networkname = net.labels[GHOSTWIRE_LABEL_ROOT + 'network/name']
             const services: { [key: string]: Service } = {}
-            net.slaves
-                ?.filter(nif => nif.kind === 'veth' && nif.peer)
-                .map(nif => nif.peer?.netns.containers.filter(cntr => isContainer(cntr)) as Container[])
+            attachedNifs(net)
+                .map(nif => nif.netns.containers.filter(cntr => isContainer(cntr) && cntr.engineType === 'docker') as Container[])
                 .reduce((cntrs, morecntrs) => mergeContainers(cntrs, morecntrs), [])
                 .forEach(cntr => {
                     // Nota bene: consider service-less containers to be
