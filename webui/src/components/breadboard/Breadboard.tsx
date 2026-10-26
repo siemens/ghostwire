@@ -203,7 +203,7 @@ const extractWiring = (
                     if (nif.peer && !wires.has(nif.peer) && !wires.has(nif)) {
                         wires.set(nif, {
                             kind: nif.kind,
-                            operStateDown: nif.operstate === OperationalState.Down,
+                            operStateDown: (nif.operstate === OperationalState.Down) || (nif.peer.operstate === OperationalState.Down),
                             nif1Id: domIdBase + nifId(nif),
                             nif2Id: domIdBase + nifId(nif.peer),
                         } as Wire)
@@ -240,7 +240,7 @@ const extractWiring = (
                 case 'vxlan':
                     wires.set(nif, {
                         kind: nif.kind,
-                        operStateDown: nif.operstate === OperationalState.Down,
+                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.underlay?.operstate === OperationalState.Down),
                         nif1Id: domIdBase + nifId(nif),
                         nif2Id: domIdBase + nifId(nif.underlay!),
                     } as Wire)
