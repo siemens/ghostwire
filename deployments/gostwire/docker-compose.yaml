@@ -1,6 +1,5 @@
 # Gostwire server in a container; further G(h)ostwire-aware projects can then
 # attach to its dedicated G(h)ostwire (internal) network.
-version: '2.4'
 services:
     gostwire:
         image: 'gostwire'
