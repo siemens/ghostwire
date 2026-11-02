@@ -140,10 +140,6 @@ Linux for some time now):
 make deploy
 ```
 
-Alternatively, you can build and deploy a pprof-enabled service, which enables
-pprof information at `:5000/debug/pprof/`; please see the "Performance
-Profiling" section in `docs/buildndeploy.md`.
-
 For more information, please refer to the (docsified) documentation in `docs/`.
 
 ### Standalone Service Binary

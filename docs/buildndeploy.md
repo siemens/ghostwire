@@ -15,7 +15,7 @@ Build tags are (only) required to:
 
 - build and run tests,
 - drop all C library dependencies,
-- enable special `gostwire` service features, such as pprof support.
+- embed the web UI into the `gostwire` service binary (`webui`).
 
 ### `matchers`
 
@@ -36,12 +36,6 @@ The build tag `kind` enables
 start a Kubernetes-in-Docker test cluster during tests. There is no need to
 install any `kind` binary, as Ghostwire unit tests use Kind's Go API directly.
 Since this pulls in the kind dependency, it must be enabled explicitly.
-
-### `pprof`
-
-The build tag `pprof` enables a pprof HTTP handler at route `/debug/pprof/` in
-the `gostwire` service. As the pprof dumps contain sensitive data, never enable
-this tag for productive builds.
 
 ### Go Standard Library
 
@@ -73,34 +67,3 @@ RUN go build -tags="${TAGS}" -ldflags="${LDFLAGS}" ./cmd/gostwire
 
 The build tags `netgo` and `osusergo` are required in order to build with only
 the "pure Go" versions of the `net` and `os` without any libc dependencies.
-
-## Performance Profiling
-
-### Containerized
-
-To deploy a pprof-enabled service, exposing pprof information at
-`:5000/debug/pprof/` (please note the trailing slash), build the service image
-with the additional `pprof` build tag and without stripping:
-
-```bash
-scripts/docker-build.sh deployments/gostwire/Dockerfile \
-    -t gostwire \
-    --build-arg TAGS="osusergo,netgo,sqlite_omit_load_extension,pprof" \
-    --build-arg LDFLAGS="-extldflags=-static" \
-    --build-context webappsrc=./webui
-docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml up
-```
-
-In this case, the deployed binary contains pprof support and the debugging
-information won't be stripped from the (still static) binary. The only downside
-here is that a `list` command in `pprof` cannot show source code, because that's
-not available.
-
-### Bare
-
-If you need to show source code, then run instead:
-
-```bash
-# run gostwire service without container, at port :5000 and with pprof enabled.
-go run -exec sudo -tags osusergo,netgo,pprof -ldflags="-extldflags=-static" ./cmd/gostwire
-```

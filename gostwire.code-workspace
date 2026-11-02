@@ -5,10 +5,10 @@
         }
     ],
     "settings": {
-        "go.buildTags": "matchers,pprof,kind",
+        "go.buildTags": "matchers,kind",
         "go.lintTool": "golangci-lint-v2",
         "go.lintFlags": [
-            "--build-tags=matchers,pprof,kind"
+            "--build-tags=matchers,kind"
         ],
         "go.alternateTools": {
             "customFormatter": "golangci-lint-v2"
