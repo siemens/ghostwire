@@ -23,7 +23,7 @@ In several places, Ghostwire uses network-related
 nerdctl/CNI container networks and thus allow labelling their data-link layer
 bridges with the network names.
 
-> [!INFO] In case you wonder about how some types are designed – especially when
+> [!NOTE] In case you wonder about how some types are designed – especially when
 > describing the properties and topology of network interfaces – then please see
 > [embedding](embedding) for background information on why "embedding" isn't any
 > substitute for "inheritance".
@@ -40,7 +40,207 @@ containers are managed by **container engines**.
 At a high level this now looks like this, but don't despair: we'll give you a
 general walk-through.
 
-![Ghostwire Information Model](media/gostwire-overview.png)
+```mermaid
+classDiagram
+    direction TB
+
+    namespace ghostwire.turtlefinder {
+        class TurtleFinder
+    }
+
+    namespace lxkns.containerizer {
+        class Containerizer {
+            <<interface>>
+        }
+    }
+
+    namespace ghostwire {
+        class Discover["Discover()"] {
+            <<global function>>
+            Discover(cizer containerizer.Containerizer) DiscoveryResult
+        }
+        class DiscoveryResult {
+            Netns network.NetworkNamespaces
+            Lxkns discover.Result
+        }
+    }
+
+    namespace ghostwire.decorator {
+        class decorator {
+            <<plugin group>>
+        }
+    }
+
+    namespace ghostwire.decorator.dockernet {
+        class dockernetDecorate["Decorate"] {
+            <<plugin function>>
+        }
+    }
+
+    namespace ghostwire.decorator.nerdctlnet {
+        class nerdctlnetDecorate["Decorate"] {
+            <<plugin function>>
+        }
+    }
+
+    namespace lxkns.discover {
+        class Result
+    }
+
+    namespace ghostwire.network {
+        class NetworkNamespaces {
+            <<map>>
+        }
+        class NetworkNamespace {
+            Namespace model.Namespace
+            Nifs map[int]Interface
+            NamedNifs map[string]Interface
+            Tenants []*Tenant
+            Routesv4 []Route
+            Routesv6 []Route
+            Portsv4 []ProcessSocket
+            Portsv6 []ProcessSocket
+        }
+        class Interface {
+            <<interface>>
+            Netns *NetworkNamespace
+            Link netlink.Link
+            Labels map[string]string
+        }
+        class Tenant {
+            Process *model.Process
+            DNS DnsConfiguration
+            BoundingCaps []byte
+        }
+        class Bridge
+        class Macvlan
+        class Veth
+        class Vxlan
+        class TunTap
+    }
+
+    namespace netlink {
+        class Link
+    }
+
+    namespace lxkns.model {
+        class lxNamespace["Namespace"] {
+            <<interface>>
+            ID() NamespaceID
+            Type() NamespaceType
+            Owner() Ownership
+            Ref() NamespaceRef
+            Ealdorman() *Process
+            Leaders() []*Process
+        }
+        class Process {
+            PID PIDType
+            PPID PIDType
+            Parent *Process
+            Children []*Process
+            Name string
+            Cmdline []string
+            Starttime uint64
+            CpuCgroup string
+            FridgeCgroup string
+            FridgeFrozen bool
+            Namespaces [8]Namespace
+            Container *Container
+        }
+        class Container {
+            <<interface>>
+            ID() string
+            Name() string
+            Type() string
+            Flavor() string
+            PID() PIDType
+            Paused() bool
+            Labels() map[string]string
+            Groups() []*Group
+            Engine() *ContainerEngine
+            Process() *Process
+        }
+        class Group {
+            Name string
+            Type string
+            Flavor string
+            Containers []*Container
+            Labels map[string]string
+        }
+        class ContainerEngine {
+            ID string
+            Type string
+            API string
+            PID PIDType
+            Containers []*Container
+        }
+    }
+
+    TurtleFinder ..|> Containerizer
+    Discover ..> Containerizer
+    Discover ..> DiscoveryResult : «create»
+    Discover ..> decorator
+    decorator ..> dockernetDecorate
+    decorator ..> nerdctlnetDecorate
+
+    DiscoveryResult *-- Result
+    DiscoveryResult *-- NetworkNamespaces
+    NetworkNamespaces --> "*" NetworkNamespace : by namespace ID
+
+    NetworkNamespace --> lxNamespace
+    NetworkNamespace --> "*" Interface : Nifs
+    NetworkNamespace --> "*" Interface : NamedNifs
+    NetworkNamespace --> "*" Tenant : Tenants
+    Interface --> NetworkNamespace : NetworkNamespace
+    Interface --> "0..1" Interface : Bridge
+    Interface --> "*" Interface : Slaves
+    Interface *-- Link
+    Tenant --> Process : Process
+
+    Bridge --|> Interface
+    Bridge --> "*" Interface : Port
+    Macvlan --|> Interface
+    Macvlan --> Interface : Master
+    Veth --|> Interface
+    Veth "1" --> "1" Veth : Peer
+    Vxlan --|> Interface
+    Vxlan --> Interface : Master
+    TunTap --|> Interface
+    TunTap --> "*" Process
+
+    Process --> "0..1" Process : Parent
+    Process --> "*" Process : Children
+    Process --> "*" lxNamespace : Namespaces
+    lxNamespace --> Process : Ealdorman
+    lxNamespace --> "*" Process : Leaders
+    Process -- Container
+    Group "*" -- "*" Container
+    Container "*" -- "1" ContainerEngine
+
+    style TurtleFinder fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Discover fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style DiscoveryResult fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style decorator fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style dockernetDecorate fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style nerdctlnetDecorate fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style NetworkNamespaces fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style NetworkNamespace fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Interface fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Tenant fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Bridge fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Macvlan fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Veth fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Vxlan fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style TunTap fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Containerizer fill:#f4f4f4,stroke:#888888,color:#000
+    style Result fill:#f4f4f4,stroke:#888888,color:#000
+    style Link fill:#f4f4f4,stroke:#888888,color:#000
+    style lxNamespace fill:#f4f4f4,stroke:#888888,color:#000
+    style Process fill:#f4f4f4,stroke:#888888,color:#000
+    style Container fill:#f4f4f4,stroke:#888888,color:#000
+    style Group fill:#f4f4f4,stroke:#888888,color:#000
+    style ContainerEngine fill:#f4f4f4,stroke:#888888,color:#000
+```
 
 Please note that Ghostwire-specific classes/types are shown in petrol.
 
