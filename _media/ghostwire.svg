@@ -87,10 +87,10 @@
            id="circle6" />
       </g>
       <path
-         d="M203 290 Q252 298 288 281 Q294 278 298 271"
+         d="M200 294 Q250 312 290 290 Q297 286 301 277"
          fill="none"
          stroke="#000"
-         stroke-width="12"
+         stroke-width="18"
          stroke-linecap="round"
          id="path6" />
     </mask>
@@ -178,10 +178,10 @@
            r="37"
            id="circle18" />
         <path
-           d="M203 290 Q252 298 288 281 Q294 278 298 271"
+           d="M200 294 Q250 312 290 290 Q297 286 301 277"
            fill="none"
            stroke="#fff"
-           stroke-width="12"
+           stroke-width="18"
            stroke-linecap="round"
            id="path18" />
       </g>
