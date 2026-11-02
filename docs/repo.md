@@ -17,7 +17,7 @@ Ghostwire module. The interesting stuff mostly lives in the sub directories.
 - `cmd/`
   - `gostwire`: the real meat: this package implements the `gostwire` service. Use
     `make deploy` to build a containerized version and deploy it. Alternatively,
-    use `make build` to build a standalone, stripped binary.
+    build a standalone binary, see [Build & Deploy](buildndeploy#production).
   - `lsallnifs`: "_list all network interfaces_" is more of a showcase CLI command
     that pretty-prints the discovery results to the console, clearly sorted by
     network namespace. It is kind of the spiritual successor to the v1 `gw show`

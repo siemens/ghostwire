@@ -111,13 +111,11 @@ repositories:
 
 For deployment, usage and development information, please see the accompanying
 documentation in `docs/`. The most convenient way to view this documentation is
-with the help of [docsify](https://docsify.js.org/):
-
-```bash
-make docsify
-```
-
-Then navigate to [http://localhost:3300](http://localhost:3300) to read on.
+with the help of [docsify](https://docsify.js.org/): inside the dev container,
+the documentation is automatically served at
+[http://localhost:3300](http://localhost:3300) (restart it using
+`docsify-serve`, if necessary). Use `make redocsify` to regenerate the REST API
+documentation.
 
 ## Build & Deploy
 
@@ -143,63 +141,38 @@ make deploy
 ```
 
 Alternatively, you can build and deploy a pprof-enabled service, which enables
-pprof information at `:5000/debug/pprof`.
-
-```bash
-make pprofdeploy
-```
+pprof information at `:5000/debug/pprof/`; please see the "Performance
+Profiling" section in `docs/buildndeploy.md`.
 
 For more information, please refer to the (docsified) documentation in `docs/`.
 
 ### Standalone Service Binary
 
-- ensure that Go 1.20 (or later) is installed.
-- ensure that [nodejs](https://nodejs.org/en/) 16+,
-  [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), and
-  [yarn](https://classic.yarnpkg.com/en/docs/install/#debian-stable) (`npm
-  install --global yarn`) are installed.
+The dev container comes with Go, Node.js and yarn already set up. To build the
+standalone service binary with the web UI embedded:
 
 ```bash
-make yarnsetup # if not done already so
-make build-embedded
-./gostwire --debug
+(cd webui && yarn install && yarn build)
+go build -tags=osusergo,netgo,sqlite_omit_load_extension,webui \
+    -ldflags="-s -w -extldflags=-static" ./cmd/gostwire
+sudo ./gostwire --debug
 ```
 
-## VSCode Tasks
+## Go Module Documentation
 
-The included `gostwire.code-workspace` defines the following tasks:
-
-- **View Go module documentation** task: installs `pkgsite`, if not done already
-  so, then starts `pkgsite` and opens VSCode's integrated ("simple") browser to
-  show the csharg documentation.
-
-#### Aux Tasks
-
-- _pksite service_: auxilliary task to run `pkgsite` as a background service
-  using `scripts/pkgsite.sh`. The script leverages browser-sync and nodemon to
-  hot reload the Go module documentation on changes; many thanks to @mdaverde's
-  [_Build your Golang package docs
-  locally_](https://mdaverde.com/posts/golang-local-docs) for paving the way.
-  `scripts/pkgsite.sh` adds automatic installation of `pkgsite`, as well as the
-  `browser-sync` and `nodemon` npm packages for the local user.
-- _view pkgsite_: auxilliary task to open the VSCode-integrated "simple" browser
-  and pass it the local URL to open in order to show the module documentation
-  rendered by `pkgsite`. This requires a detour via a task input with ID
-  "_pkgsite_".
+Inside the dev container, the Go module documentation is automatically served by
+`pkgsite` at
+[http://localhost:6060/github.com/siemens/ghostwire/v2](http://localhost:6060/github.com/siemens/ghostwire/v2)
+(restart it using `pkgsite-serve`, if necessary).
 
 ## Make Targets
 
 - `make`: lists all targets.
-- `make dist`: builds snapshot packages and archives of the csharg CLI binary.
-- `make pkgsite`: installs [`x/pkgsite`](golang.org/x/pkgsite/cmd/pkgsite), as
-  well as the [`browser-sync`](https://www.npmjs.com/package/browser-sync) and
-  [`nodemon`](https://www.npmjs.com/package/nodemon) npm packages first, if not
-  already done so. Then runs the `pkgsite` and hot reloads it whenever the
-  documentation changes.
-- `make report`: installs
-  [`@gojp/goreportcard`](https://github.com/gojp/goreportcard) if not yet done
-  so and then runs it on the code base.
-- `make vuln`: install (or updates) govuln and then checks the Go sources.
+- `make clean`: removes build and testing artefacts.
+- `make redocsify`: regenerates the REST API documentation in `docs/api/`.
+- `make deploy`: builds and deploys the containerized Ghostwire service on host
+  port 5000.
+- `make undeploy`: removes the containerized Ghostwire service deployment.
 
 # Contributing
 
