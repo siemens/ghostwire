@@ -20,6 +20,9 @@ ARG XX_VERSION=1.9.0
 ARG LDFLAGS="-s -w -extldflags=-static"
 ARG TAGS="osusergo,netgo,sqlite_omit_load_extension"
 
+# VERSION is the (git describe/tag) version to stamp the binary and web UI with.
+ARG VERSION=""
+
 # 0th stage: https://github.com/tonistiigi/xx/blob/master/README.md
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx:${XX_VERSION} AS cc-helpers
 
@@ -135,8 +138,8 @@ COPY --from=webappsrc \
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
 COPY --from=webappsrc .env ./
-ARG REACT_APP_GIT_VERSION
-RUN sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${REACT_APP_GIT_VERSION}/" .env
+ARG VERSION
+RUN sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${VERSION#v}/" .env
 RUN yarn build
 
 # -- 3. stage ---------------------------------------------------------------
@@ -146,6 +149,7 @@ FROM --platform=${BUILDPLATFORM} builder AS embedder
 
 ARG LDFLAGS
 ARG TAGS
+ARG VERSION
 
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
@@ -159,7 +163,7 @@ COPY --from=webui /webui/build/ ./webui/build/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     xx-go build -v \
     -tags="${TAGS},webui" \
-    -ldflags="${LDFLAGS}" \
+    -ldflags="${LDFLAGS} -X github.com/siemens/ghostwire/v2.SemVersion=${VERSION#v}" \
     -o /gostwire ./cmd/gostwire && \
     xx-verify --static /gostwire
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override,cap_net_raw,cap_net_admin+ep" /gostwire

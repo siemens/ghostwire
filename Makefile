@@ -1,6 +1,4 @@
-GOGEN = go generate .
-
-GETGITVERSION = export GIT_VERSION=$$(sed -n 's/^const SemVersion = "\(.*\)"$$/\1/p' defs_version.go)
+GETVERSION = export VERSION=$$(git describe --tags --always --dirty)
 
 # Falls back to the redocly/cli container when there's no npx or only a Windows npx (WSL interop),
 # as the latter can't work on UNC paths like \\wsl.localhost\...
@@ -27,14 +25,13 @@ redocsify: ## generate the API docs in docs/api
 	@$(GENAPIDOC)
 
 deploy: ## deploy Gostwire service exposed on host port 5000
-	$(GOGEN)
 	@$(GENAPIDOC)
 	( \
-		$(GETGITVERSION) \
-		&& echo "deploying version" $$GIT_VERSION \
+		$(GETVERSION) \
+		&& echo "deploying version" $$VERSION \
 		&& scripts/docker-build.sh deployments/gostwire/Dockerfile \
 			-t gostwire \
-			--build-arg REACT_APP_GIT_VERSION=$$GIT_VERSION \
+			--build-arg VERSION=$$VERSION \
 			--build-context webappsrc=./webui \
 	)
 	docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml up
