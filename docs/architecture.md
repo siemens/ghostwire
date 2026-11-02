@@ -1,6 +1,6 @@
 # Architecture
 
-An important aspect of G(h)ostwire's architecture is that it **focuses on
+An important aspect of Ghostwire's architecture is that it **focuses on
 network discovery** and thus **leverages existing open-source Go modules for the
 non-focus tasks**:
 
@@ -9,16 +9,16 @@ non-focus tasks**:
 - background tracking of container workloads via
   [@thediveo/whalewatcher](https://github.com/thediveo/whalewatcher)
 
-Then, G(h)ostwire brings in the specifically network and communication related
+Then, Ghostwire brings in the specifically network and communication related
 discovery aspects, such as (virtual) layer 2 network elements and port
 forwarding.
 
-Another feature is G(h)ostwire's **unique container engine discovery** – which
+Another feature is Ghostwire's **unique container engine discovery** – which
 also is nicknamed the "turtles finder" in reminiscence of Terry Pratchett's
 [Discworld](https://en.wikipedia.org/wiki/Discworld). This discovery snoops out
 container engines from their engine processes, wherever they are.
 
-In several places, G(h)ostwire uses network-related
+In several places, Ghostwire uses network-related
 "[decorators](/terminology?id=decorator)": they detect, for instance Docker and
 nerdctl/CNI container networks and thus allow labelling their data-link layer
 bridges with the network names.
@@ -30,7 +30,7 @@ bridges with the network names.
 
 ## Information Model
 
-Very simply spoken, G(h)ostwire is a network-centric discovery service, it is
+Very simply spoken, Ghostwire is a network-centric discovery service, it is
 **centered around network namespaces (~network/IP stacks)** and **their
 interconnections**. In addition, **processes** are attached to these network
 namespaces. And then there are **containers** related to these processes. And
@@ -40,9 +40,9 @@ containers are managed by **container engines**.
 At a high level this now looks like this, but don't despair: we'll give you a
 general walk-through.
 
-![Gostwire Information Model](media/gostwire-overview.png)
+![Ghostwire Information Model](media/gostwire-overview.png)
 
-Please note that Gostwire-specific classes/types are shown in petrol.
+Please note that Ghostwire-specific classes/types are shown in petrol.
 
 ## Discovery
 
@@ -67,28 +67,28 @@ container engines.
 
 A call to `gostwire.Discover()` returns a `gostwire.DiscoveryResult`. This
 result then contains a map of network namespaces, indexed by the namespace IDs
-and pointing to Gostwire's `network.NetworkNamespace` type.
+and pointing to Ghostwire's `network.NetworkNamespace` type.
 
-Technically, Gostwire's discovery inside `gostwire.Discover()` consists of two
+Technically, Ghostwire's discovery inside `gostwire.Discover()` consists of two
 main phases (no neutral, no protective earth required):
 
 1. network _namespaces_ and container discovery (including decoration) under the
    control of the OpenSource `lxkns` module. However, the container discovery is
-   in part managed by Gostwire, as it auto-detects container engines, see the
+   in part managed by Ghostwire, as it auto-detects container engines, see the
    "Turtle Finder" section below.
 
    1. **lxkns:** discover the process tree and network namespaces (but not the
       configuration inside network namespaces),
    2. **lxkns:** discover containers and then decorate them:
-      1. **Gostwire:** container engine discovery by a Turtle Finder as well as engine-hierarchy detection,
+      1. **Ghostwire:** container engine discovery by a Turtle Finder as well as engine-hierarchy detection,
       2. **whalewatcher:** container workload queries, based on the auto-detected
           container engines sniffed out by the Turtle Finder,
-      3. **Gostwire:** container hierarchy labelling.
+      3. **Ghostwire:** container hierarchy labelling.
       4. **lxkns:** container decoration (for instance, Docker-composer groups and
           Kubernetes pods, et cetera),
 
 2. network _topology_ and network _configuration_ discovery now under the sole
-   control of **Gostwire**.
+   control of **Ghostwire**.
 
    1. discover inside network namespaces: interfaces, configuration, relations,
       ...
@@ -97,7 +97,7 @@ main phases (no neutral, no protective earth required):
 
 ## Network Stacks
 
-Each Gostwire `network.NetworkNamespace` repesents a "network stack" with its
+Each Ghostwire `network.NetworkNamespace` repesents a "network stack" with its
 network-related configuration:
 
 - the `network.Interface`s,
@@ -110,7 +110,7 @@ network-related configuration:
 
 ## Network Interfaces
 
-A Gostwire `network.Interface` describes an individual network interface with
+A Ghostwire `network.Interface` describes an individual network interface with
 several attributes, such as its name, interface index, MAC address, assigned IP
 addresses, et cetera.
 
@@ -129,13 +129,13 @@ In consequence, a some of the tenants of a network namespace might not be
 topmost in the process tree with respect to the network namespace, but deeper
 inside it.
 
-For each tenant, Gostwire discovers the name and DNS client configuration, such
+For each tenant, Ghostwire discovers the name and DNS client configuration, such
 as the hostname (differentiated between system-set hostname and
 `/etc/hostname`), `/etc/resolv.conf`, et cetera. This information depends on a
 tenant's/process' UTS and mount namespaces. This discovery aids in diagnosing
 communication problems, and especially name resolving issues.
 
-For more process details a Gostwire `network.Tenant` refers to its
+For more process details a Ghostwire `network.Tenant` refers to its
 `model.Process` counterpart from the OpenSource `lxkns` module. This reference
 is important as it relates tenants to containers. But please keep in mind that
 not every tenant is also a container.
@@ -153,13 +153,13 @@ _projects_.
 Finally, containers are associated with a simple description of their managing
 container engine, such as the engine's `ID`, `Type` and `API` endpoint path.
 
-> [!NOTE] When using Gostwire's `TurtleFinder` the `API` endpoint paths are
+> [!NOTE] When using Ghostwire's `TurtleFinder` the `API` endpoint paths are
 > always `/proc/[PID]/root/...`-based paths that can be used from processes,
 > regardless of their current mount namespaces.
 
 ## Turtle Finder
 
-Gostwire leverages the [turtlefinder](https://github.com/siemens/turtlefinder)
+Ghostwire leverages the [turtlefinder](https://github.com/siemens/turtlefinder)
 package to auto-detect container engines in the process tree and then
 continously watching their container workload in the background. Additionally,
 the hierarchy of container engines is detected, such as when operating a
@@ -174,7 +174,7 @@ and as part of the `lxkns`-controlled discovery phase in particular.
 > [!NOTE] The auto-discovery of container engines cannot be run in the
 > background, but only on-demand as part of a `ghostwire.Discover()` call. The
 > catch here is that when detecting a new container engine it takes a non-zero
-> amount of time to synchronize to that engine's container workload. Gostwire
+> amount of time to synchronize to that engine's container workload. Ghostwire
 > thus waits for up to 2s for such initial synchronizations to succeed (it waits
 > in parallel, so the maximum delay is always 2s, regardless of number of newly
 > discovered engines), before proceeding into the container and network
@@ -186,7 +186,7 @@ prefix label based on the container engine hierarchy.
 
 ## Network Decorators
 
-Gostwire's network decorators are run over the discovered network namespaces and
+Ghostwire's network decorators are run over the discovered network namespaces and
 container engines (thus including tenants, containers, ...). Sub-packages of
 `gostwire.decorator` implement decoration of network interfaces based on
 container-mananged networks. At this time, container engine-level networks for

@@ -1,8 +1,8 @@
 # REST API
 
-> Are you looking for Gostwire's [Go API](api) instead?
+> Looking for Ghostwire's [Go API](api) instead?
 
-G(h)ostwire's <a href="api/index.html" target="_blank">REST API endpoints</a>
+Ghostwire's <a href="api/index.html" target="_blank">REST API endpoints</a>
 (opens documentation in new tab) are defined in the OpenAPI v3 specification in
 `api/openapi-spec/ghostwire-v1.yaml`. API unit tests check against this API
 specification.
