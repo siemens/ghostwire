@@ -13,6 +13,7 @@ import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import '@fontsource/roboto-mono/400.css'
+import '@fontsource/roboto-mono/600.css'
 
 // Allow development version to temporarily drop strict mode in order to see
 // performance without strict-mode double rendering.

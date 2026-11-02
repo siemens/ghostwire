@@ -105,7 +105,7 @@ const Nif = styled(Button)(({ theme }) => ({
 
     // Style the nif name and alias differently for better
     // differentiation...
-    '& .name': { fontWeight: 'bold' },
+    '& .name': { fontWeight: 600 },
     '& .alias': { fontStyle: 'italic' },
 
     // Ensure to use the proper button appearance when linking to a
