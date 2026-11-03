@@ -12,7 +12,10 @@ GENAPIDOC = $(REDOCLY); out=$$(redocly build-docs -t api/openapi-spec/redoc.hbs 
 
 tools := gostwire gostdump lsallnifs lsnetdev
 
-.PHONY: help clean redocsify deploy undeploy
+DOCKERFILE := deployments/gostwire/Dockerfile
+TRIVY_IMAGE := aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+
+.PHONY: help clean redocsify deploy undeploy bump-debian
 
 help: ## list available targets
 	@# Derived from Gomega's Makefile (github.com/onsi/gomega) under MIT License
@@ -29,7 +32,7 @@ deploy: ## deploy Gostwire service exposed on host port 5000
 	( \
 		$(GETVERSION) \
 		&& echo "deploying version" $$VERSION \
-		&& scripts/docker-build.sh deployments/gostwire/Dockerfile \
+		&& scripts/docker-build.sh $(DOCKERFILE) \
 			-t gostwire \
 			--build-arg VERSION=$$VERSION \
 			--build-context webappsrc=./webui \
@@ -38,3 +41,22 @@ deploy: ## deploy Gostwire service exposed on host port 5000
 
 undeploy: ## remove any Gostwire service deployment
 	docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml down
+
+# Trivy exits with 3 only when it finds fixable vulnerabilities, so that other
+# failures still abort.
+bump-debian: ## list Debian security fixes missing from the image, then bump the Debian snapshot
+	@set -e; \
+	tar=$$(mktemp); trap 'rm -f "$$tar"' EXIT; \
+	scan() { \
+		scripts/docker-build.sh $(DOCKERFILE) -q --load -t gostwire:bump-debian \
+			--build-context webappsrc=./webui >/dev/null && \
+		docker save gostwire:bump-debian -o "$$tar" && \
+		docker run --rm -v "$$tar:/image.tar:ro" -v gostwire-trivy-cache:/root/.cache $(TRIVY_IMAGE) \
+			image --quiet --input /image.tar --scanners vuln --pkg-types os --ignore-unfixed --exit-code 3; \
+	}; \
+	echo "Scanning image with Debian snapshot $$(sed -n 's/^ARG DEBIAN_SNAPSHOT=//p' $(DOCKERFILE))..."; \
+	scan || [ $$? -eq 3 ]; \
+	snapshot=$$(date -u +%Y%m%dT%H%M%SZ); \
+	sed -i "s/^ARG DEBIAN_SNAPSHOT=.*/ARG DEBIAN_SNAPSHOT=$$snapshot/" $(DOCKERFILE); \
+	echo "Bumped to Debian snapshot $$snapshot, rescanning..."; \
+	scan && echo "No Debian security fixes missing."

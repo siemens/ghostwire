@@ -20,6 +20,9 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Determine reproducible build timestamp
+        run: echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:
@@ -78,4 +81,4 @@ jobs:
             ${{ env.BUILDCONTEXTS }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=Container virtual networks discovery service
+          outputs: type=image,name=target,rewrite-timestamp=true,annotation-index.org.opencontainers.image.description=Container virtual networks discovery service

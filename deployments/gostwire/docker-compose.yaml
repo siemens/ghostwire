@@ -15,6 +15,10 @@ services:
         build:
             context: ../..
             dockerfile: deployments/gostwire/Dockerfile
+            additional_contexts:
+                webappsrc: ../../webui
+            args:
+                VERSION: ${VERSION:-}
         # Please note: port remapping is only possible when using a separate
         # network namespace, but *NOT* when using the host's network namespace.
         # Also, remapping happens *OUTSIDE* the container, such as in the host,
