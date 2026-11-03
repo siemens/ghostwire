@@ -7,13 +7,13 @@ import React, { type ChangeEvent, useState } from 'react'
 import { Box, Checkbox, Fade, IconButton, styled, Tooltip } from '@mui/material'
 import { Paper } from '@mui/material'
 import FullscreenIcon from '@mui/icons-material/Fullscreen'
+import SignpostOutlinedIcon from '@mui/icons-material/SignpostOutlined'
 
 import { ContaineeBadge } from 'components/containeebadge'
 import { type PrimitiveContainee, containeeKey, netnsId, type NetworkNamespace, orderNifByName, type NetworkInterface, type AddressFamilySet, containeesOfNetns, sortContaineesByName, type Containee } from 'models/gw'
 import { useContextualId } from 'components/idcontext'
 import { NifBadge } from 'components/nifbadge'
 import { NifNavigator } from 'components/nifnavigator'
-import { RoutingEtcIcon } from 'icons/RoutingEtc'
 import CaptureMultiIcon from 'icons/CaptureMulti'
 import CaptureMultiOnIcon from 'icons/CaptureMultiOn'
 import { TargetCapture } from 'components/targetcapture'
@@ -375,7 +375,7 @@ export const NetnsPlainCard = ({ netns, onNavigation, onNetnsZoom, onContaineeZo
             <RoutingEtc key="routing" style={{ gridRow: `1/${row + 1}` }}>
                 <Tooltip title="show routing">
                     <IconButton onClick={handleRouting} size="large">
-                        <RoutingEtcIcon />
+                        <SignpostOutlinedIcon />
                     </IconButton>
                 </Tooltip>
             </RoutingEtc>)
