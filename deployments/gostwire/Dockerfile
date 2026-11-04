@@ -11,7 +11,8 @@
 
 # Debian packages come from snapshot.debian.org as of this point in time, so
 # rebuilds get the same package versions; use "make bump-debian" to pick up
-# (security) updates.
+# (security) updates. An empty DEBIAN_SNAPSHOT uses the live Debian mirrors
+# instead, as a fallback when snapshot.debian.org is down.
 ARG DEBIAN_SNAPSHOT=20261102T185036Z
 
 ARG NODE_VERSION=24
@@ -39,10 +40,14 @@ ARG DEBIAN_SNAPSHOT
 SHELL ["/bin/bash", "-o", "pipefail", "-ec"]
 COPY --from=cc-helpers / /
 # Plain http is fine, as apt checks the signed Release files; these will have
-# expired for older snapshots, though.
-RUN sed -i -E "s#^URIs: http://deb.debian.org/(debian(-security)?)\$#URIs: http://snapshot.debian.org/archive/\1/${DEBIAN_SNAPSHOT}#" \
-        /etc/apt/sources.list.d/debian.sources && \
-    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot
+# expired for older snapshots, though. As snapshot.debian.org is flaky, retry
+# and fail on index fetch errors, never silently caching incomplete lists.
+RUN if [ -n "${DEBIAN_SNAPSHOT}" ]; then \
+        sed -i -E "s#^URIs: http://deb.debian.org/(debian(-security)?)\$#URIs: http://snapshot.debian.org/archive/\1/${DEBIAN_SNAPSHOT}#" \
+            /etc/apt/sources.list.d/debian.sources && \
+        echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot; \
+    fi && \
+    printf 'Acquire::Retries "5";\nAPT::Update::Error-Mode "any";\n' >> /etc/apt/apt.conf.d/99snapshot
 
 # Empty defaults for the additional Go workspace module build contexts, unless
 # overridden using --build-context bctxN=...

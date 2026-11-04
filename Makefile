@@ -27,6 +27,9 @@ clean: ## cleans up build and testing artefacts
 redocsify: ## generate the API docs in docs/api
 	@$(GENAPIDOC)
 
+# When snapshot.debian.org is down (apt hangs on "Ign:" lines or fails with
+# 503/504), use "make deploy DEBIAN_SNAPSHOT=" to build from the live Debian
+# mirrors instead; package versions then aren't pinned, so for local use only.
 deploy: ## deploy Gostwire service exposed on host port 5000
 	@$(GENAPIDOC)
 	( \
@@ -35,6 +38,7 @@ deploy: ## deploy Gostwire service exposed on host port 5000
 		&& scripts/docker-build.sh $(DOCKERFILE) \
 			-t gostwire \
 			--build-arg VERSION=$$VERSION \
+			$(if $(filter command line environment,$(origin DEBIAN_SNAPSHOT)),--build-arg DEBIAN_SNAPSHOT=$(DEBIAN_SNAPSHOT)) \
 			--build-context webappsrc=./webui \
 	)
 	docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml up
