@@ -332,6 +332,7 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 			}
 			netnspath, err = mntneer.Resolve(netnspath)
 			if err != nil {
+				mntneer.Close()
 				continue
 			}
 		}
@@ -346,13 +347,13 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 			continue
 		}
 		nsid, err := nlh.GetNetNsIdByFd(netnsfd)
+		closer()
 		if err != nil {
 			slog.Error("cannot determine NSID of peer netns",
 				slog.String("ref", ref.String()),
 				xslog.Error(err))
 			continue
 		}
-		closer()
 		if NSID(nsid) == NSID_NONE {
 			// slog.Debug("no nsid mapping", slog.Uint64("peer.netns", peerNetns.ID().Ino))
 			continue
