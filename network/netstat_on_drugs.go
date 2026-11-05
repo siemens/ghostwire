@@ -382,7 +382,7 @@ func (p ProcessSockets) Sort() {
 		case ipA < ipB:
 			return true
 		case ipA > ipB:
-			return true
+			return false
 		}
 		ipA = Exploded(p[a].RemoteIP)
 		ipB = Exploded(p[b].RemoteIP)
@@ -390,7 +390,7 @@ func (p ProcessSockets) Sort() {
 		case ipA < ipB:
 			return true
 		case ipA > ipB:
-			return true
+			return false
 		}
 		return p[a].RemotePort < p[b].RemotePort
 	})

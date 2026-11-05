@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslices"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -272,6 +273,45 @@ var _ = Describe("discovers transport ports", func() {
 		Expect(sockmap).NotTo(ContainElement(
 			ConsistOf(model.PIDType(pid)),
 		))
+	})
+
+	It("sorts by family, then local and remote address", func() {
+		v4 := func(local, remote string) ProcessSocket {
+			return ProcessSocket{
+				Family:   unix.AF_INET,
+				LocalIP:  net.ParseIP(local).To4(),
+				RemoteIP: net.ParseIP(remote).To4(),
+			}
+		}
+		v6 := func(local, remote string) ProcessSocket {
+			return ProcessSocket{
+				Family:   unix.AF_INET6,
+				LocalIP:  net.ParseIP(local),
+				RemoteIP: net.ParseIP(remote),
+			}
+		}
+		// exploded "::a" sorts before exploded "10.0.0.10", so family must take precedence.
+		sorted := ProcessSockets{
+			v4("10.0.0.1", "10.0.0.9"),
+			v4("10.0.0.2", "10.0.0.1"),
+			v4("10.0.0.2", "10.0.0.2"),
+			v4("10.0.0.9", "10.0.0.1"),
+			v4("10.0.0.10", "10.0.0.9"),
+			v4("10.0.0.10", "10.0.0.10"),
+			v6("::a", "::1"),
+			v6("::10", "::a"),
+			v6("::10", "::10"),
+		}
+		for _, order := range [][]int{
+			{0, 1, 2, 3, 4, 5, 6, 7, 8},
+			{8, 7, 6, 5, 4, 3, 2, 1, 0},
+			{6, 0, 7, 1, 8, 2, 3, 4, 5},
+			{4, 8, 3, 7, 2, 6, 1, 5, 0},
+		} {
+			s := ProcessSockets(xslices.Map(order, func(idx int) ProcessSocket { return sorted[idx] }))
+			s.Sort()
+			Expect(s).To(Equal(sorted), "order %v", order)
+		}
 	})
 
 })
