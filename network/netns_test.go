@@ -8,8 +8,12 @@ import (
 	"log/slog"
 	"maps"
 	"os"
+	"slices"
+	"strings"
 	"time"
 
+	"github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/nonstd/xiter"
@@ -81,6 +85,12 @@ var _ = Describe("network namespace", func() {
 				HaveInterfaceName(gromit.Attrs().Name)))
 		})
 
+		It("names a tenant-less network namespace after its reference", func() {
+			Expect(testNetns.Tenants).To(BeEmpty())
+			Expect(testNetns.DisplayName()).To(Equal(testNetns.Ref().String()))
+			Expect(orderingNetnsName(testNetns)).To(Equal(testNetns.Ref().String()))
+		})
+
 		When("sorting", func() {
 
 			It("sorts the initial netns first", func() {
@@ -99,6 +109,46 @@ var _ = Describe("network namespace", func() {
 				Expect(orderNetworkNamespaces([]*NetworkNamespace{initialNetns, initialNetns})(0, 1)).To(BeFalse())
 			})
 
+		})
+
+	})
+
+	Context("looking up and listing", func() {
+
+		var allnetns NetworkNamespaces
+		var ourproc *model.Process
+		var ournetns *NetworkNamespace
+
+		BeforeEach(func() {
+			var disco *discover.Result
+			allnetns, disco = discoverRedux()
+			ourproc = disco.Processes[model.PIDType(os.Getpid())]
+			Expect(ourproc).NotTo(BeNil())
+			ournetns = allnetns[Successful(ops.NamespacePath("/proc/self/ns/net").ID())]
+			Expect(ournetns).NotTo(BeNil())
+		})
+
+		It("looks up the network namespace of a process", func() {
+			Expect(allnetns.ByProcess(ourproc)).To(BeIdenticalTo(ournetns))
+			Expect(allnetns.ByProcess(&model.Process{})).To(BeNil())
+		})
+
+		It("looks up the network namespace of a container", func() {
+			Expect(allnetns.ByContainer(&model.Container{Process: ourproc})).To(BeIdenticalTo(ournetns))
+		})
+
+		It("returns a sorted list", func() {
+			sorted := allnetns.Sorted()
+			Expect(sorted).To(ConsistOf(slices.Collect(maps.Values(allnetns))))
+			for idx := 1; idx < len(sorted); idx++ {
+				Expect(orderNetworkNamespaces(sorted)(idx, idx-1)).To(BeFalse())
+			}
+		})
+
+		It("returns the display names", func() {
+			Expect(ournetns.DisplayName()).NotTo(BeEmpty())
+			Expect(allnetns.String()).To(ContainSubstring(ournetns.DisplayName()))
+			Expect(strings.Count(allnetns.String(), " // ")).To(Equal(len(allnetns) - 1))
 		})
 
 	})
