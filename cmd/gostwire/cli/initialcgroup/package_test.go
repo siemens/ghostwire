@@ -13,5 +13,5 @@ import (
 
 func TestCmdCliInitialCgroup(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ghostwire/cmd/cli/initialcgroup package")
+	RunSpecs(t, "ghostwire/cmd/gostwire/cli/initialcgroup package")
 }

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package brand
+package service
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCmdCliBrand(t *testing.T) {
+func TestCmdCliService(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ghostwire/cmd/cli/brand package")
+	RunSpecs(t, "ghostwire/cmd/gostwire/cli/service package")
 }

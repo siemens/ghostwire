@@ -21,8 +21,8 @@ import (
 	"github.com/thediveo/lxkns/ops/mountineer"
 
 	gostwire "github.com/siemens/ghostwire/v2"
-	_ "github.com/siemens/ghostwire/v2/cmd/cli/initialcgroup"
-	"github.com/siemens/ghostwire/v2/cmd/cli/service"
+	_ "github.com/siemens/ghostwire/v2/cmd/gostwire/cli/initialcgroup"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/service"
 	"github.com/siemens/ghostwire/v2/cmd/internal/wsconn"
 )
 

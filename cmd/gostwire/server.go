@@ -19,7 +19,7 @@ import (
 	"github.com/thediveo/spaserve"
 
 	gostwire "github.com/siemens/ghostwire/v2"
-	"github.com/siemens/ghostwire/v2/cmd/cli/brand"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/brand"
 )
 
 // dynVarsRe matches the window.dynvars assignment, so we can rewrite (or
