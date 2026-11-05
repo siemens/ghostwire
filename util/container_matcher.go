@@ -13,9 +13,8 @@ import (
 
 	"github.com/siemens/ghostwire/v2/network"
 
+	g "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-
-	. "github.com/onsi/gomega"
 )
 
 // ContainContainer succeeds if ACTUAL is a slice, array or map of
@@ -24,7 +23,7 @@ import (
 // GomegaMatcher can also be specified for matching the name or ID, such as
 // ContainSubstring and MatchRegexp.
 func ContainContainer(nameorid any, typ string) types.GomegaMatcher {
-	return ContainElement(WithTransform(
+	return g.ContainElement(g.WithTransform(
 		func(actual *network.NetworkNamespace) []*model.Container {
 			containers := make([]*model.Container, 0, len(actual.Tenants))
 			for _, tenant := range actual.Tenants {
@@ -34,7 +33,7 @@ func ContainContainer(nameorid any, typ string) types.GomegaMatcher {
 			}
 			return containers
 		},
-		ContainElement(SatisfyAll(
+		g.ContainElement(g.SatisfyAll(
 			HaveContainerNameID(nameorid),
 			HaveContainerType(typ),
 		))))
@@ -46,7 +45,7 @@ func ContainContainer(nameorid any, typ string) types.GomegaMatcher {
 // specified for matching the name or ID, such as ContainSubstring and
 // MatchRegexp.
 func HaveContainer(nameid any, typ string) types.GomegaMatcher {
-	return SatisfyAll(HaveContainerNameID(nameid), HaveContainerType(typ))
+	return g.SatisfyAll(HaveContainerNameID(nameid), HaveContainerType(typ))
 }
 
 // HaveContainerNameID succeeds if ACTUAL is either a model.Container or
@@ -57,14 +56,14 @@ func HaveContainerNameID(nameorid any) types.GomegaMatcher {
 	var nameoridMatcher types.GomegaMatcher
 	switch nameorid := nameorid.(type) {
 	case string:
-		nameoridMatcher = Equal(nameorid)
+		nameoridMatcher = g.Equal(nameorid)
 	case types.GomegaMatcher:
 		nameoridMatcher = nameorid
 	default:
 		panic("nameorid argument must be string or GomegaMatcher")
 	}
-	return SatisfyAny(
-		WithTransform(func(actual any) (string, error) {
+	return g.SatisfyAny(
+		g.WithTransform(func(actual any) (string, error) {
 			switch container := actual.(type) {
 			case *model.Container:
 				return container.ID, nil
@@ -73,14 +72,14 @@ func HaveContainerNameID(nameorid any) types.GomegaMatcher {
 			}
 			return "", fmt.Errorf("HaveContainerNameID expects a model.Container or *model.Container, but got %T", actual)
 		}, nameoridMatcher),
-		WithTransform(func(actual *model.Container) string { return actual.Name }, Equal(nameorid)),
+		g.WithTransform(func(actual *model.Container) string { return actual.Name }, g.Equal(nameorid)),
 	)
 }
 
 // HaveContainerType succeeds if ACTUAL is either a model.Container or
 // *model.Container with the specified type.
 func HaveContainerType(typ string) types.GomegaMatcher {
-	return WithTransform(func(actual any) string {
+	return g.WithTransform(func(actual any) string {
 		switch container := actual.(type) {
 		case *model.Container:
 			return container.Type
@@ -88,20 +87,20 @@ func HaveContainerType(typ string) types.GomegaMatcher {
 			return container.Type
 		}
 		panic("HaveContainerType expects a model.Container or *model.Container")
-	}, Equal(typ))
+	}, g.Equal(typ))
 }
 
 func FromPod(pod any) types.GomegaMatcher {
 	var podNameMatcher types.GomegaMatcher
 	switch pod := pod.(type) {
 	case string:
-		podNameMatcher = Equal(pod)
+		podNameMatcher = g.Equal(pod)
 	case types.GomegaMatcher:
 		podNameMatcher = pod
 	default:
 		panic("pod argument must be string or GomegaMatcher")
 	}
-	return WithTransform(func(actual any) ([]*model.Group, error) {
+	return g.WithTransform(func(actual any) ([]*model.Group, error) {
 		switch container := actual.(type) {
 		case *model.Container:
 			return container.Groups, nil
@@ -109,8 +108,8 @@ func FromPod(pod any) types.GomegaMatcher {
 			return container.Groups, nil
 		}
 		return nil, fmt.Errorf("FromPod expects a model.Container or *model.Container, but got %T", actual)
-	}, ContainElement(
-		WithTransform(
+	}, g.ContainElement(
+		g.WithTransform(
 			func(group *model.Group) string {
 				return group.Name
 			}, podNameMatcher)))
