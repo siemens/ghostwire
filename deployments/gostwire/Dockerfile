@@ -13,7 +13,7 @@
 # rebuilds get the same package versions; use "make bump-debian" to pick up
 # (security) updates. An empty DEBIAN_SNAPSHOT uses the live Debian mirrors
 # instead, as a fallback when snapshot.debian.org is down.
-ARG DEBIAN_SNAPSHOT=20261102T185036Z
+ARG DEBIAN_SNAPSHOT=20261105T143213Z
 
 ARG NODE_VERSION=24
 # keep in sync with "packageManager" in webui/package.json
@@ -33,21 +33,22 @@ FROM --platform=${BUILDPLATFORM} tonistiigi/xx:1.10.0@sha256:40fe21f44bb8cddf1eb
 #
 # Debian stable with the Go toolchain, and its package sources pointing to our
 # fixed snapshot.
-FROM --platform=${BUILDPLATFORM} golang:1.26-trixie@sha256:a050dcceee6eb9bf110151662dfac7662f3bec40927c7dee48731e3d92083d42 AS debian
+FROM --platform=${BUILDPLATFORM} golang:1.26-trixie@sha256:9ce8fcba4b6fa1ae0fc1c00d255c073cfb9f9783237bb6315512fed4051d83ce AS debian
 
 ARG DEBIAN_SNAPSHOT
 
 SHELL ["/bin/bash", "-o", "pipefail", "-ec"]
 COPY --from=cc-helpers / /
 # Plain http is fine, as apt checks the signed Release files; these will have
-# expired for older snapshots, though. As snapshot.debian.org is flaky, retry
-# and fail on index fetch errors, never silently caching incomplete lists.
+# expired for older snapshots, though. As snapshot.debian.org is flaky, give up
+# on stalled connections early and retry, and fail on index fetch errors, never
+# silently caching incomplete lists.
 RUN if [ -n "${DEBIAN_SNAPSHOT}" ]; then \
         sed -i -E "s#^URIs: http://deb.debian.org/(debian(-security)?)\$#URIs: http://snapshot.debian.org/archive/\1/${DEBIAN_SNAPSHOT}#" \
             /etc/apt/sources.list.d/debian.sources && \
         echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot; \
     fi && \
-    printf 'Acquire::Retries "5";\nAPT::Update::Error-Mode "any";\n' >> /etc/apt/apt.conf.d/99snapshot
+    printf 'Acquire::http::Timeout "15";\nAcquire::Retries "5";\nAPT::Update::Error-Mode "any";\n' >> /etc/apt/apt.conf.d/99snapshot
 
 # Empty defaults for the additional Go workspace module build contexts, unless
 # overridden using --build-context bctxN=...

@@ -52,15 +52,26 @@ bump-debian: ## list Debian security fixes missing from the image, then bump the
 	@set -e; \
 	tar=$$(mktemp); trap 'rm -f "$$tar"' EXIT; \
 	scan() { \
-		scripts/docker-build.sh $(DOCKERFILE) -q --load -t gostwire:bump-debian \
+		echo "==> building image..." && \
+		scripts/docker-build.sh $(DOCKERFILE) --load -t gostwire:bump-debian \
 			--build-context webappsrc=./webui >/dev/null && \
+		echo "==> exporting image..." && \
 		docker save gostwire:bump-debian -o "$$tar" && \
+		echo "==> scanning image with Trivy..." && \
 		docker run --rm -v "$$tar:/image.tar:ro" -v gostwire-trivy-cache:/root/.cache $(TRIVY_IMAGE) \
-			image --quiet --input /image.tar --scanners vuln --pkg-types os --ignore-unfixed --exit-code 3; \
+			image --input /image.tar --scanners vuln --pkg-types os --ignore-unfixed --exit-code 3; \
 	}; \
-	echo "Scanning image with Debian snapshot $$(sed -n 's/^ARG DEBIAN_SNAPSHOT=//p' $(DOCKERFILE))..."; \
+	old=$$(sed -n 's/^ARG DEBIAN_SNAPSHOT=//p' $(DOCKERFILE)); \
+	echo "Scanning image with Debian snapshot $$old..."; \
 	scan || [ $$? -eq 3 ]; \
 	snapshot=$$(date -u +%Y%m%dT%H%M%SZ); \
 	sed -i "s/^ARG DEBIAN_SNAPSHOT=.*/ARG DEBIAN_SNAPSHOT=$$snapshot/" $(DOCKERFILE); \
 	echo "Bumped to Debian snapshot $$snapshot, rescanning..."; \
-	scan && echo "No Debian security fixes missing."
+	rc=0; scan || rc=$$?; \
+	case $$rc in \
+	0) echo "No Debian security fixes missing." ;; \
+	3) ;; \
+	*) sed -i "s/^ARG DEBIAN_SNAPSHOT=.*/ARG DEBIAN_SNAPSHOT=$$old/" $(DOCKERFILE); \
+		echo "Rescan failed, reverted to Debian snapshot $$old." >&2 ;; \
+	esac; \
+	exit $$rc
