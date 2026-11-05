@@ -2,6 +2,8 @@ module github.com/siemens/ghostwire/v2
 
 go 1.26.6
 
+ignore ./webui/node_modules
+
 exclude (
 	google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
