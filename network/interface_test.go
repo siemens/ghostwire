@@ -57,7 +57,7 @@ var _ = Describe("network interface", func() {
 		Expect(netlink.LinkAddAltName(dmy, "rincewind")).To(Succeed())
 
 		nlh := Successful(netlink.NewHandle())
-		defer nlh.Close()
+		defer func() { _ = nlh.Close() }()
 		nif := NewInterface(nlh, nil, Successful(nlh.LinkByName(dmy.Attrs().Name)))
 		Expect(nif.Nif().AltNames).To(ConsistOf("twoflower", "rincewind"))
 	})
@@ -71,7 +71,7 @@ var _ = Describe("network interface", func() {
 		dmy := dummy.NewTransient()
 
 		nlh := Successful(netlink.NewHandle())
-		defer nlh.Close()
+		defer func() { _ = nlh.Close() }()
 		lo := NewInterface(nlh, nil, Successful(nlh.LinkByName("lo")))
 		Expect(lo.Nif().Loopback).To(BeTrue())
 		Expect(lo.Nif().Physical).To(BeFalse())
