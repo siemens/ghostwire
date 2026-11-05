@@ -11,7 +11,9 @@
             "--build-tags=matchers,kind"
         ],
         "go.alternateTools": {
-            "customFormatter": "golangci-lint-v2"
+            // same golangci-lint as in the terminal, not a separately installed, aging one
+            "golangci-lint-v2": "golangci-lint",
+            "customFormatter": "golangci-lint"
         },
         "go.formatTool": "custom",
         "go.formatFlags": [
@@ -38,7 +40,5 @@
         "markdown.styles": [
             "./.vscode/markdown-preview.css"
         ],
-        "statsBar.memoUsage.format": "$(chip) ${used}/${total} ${unit}, ${percent}%",
-        "statsBar.location": "Right",
     },
 }
