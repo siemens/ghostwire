@@ -100,7 +100,7 @@ func readEdgeCoreContainerOsrelease(cc *model.Container) map[string]string {
 	// current mount namespace.
 	osrelPath, err := corefs.Resolve("/etc/os-release-container")
 	if err != nil {
-		slog.Error("cannot resolve /etc/os-release-container path in edge-iot-core: %s", xslog.Error(err))
+		slog.Error("cannot resolve /etc/os-release-container path in edge-iot-core", xslog.Error(err))
 	}
 	osrel := osrelease.NewFromName(osrelPath)
 	// Fix broken VERSION_ID entries...

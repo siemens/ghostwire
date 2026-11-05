@@ -129,7 +129,7 @@ func newNerdctlNetworks(_ context.Context, engine *model.ContainerEngine, allnet
 			slog.String("path", configFilename))
 		nerdynetworkconf, err := libcni.ConfListFromFile(configFilename)
 		if err != nil {
-			slog.Error("invalid CNI configuration file %q",
+			slog.Error("invalid CNI configuration file",
 				slog.String("path", configFilename),
 				xslog.Error(err))
 			continue

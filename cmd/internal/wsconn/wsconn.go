@@ -158,7 +158,7 @@ func NewWSConn(w http.ResponseWriter, req *http.Request) (*WSConn, error) {
 	c.Conn, err = wsupgrader.Upgrade(w, req, nil)
 	if err != nil {
 		c.Error("websocket upgrade process failed",
-			slog.String("error", err.Error()))
+			xslog.Error(err))
 		return nil, err
 	}
 	// We handle close control messages explicitly, so we have to set a dummy

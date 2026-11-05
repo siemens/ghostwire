@@ -71,7 +71,7 @@ func (n *VlanAttrs) ResolveRelations(allns NetworkNamespaces) {
 				master.Nif().Slaves = append(master.Nif().Slaves, n.Interface())
 			}
 		} else {
-			slog.Warn("unknown NSID %d in net:[%d]",
+			slog.Warn("unknown NSID of VLAN master",
 				slog.Uint64("nsid", uint64(netnsid)),
 				slog.Uint64("netns", n.Netns.ID().Ino))
 		}

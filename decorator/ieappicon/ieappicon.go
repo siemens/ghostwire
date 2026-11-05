@@ -131,7 +131,7 @@ func loadProjectIcons(engines []*model.ContainerEngine, projects []ieAppProject)
 	defer func() { _ = db.Close() }()
 	apps, err := db.Apps()
 	if err != nil {
-		slog.Error("cannot discover installed IE Apps: %s", xslog.Error(err))
+		slog.Error("cannot discover installed IE Apps", xslog.Error(err))
 		return
 	}
 	// Next, build an index that maps (composer) project names to IE App

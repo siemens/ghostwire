@@ -77,7 +77,7 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, family nufftables.TableFamily) []ForwardedPort {
 	iptables, err := nufftables.GetFamilyTables(conn, family)
 	if err != nil {
-		slog.Error("cannot retrieve %netfilter tables",
+		slog.Error("cannot retrieve netfilter tables",
 			slog.String("family", family.String()),
 			xslog.Error(err))
 		return nil
