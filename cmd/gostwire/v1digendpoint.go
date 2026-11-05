@@ -25,6 +25,10 @@ import (
 const maxDiggers = 8
 const maxVerifiers = 8
 
+// closeBadTarget is an application-specific websocket close code (4000-4999),
+// mirroring HTTP status 400.
+const closeBadTarget = 4000 + http.StatusBadRequest
+
 var validContainerNamesRegex = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
 
 // registerDiscovery registers the /mobydig discovery route and handler with the
@@ -39,7 +43,7 @@ func init() {
 					query := req.URL.Query()
 					target := query["target"]
 					if len(target) != 1 {
-						http.Error(w, "missing or multiple target query parameters", 400)
+						http.Error(w, "missing or multiple target query parameters", http.StatusBadRequest)
 						return
 					}
 					targetname := target[0]
@@ -48,7 +52,7 @@ func init() {
 					// parameter nonsense. Due to DNS label restriction, useful
 					// Docker container names are at most 63 characters.
 					if !validContainerNamesRegex.MatchString(targetname) || len(targetname) > 255 {
-						http.Error(w, "invalid target name", 400)
+						http.Error(w, "invalid target name", http.StatusBadRequest)
 						return
 					}
 
@@ -60,17 +64,17 @@ func init() {
 					defer func() {
 						conn.Debug("neighborhood nearby scan completed",
 							slog.String("target", targetname))
-						conn.InitiateGracefulClose(1000, "")
+						conn.InitiateGracefulClose(websocket.CloseNormalClosure, "")
 					}()
 					conn.Debug("discovering and verifying nearby neighborhood services",
 						slog.String("target", targetname))
 
-					allnetns := gostwire.Discover(req.Context(), cizer, nil)
+					allnetns := gostwire.Discover(ctx, cizer, nil)
 					startContainer := allnetns.Lxkns.Containers.FirstWithNameType(targetname, moby.Type)
 					if startContainer == nil {
 						slog.Error("Docker container not found",
 							slog.String("target", targetname))
-						conn.GracefullyClose(4400,
+						conn.GracefullyClose(closeBadTarget,
 							fmt.Sprintf("Docker container %q not found", targetname))
 						return
 					}
@@ -82,7 +86,7 @@ func init() {
 					if err != nil {
 						conn.Error("cannot start digging and address verification",
 							xslog.Error(err))
-						conn.GracefullyClose(4400,
+						conn.GracefullyClose(closeBadTarget,
 							fmt.Sprintf("cannot start digging and address verification for %q", targetname))
 						return
 					}
