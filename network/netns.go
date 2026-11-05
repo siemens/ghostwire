@@ -476,13 +476,16 @@ func init() {
 func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 	links, err := nlh.LinkList()
 	if err != nil {
+		slog.Error("cannot list network interfaces",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
 	// We only open the ethtool API socket on demand when we find actual
 	// physical network interfaces. This way, we don't need to switch network
 	// namespaces and open the socket for containers without any physical
 	// (SR-IOV VF) network interface(s) present.
-	physNifsPresent := false
+	ethtoolOpenAttempted := false
 	ethtoolFd := -1 // optional AF_INET+SOCK_DGRAM+IPPROTO_IP socket, opened on the fly
 	for _, link := range links {
 		nif := NewInterface(nlh, n, link)
@@ -492,16 +495,22 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 		if !nif.Nif().Physical {
 			continue
 		}
-		// It's a physical network interface and if we haven't done so already,
-		// we now open the ethtool API in this network namespace.
-		if !physNifsPresent {
+		// It's a physical network interface and if we haven't tried so
+		// already, we now open the ethtool API in this network namespace.
+		if !ethtoolOpenAttempted {
+			ethtoolOpenAttempted = true
 			var err error
-			if ethtoolFd, err = n.OpenEthtool(); err == nil { // TODO: improve error handling
-				physNifsPresent = true
+			if ethtoolFd, err = n.OpenEthtool(); err != nil {
+				slog.Error("cannot open ethtool API, skipping bus address discovery",
+					slog.Uint64("netns", n.ID().Ino),
+					xslog.Error(err))
+			} else {
 				defer func() { _ = unix.Close(ethtoolFd) }()
 			}
 		}
-		nif.Nif().discoverBusAddress(ethtoolFd)
+		if ethtoolFd >= 0 {
+			nif.Nif().discoverBusAddress(ethtoolFd)
+		}
 	}
 }
 
