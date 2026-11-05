@@ -51,18 +51,17 @@ func (n *VethAttrs) ResolveRelations(allns NetworkNamespaces) {
 	if n.Peer != nil {
 		return
 	}
-	peer := n.peerNif()
-	if peer == nil {
+	peer, ok := n.peerNif().(*VethAttrs)
+	if !ok {
 		return
 	}
 	n.Peer = peer
 	self := n.Interface()
-	peerpeer := peer.(Veth).Veth().Peer
-	if peerpeer == nil || peerpeer == self {
-		peer.(*VethAttrs).Peer = self
+	if peer.Peer == nil || peer.Peer == self {
+		peer.Peer = self
 		return
 	}
-	warnPeerInconsistency(n.Interface(), peer, peerpeer)
+	warnPeerInconsistency(self, peer, peer.Peer)
 }
 
 // peerNif returns the peer network interface of a VETH or netkit pair end, or

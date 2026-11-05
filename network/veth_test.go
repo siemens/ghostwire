@@ -14,6 +14,7 @@ import (
 	"github.com/thediveo/notwork/bridge"
 	"github.com/thediveo/notwork/veth"
 	"github.com/thediveo/spacetest/netns"
+	"github.com/vishvananda/netlink"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,6 +40,19 @@ var _ = Describe("VETH nif", func() {
 		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		})))
+	})
+
+	It("ignores a peer that isn't a VETH", func() {
+		nns := &NetworkNamespace{
+			Nifs:      map[int]Interface{1: &NifAttrs{Link: &netlink.Dummy{}}},
+			peerNetns: map[NSID]*NetworkNamespace{},
+		}
+		vethnif := &VethAttrs{NifAttrs: NifAttrs{
+			Link:  &netlink.Veth{LinkAttrs: netlink.LinkAttrs{Index: 2, ParentIndex: 1, NetNsID: -1}},
+			Netns: nns,
+		}}
+		Expect(func() { vethnif.ResolveRelations(NetworkNamespaces{}) }).NotTo(Panic())
+		Expect(vethnif.Peer).To(BeNil())
 	})
 
 	It("discovers VETH pairs", func(ctx context.Context) {
