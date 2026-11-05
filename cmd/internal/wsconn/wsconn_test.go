@@ -108,6 +108,44 @@ var _ = Describe("web socket connections", func() {
 		Expect(log.String()).To(BeEmpty())
 	})
 
+	DescribeTable("checks the origin of websocket handshakes",
+		func(ctx context.Context, origin string, fwdHost string, allowed string, accepted bool) {
+			if allowed != "" {
+				AllowOrigins(strings.Split(allowed, ",")...)
+				DeferCleanup(func() { AllowOrigins() })
+			}
+			hdr := http.Header{}
+			if origin != "" {
+				hdr.Set("Origin", strings.ReplaceAll(origin, "HOST", strings.TrimPrefix(url, "http://")))
+			}
+			if fwdHost != "" {
+				hdr.Set("X-Forwarded-Host", fwdHost)
+			}
+			var res Pair[*WSConn, error]
+			if !accepted {
+				_, resp, err := websocket.DefaultDialer.DialContext(ctx, wsurl(url), hdr)
+				Expect(err).To(MatchError(websocket.ErrBadHandshake))
+				Expect(resp).To(HaveField("StatusCode", http.StatusForbidden))
+				Eventually(ch).Should(Receive(&res))
+				Expect(res.Unpack()).Error().To(HaveOccurred())
+				return
+			}
+			conn, resp := Successful2R(websocket.DefaultDialer.DialContext(ctx, wsurl(url), hdr))
+			DeferCleanup(resp.Body.Close)
+			DeferCleanup(conn.Close)
+			Eventually(ch).Should(Receive(&res))
+			Expect(Successful(res.Unpack()).Close()).To(Succeed())
+		},
+		Entry("without origin", "", "", "", true),
+		Entry("same origin", "http://HOST", "", "", true),
+		Entry("cross origin", "http://evil.example", "", "", false),
+		Entry("forwarded origin", "https://gw.example", "gw.example, proxy.internal", "", true),
+		Entry("cross origin behind proxy", "http://evil.example", "gw.example", "", false),
+		Entry("allowed origin", "https://gw.example", "", "http://other.example, https://GW.example/", true),
+		Entry("any origin allowed", "http://evil.example", "", "*", true),
+		Entry("origin not allowed", "http://evil.example", "", "https://gw.example", false),
+	)
+
 	It("watches the connection and gracefully closes when the client requests it", func(ctx context.Context) {
 		By("connecting")
 		clntconn, resp := Successful2R(

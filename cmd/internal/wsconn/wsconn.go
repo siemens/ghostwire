@@ -13,11 +13,16 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/gorilla/websocket"
+	"github.com/thediveo/nonstd/sets"
+	"github.com/thediveo/nonstd/xslices"
 	"github.com/thediveo/nonstd/xslog"
 )
 
@@ -26,9 +31,45 @@ import (
 const ClosingDeadline = 5 * time.Second
 
 var wsupgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: checkOrigin,
+}
+
+var allowedOrigins atomic.Pointer[sets.Set[string]]
+
+// AllowOrigins additionally accepts websocket handshakes from the specified
+// origins, such as "https://gw.example"; "*" accepts any origin. It replaces
+// any previously allowed origins.
+func AllowOrigins(origins ...string) {
+	allowed := sets.New(xslices.Map(origins, normalizeOrigin)...)
+	allowedOrigins.Store(&allowed)
+}
+
+func normalizeOrigin(origin string) string {
+	return strings.ToLower(strings.TrimSuffix(strings.TrimSpace(origin), "/"))
+}
+
+// checkOrigin rejects cross-origin websocket handshakes, unless explicitly
+// allowed, but also accepts the original host behind reverse proxies; browsers
+// cannot set X-Forwarded-Host on websocket handshakes.
+func checkOrigin(req *http.Request) bool {
+	origin := req.Header.Get("Origin")
+	if origin == "" {
 		return true
-	},
+	}
+	if allowed := allowedOrigins.Load(); allowed != nil &&
+		(allowed.Contains("*") || allowed.Contains(normalizeOrigin(origin))) {
+		return true
+	}
+	originURL, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	if strings.EqualFold(originURL.Host, req.Host) {
+		return true
+	}
+	fwdHost, _, _ := strings.Cut(req.Header.Get("X-Forwarded-Host"), ",")
+	fwdHost = strings.TrimSpace(fwdHost)
+	return fwdHost != "" && strings.EqualFold(originURL.Host, fwdHost)
 }
 
 // Things are tricky, since we have to juggle with an external process that can
