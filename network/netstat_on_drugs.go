@@ -6,6 +6,7 @@ package network
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -14,7 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"unsafe"
 
 	"github.com/thediveo/lxkns/model"
 	"golang.org/x/sys/unix"
@@ -327,20 +327,7 @@ func reverseUint32(b []byte, idx int) {
 // Since the Linux kernel in part simply dumps certain data fields of a socket
 // "as is" in form of a hex string, we need to know what endianess we're
 // operating with.
-var isLE bool
-
-func init() {
-	buf := [2]byte{}
-	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xCAFE) // #nosec G103
-	switch buf {
-	case [2]byte{0xFE, 0xCA}:
-		isLE = true
-	case [2]byte{0xCA, 0xFE}:
-		isLE = false
-	default:
-		panic("can not determine native endianness.")
-	}
-}
+var isLE = binary.NativeEndian.Uint16([]byte{1, 0}) == 1
 
 // Sort sorts a list of ProcessSocket elements:
 // - local port,
