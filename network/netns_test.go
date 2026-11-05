@@ -7,6 +7,7 @@ package network
 import (
 	"log/slog"
 	"maps"
+	"net"
 	"os"
 	"slices"
 	"strings"
@@ -149,6 +150,19 @@ var _ = Describe("network namespace", func() {
 			Expect(ournetns.DisplayName()).NotTo(BeEmpty())
 			Expect(allnetns.String()).To(ContainSubstring(ournetns.DisplayName()))
 			Expect(strings.Count(allnetns.String(), " // ")).To(Equal(len(allnetns) - 1))
+		})
+
+		It("relates open ports to their processes", func() {
+			listener := Successful(net.Listen("tcp4", "127.0.0.1:0"))
+			DeferCleanup(listener.Close)
+			port := uint16(AssignableTo[*net.TCPAddr](listener.Addr()).Port)
+
+			allnetns, _ := discoverRedux()
+			ournetns := allnetns[Successful(ops.NamespacePath("/proc/self/ns/net").ID())]
+			Expect(ournetns.Portsv4).To(ContainElement(And(
+				HaveField("LocalPort", port),
+				HaveField("SimplifiedState", Listening),
+				HaveField("PIDs", ContainElement(model.PIDType(os.Getpid()))))))
 		})
 
 	})

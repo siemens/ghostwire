@@ -17,6 +17,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
@@ -470,10 +471,28 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 // NewNetworkNamespaces takes a set of discovered network namespaces and creates
 // the Gostwire-specific NetworkNamespace objects wrapping them and supplying
 // network layer-related information not discovered by lxkns.
+//
+// Deprecated: use [NewNetworkNamespacesWithSocketProcesses] together with the
+// lxkns discovery option [discover.WithSocketProcesses] instead.
 func NewNetworkNamespaces(
 	allnetns model.NamespaceMap,
 	allprocs model.ProcessTable,
 	containers model.Containers,
+) NetworkNamespaces {
+	return NewNetworkNamespacesWithSocketProcesses(
+		allnetns, allprocs, containers, discover.SocketProcesses(discoverAllSockInodes("/proc")))
+}
+
+// NewNetworkNamespacesWithSocketProcesses takes a set of discovered network
+// namespaces and creates the Gostwire-specific NetworkNamespace objects
+// wrapping them and supplying network layer-related information not discovered
+// by lxkns. The socket-to-processes map sockprocs comes from an lxkns discovery
+// using the [discover.WithSocketProcesses] option.
+func NewNetworkNamespacesWithSocketProcesses(
+	allnetns model.NamespaceMap,
+	allprocs model.ProcessTable,
+	containers model.Containers,
+	sockprocs discover.SocketProcesses,
 ) NetworkNamespaces {
 	// In order to later figure out the tenants of a network namespace, we need
 	// not only to take network namespace leader processes into account but also
@@ -489,7 +508,7 @@ func NewNetworkNamespaces(
 			netspaces[netnsid] = netwns
 		}
 	}
-	soxProcsMap := discoverAllSockInodes("/proc")
+	soxProcsMap := socketToProcessMap(sockprocs)
 	for nsid, netns := range netspaces {
 		slog.Debug("discovering netns details",
 			slog.Uint64("netns", nsid.Ino),

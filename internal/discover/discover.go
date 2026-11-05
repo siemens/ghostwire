@@ -35,16 +35,18 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 		lxknsdiscover.WithPIDMapper(),
 		lxknsdiscover.WithLabels(labels),
 		lxknsdiscover.WithAffinityAndScheduling(),
+		lxknsdiscover.WithSocketProcesses(),
 	)
 	// Second phase: create the Gostwire-specific information model based on the
 	// lxkns discovery and augment the model with additional network-related
 	// details, such as tenant DNS resolver configuration, Docker network names,
 	// et cetera.
 	slog.Debug("discovering network namespace details (interfaces, address, routes, ...)")
-	allnetns := network.NewNetworkNamespaces(
+	allnetns := network.NewNetworkNamespacesWithSocketProcesses(
 		discoverednetns.Namespaces[model.NetNS],
 		discoverednetns.Processes,
-		discoverednetns.Containers)
+		discoverednetns.Containers,
+		discoverednetns.SocketProcessMap)
 	slog.Debug("running gostwire decorators")
 	for _, decorateur := range plugger.Group[decorator.Decorate]().Symbols() {
 		decorateur(ctx, allnetns, discoverednetns.Processes, discoverednetns.ContainerEngines)

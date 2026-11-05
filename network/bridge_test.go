@@ -36,11 +36,13 @@ func discoverRedux() (NetworkNamespaces, *discover.Result) {
 			species.CLONE_NEWNET|species.CLONE_NEWPID|species.CLONE_NEWNS|species.CLONE_NEWUTS),
 		discover.WithHierarchy(),
 		discover.WithPIDMapper(),
+		discover.WithSocketProcesses(),
 	)
-	allnetns := NewNetworkNamespaces(
+	allnetns := NewNetworkNamespacesWithSocketProcesses(
 		discoverednetns.Namespaces[model.NetNS],
 		discoverednetns.Processes,
-		discoverednetns.Containers)
+		discoverednetns.Containers,
+		discoverednetns.SocketProcessMap)
 	return allnetns, discoverednetns
 }
 
