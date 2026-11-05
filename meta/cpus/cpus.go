@@ -32,7 +32,7 @@ func Metadata(r gostwire.DiscoveryResult) meta.Data {
 	}
 	cpulist, err := cpus.NewList(bytes.TrimSuffix(onlinecpus, []byte("\n")))
 	if err != nil {
-		slog.Error("malformed /sys/devices/system/cpu/online,", xslog.Error(err))
+		slog.Error("malformed /sys/devices/system/cpu/online", xslog.Error(err))
 		return nil
 	}
 	return meta.Data{

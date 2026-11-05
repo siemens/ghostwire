@@ -62,7 +62,7 @@ func Decorate(ctx context.Context, allnetns network.NetworkNamespaces, allprocs 
 			if !strings.HasSuffix(child.Name, dockerProxy) {
 				continue
 			}
-			slog.Debug("found proxy process", slog.Any("PID", child.PID))
+			slog.Debug("found proxy process", slog.Int("pid", int(child.PID)))
 			fp := extractForwardedPort(child)
 			if fp.IP == nil {
 				continue

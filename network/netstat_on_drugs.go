@@ -156,7 +156,7 @@ func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm s
 	}
 	sox := []ProcessSocket{}
 	// "path" is garantueed to be a procfs-based path, so no need to deploy the
-	// mountineers... And no reason for gosec to go berserk: there is path where
+	// mountineers... And no reason for gosec to go berserk: there is no path where
 	// user-controlled input can reach procroot and it is otherwise only used in
 	// unit tests with a test-local fake procfs root.
 	f, err := os.Open(path) // #nosec G304
