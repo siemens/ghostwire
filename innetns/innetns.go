@@ -17,9 +17,6 @@ import (
 // Run the specified function while temporarily attached in the specified
 // network namespace (and with the OS-level thread locked during the execution
 // of fn).
-//
-// Nota bene: generalisation of ghostwire's OpenInNetworkNamespace to use it
-// outside a network.NetworkNamespace object.
 func Run(netns model.Namespace, fn func() error) error {
 	if netns == nil {
 		return errors.New("nil namespace")
@@ -29,7 +26,7 @@ func Run(netns model.Namespace, fn func() error) error {
 	}
 	ref := netns.Ref()
 	if len(ref) == 0 {
-		return fmt.Errorf("invalid empty netns reference")
+		return errors.New("invalid empty netns reference")
 	}
 	// Do we have a single network namespace path or are there multiple paths,
 	// where the last path references a bind-mounted network namespace in some
@@ -38,14 +35,14 @@ func Run(netns model.Namespace, fn func() error) error {
 	if len(ref) > 1 {
 		mntneer, err := mountineer.New(ref[:len(ref)-1], nil)
 		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %s", ref.String(), err.Error())
+			return fmt.Errorf("invalid netns reference %s: %w", ref.String(), err)
 		}
 		// we need to keep the mount namespace open only until we've got the
 		// netlink handle, that is, until the end of this method.
 		defer mntneer.Close()
 		netnspath, err = mntneer.Resolve(netnspath)
 		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %s", ref.String(), err.Error())
+			return fmt.Errorf("invalid netns reference %s: %w", ref.String(), err)
 		}
 	}
 	// Shortcut route in case it's our own network namespace for those running

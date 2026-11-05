@@ -24,6 +24,8 @@ import (
 	"github.com/thediveo/nonstd/xslog"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/innetns"
 )
 
 // NetworkNamespaces maps all NetworkNamespace objects known to us.
@@ -377,14 +379,14 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 // guaranteed to be an invalid fd, whereas 0 most probably is valid.
 func (n *NetworkNamespace) OpenEthtool() (fd int, err error) {
 	fd = -1
-	if err := n.OpenInNetworkNamespace(func() error {
+	if err := innetns.Run(n, func() error {
 		var err error
 		fd, err = unix.Socket(unix.AF_INET, unix.SOCK_DGRAM, unix.IPPROTO_IP)
 		return err
 	}); err != nil {
 		// Note: this cannot be placed inside the function passed to
-		// OpenInNetworkNamespace, because we here must deal with the situation
-		// where switching back the namespace failed and in this case properly
+		// innetns.Run, because we here must deal with the situation where
+		// switching back the namespace failed and in this case properly
 		// dispose of the socket fd now connected to the wrong network
 		// namespace.
 		if fd >= 0 {
@@ -397,11 +399,11 @@ func (n *NetworkNamespace) OpenEthtool() (fd int, err error) {
 
 // OpenNetlink returns a netlink (route) handle for netlink queries and
 // operations on this network namespace. The caller is responsible for releasing
-// the resources associated with the returned netlink handle by calling
-// Delete(!) on it when not needed anymore.
+// the resources associated with the returned netlink handle by calling Close on
+// it when not needed anymore.
 func (n *NetworkNamespace) OpenNetlink() (*netlink.Handle, error) {
 	var nlHandle *netlink.Handle
-	if err := n.OpenInNetworkNamespace(func() error {
+	if err := innetns.Run(n, func() error {
 		var err error
 		nlHandle, err = netlink.NewHandle(unix.NETLINK_ROUTE)
 		return err
@@ -416,59 +418,10 @@ func (n *NetworkNamespace) OpenNetlink() (*netlink.Handle, error) {
 
 // OpenInNetworkNamespace calls the supplied opener function in the context of
 // this network namespace.
+//
+// Deprecated: use [innetns.Run] instead.
 func (n *NetworkNamespace) OpenInNetworkNamespace(opener func() error) error {
-	ref := n.Ref()
-	if len(ref) == 0 {
-		return fmt.Errorf("invalid empty netns reference")
-	}
-	// Do we have a single network namespace path or are there multiple paths,
-	// where the last path references a bind-mounted network namespace in some
-	// mount namespace?
-	netnspath := ref[len(ref)-1]
-	if len(ref) > 1 {
-		mntneer, err := mountineer.New(ref[:len(ref)-1], nil)
-		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %s", ref.String(), err.Error())
-		}
-		// we need to keep the mount namespace open only until we've got the
-		// netlink handle, that is, until the end of this method.
-		defer mntneer.Close()
-		netnspath, err = mntneer.Resolve(netnspath)
-		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %s", ref.String(), err.Error())
-		}
-	}
-	// Shortcut route in case it's our own network namespace for those running
-	// the Gostwire discovery engine without sufficient capabilities, so trying
-	// to switch into our own current network namespace would otherwise fail.
-	// This of course begs the question, why would we do to switch into the same
-	// network namespace anyway? Because.
-	targetnetnsid, targeterr := ops.NamespacePath(netnspath).ID()
-	if gwnetnserr == nil && targeterr == nil && gwnetnsid == targetnetnsid {
-		return opener()
-	}
-	// Normal route where we need to temporarily switch into the target network
-	// namespace in order to open a file descriptor in that context.
-	var openerErr error
-	visitErr := ops.Visit(func() {
-		openerErr = opener()
-	}, ops.NamespacePath(netnspath))
-	if visitErr != nil {
-		return visitErr
-	}
-	return openerErr
-}
-
-var (
-	gwnetnsid  species.NamespaceID // our own network namespace ID when starting.
-	gwnetnserr error               // there should not be any, except for a botched procfs.
-)
-
-// Fetch the ID of network namespace we (=main Go routine) are running in for
-// once and all. All Go routines normally run attached to this network
-// namespace, except for short and carefully locked "critical" sections.
-func init() {
-	gwnetnsid, gwnetnserr = ops.NamespacePath("/proc/self/ns/net").ID()
+	return innetns.Run(n, opener)
 }
 
 // discoverNetworkInterfaces discovers the network interfaces in this network

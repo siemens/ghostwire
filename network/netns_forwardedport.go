@@ -16,6 +16,7 @@ import (
 	"github.com/thediveo/nufftables"
 	"github.com/thediveo/nufftables/portfinder"
 
+	"github.com/siemens/ghostwire/v2/innetns"
 	"github.com/siemens/ghostwire/v2/network/portfwd"
 	_ "github.com/siemens/ghostwire/v2/network/portfwd/all" // activate all port forwarding detectors.
 	"github.com/siemens/ghostwire/v2/network/portfwd/slogpfwd"
@@ -49,11 +50,11 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 	// If netfilters doesn't come to us, we simply come to netfilters ;) The
 	// reson is that nftables uses @mdlayher/netlink and that really is a major
 	// P.I.T.A. with its network namespace "support". Luckily, we have
-	// OpenInNetworkNamespace that properly supports the more complex use cases
-	// of namespace references so we simply wrap creating a netfilter netlink
+	// innetns.Run that properly supports the more complex use cases of
+	// namespace references so we simply wrap creating a netfilter netlink
 	// socket in it.
 	var conn *nftables.Conn
-	err := n.OpenInNetworkNamespace(func() error {
+	err := innetns.Run(n, func() error {
 		var err error
 		conn, err = nftables.New(nftables.AsLasting())
 		return err
