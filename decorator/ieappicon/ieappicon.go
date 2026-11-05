@@ -61,7 +61,7 @@ var EnablePlugin = true
 const platformboxdbName = "platformbox.db"
 
 var appIcons = ieAppProjects{} // App project icons cache
-var appIconsMu sync.Mutex      // TODO: improve locking
+var appIconsMu sync.Mutex      // also serializes icon loading to avoid duplicate database lookups
 
 // Register this (lxkns!) Decorator plugin.
 func init() {
@@ -80,6 +80,7 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 		return
 	}
 	appIconsMu.Lock()
+	defer appIconsMu.Unlock()
 	news := appIcons.pruneAndUpdate(engines)
 	if len(news) > 0 {
 		// Try to load IE App project icons, where available; we unconditionally
@@ -88,7 +89,6 @@ func Decorate(engines []*model.ContainerEngine, labels map[string]string) {
 		loadProjectIcons(engines, news)
 		appIcons.add(news)
 	}
-	appIconsMu.Unlock()
 	// Go over all IE app-related containers and set their icons, if any.
 	for _, engine := range engines {
 		for _, container := range engine.Containers {

@@ -5,9 +5,12 @@
 package ieappicon
 
 import (
+	"sync"
+
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/decorator/industrialedge"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -111,6 +114,32 @@ var _ = Describe("IE app icon cache", func() {
 		news = cache.pruneAndUpdate(engines)
 		Expect(news).To(BeEmpty())
 		Expect(cache).To(HaveLen(3))
+	})
+
+	It("survives concurrent decorations", func() {
+		DeferCleanup(func() { appIcons = ieAppProjects{} })
+		var wg sync.WaitGroup
+		for range 4 {
+			wg.Go(func() {
+				defer GinkgoRecover()
+				for range 100 {
+					container := &model.Container{
+						ID:     "foo-1",
+						Flavor: industrialedge.IndustrialEdgeAppFlavor,
+						Labels: model.Labels{moby.ComposerProjectLabel: "foo"},
+					}
+					group := &model.Group{
+						Name:       "foo",
+						Type:       composer.ComposerGroupType,
+						Containers: []*model.Container{container},
+					}
+					container.Groups = []*model.Group{group}
+					Decorate([]*model.ContainerEngine{{Containers: []*model.Container{container}}},
+						map[string]string{IEAppDiscoveryLabel: ""})
+				}
+			})
+		}
+		wg.Wait()
 	})
 
 })
