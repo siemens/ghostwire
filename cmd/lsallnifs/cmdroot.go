@@ -5,7 +5,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -21,38 +20,38 @@ import (
 	"github.com/siemens/ghostwire/v2/network"
 )
 
+// Names of the CLI flags of lsallnifs.
+const (
+	AllFlag       = "all"
+	TenantsFlag   = "tenants"
+	PortsFlag     = "ports"
+	AddressesFlag = "addresses"
+	RoutesFlag    = "routes"
+)
+
 // newRootCmd creates the root command with usage and version information, as
 // well as the available CLI flags (including descriptions).
 func newRootCmd() (rootCmd *cobra.Command) {
 	rootCmd = &cobra.Command{
 		Use:     "lsallnifs",
-		Short:   "dumpns outputs discovered network namespaces with interfaces, containers, ...",
-		Version: "foobar",
+		Short:   "lsallnifs outputs discovered network namespaces with interfaces, containers, ...",
+		Version: gostwire.SemVersion,
 		Args:    cobra.NoArgs,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return clippy.BeforeCommand(cmd)
+		// See: https://github.com/spf13/cobra/issues/340
+		SilenceUsage: true,
+		PersistentPreRunE: func(*cobra.Command, []string) error {
+			return clippy.BeforeCommand(rootCmd)
 		},
 		RunE: lsallnifs,
 	}
-	// Sets up the flags.
-	rootCmd.PersistentFlags().BoolP(
-		"all", "x", false,
-		"everything, but the kitchen sink")
-	rootCmd.PersistentFlags().BoolP(
-		"tenants", "t", false,
-		"show tenants")
-	rootCmd.PersistentFlags().BoolP(
-		"ports", "p", false,
-		"show open ports")
-	rootCmd.PersistentFlags().BoolP(
-		"addresses", "a", false,
-		"show network interface addresses")
-	rootCmd.PersistentFlags().BoolP(
-		"routes", "r", false,
-		"show routes")
-
-	clippy.AddFlags(rootCmd)
-
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	pf := rootCmd.PersistentFlags()
+	pf.BoolP(AllFlag, "x", false, "everything, but the kitchen sink")
+	pf.BoolP(TenantsFlag, "t", false, "show tenants")
+	pf.BoolP(PortsFlag, "p", false, "show open ports")
+	pf.BoolP(AddressesFlag, "a", false, "show network interface addresses")
+	pf.BoolP(RoutesFlag, "r", false, "show routes")
+	clippy.AddFlags(rootCmd) // ...runs all registered SetupCLI plugins.
 	return
 }
 
@@ -66,19 +65,16 @@ func lsallnifs(cmd *cobra.Command, _ []string) error {
 	out := cmd.OutOrStdout()
 	_, _ = fmt.Fprint(out, "lsallnifs\n")
 
-	showAll := without.Error(cmd.PersistentFlags().GetBool("all"))
-	showTenants := without.Error(cmd.PersistentFlags().GetBool("tenants"))
-	showPorts := without.Error(cmd.PersistentFlags().GetBool("ports"))
-	showAddrs := without.Error(cmd.PersistentFlags().GetBool("addresses"))
-	//showRoutes, _ := cmd.PersistentFlags().GetBool("routes")
+	showAll := without.Error(cmd.Flags().GetBool(AllFlag))
+	showTenants := without.Error(cmd.Flags().GetBool(TenantsFlag))
+	showPorts := without.Error(cmd.Flags().GetBool(PortsFlag))
+	showAddrs := without.Error(cmd.Flags().GetBool(AddressesFlag))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	cizer := turtles.Containerizer(ctx, cmd)
+	cizer := turtles.Containerizer(cmd.Context(), cmd)
 	defer cizer.Close()
 
 	_, _ = fmt.Fprint(out, "discovering network namespaces and containers...\n")
-	allnetns := gostwire.Discover(context.Background(), cizer, nil)
+	allnetns := gostwire.Discover(cmd.Context(), cizer, nil)
 
 	for _, netns := range allnetns.Netns.Sorted() {
 		_, _ = fmt.Fprintf(out, "net:[%d] with %s:\n", netns.ID().Ino, netns.DisplayName())

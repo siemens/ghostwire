@@ -5,8 +5,11 @@
 package main
 
 import (
+	"context"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 )
 
 func init() {
@@ -30,11 +33,12 @@ func init() {
 }
 
 func main() {
-	// This is cobra boilerplate documentation, except for the missing call to
-	// fmt.Println(err) which in the original boilerplate is just plain wrong:
-	// it renders the error message twice, see also:
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	// Cobra already reports any error, see also:
 	// https://github.com/spf13/cobra/issues/304
-	if err := newRootCmd().Execute(); err != nil {
+	if err := newRootCmd().ExecuteContext(ctx); err != nil {
+		stop()
 		os.Exit(1)
 	}
 }

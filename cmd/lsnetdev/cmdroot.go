@@ -5,7 +5,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"maps"
 	"slices"
@@ -19,6 +18,7 @@ import (
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 
+	gostwire "github.com/siemens/ghostwire/v2"
 	"github.com/siemens/ghostwire/v2/netdev/nlnetdev"
 	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
 	"github.com/siemens/ghostwire/v2/netdev/sysfsguess"
@@ -38,33 +38,36 @@ var ModeEnumMapping = map[Mode][]string{
 	CombinedMode: {"both", "b"},
 }
 
-var DisoveryMode Mode
+// ModeFlag is the name of the discovery mode CLI flag.
+const ModeFlag = "mode"
 
+// newRootCmd returns the Cobra "root" command, thus the lsnetdev tool itself.
 func newRootCmd() (rootCmd *cobra.Command) {
+	var mode Mode
 	rootCmd = &cobra.Command{
-		Use:   "lsnetdev",
-		Short: "list netdev queue and IRQ information",
-		Args:  cobra.NoArgs,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return clippy.BeforeCommand(cmd)
+		Use:     "lsnetdev",
+		Short:   "list netdev queue and IRQ information",
+		Version: gostwire.SemVersion,
+		Args:    cobra.NoArgs,
+		// See: https://github.com/spf13/cobra/issues/340
+		SilenceUsage: true,
+		PersistentPreRunE: func(*cobra.Command, []string) error {
+			return clippy.BeforeCommand(rootCmd)
 		},
-		RunE: discoverNetdevs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return discoverNetdevs(cmd, mode)
+		},
 	}
-
-	// Sets up the flags.
-	pf := rootCmd.PersistentFlags()
-	pf.Var(enumflag.New(&DisoveryMode, "mode", ModeEnumMapping, enumflag.EnumCaseInsensitive),
-		"mode", "discovery mode; can be 'sysfs'/'sf', 'netlink'/'nl', or 'both'/'b'")
-
-	clippy.AddFlags(rootCmd)
-
-	return rootCmd
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.PersistentFlags().Var(
+		enumflag.New(&mode, ModeFlag, ModeEnumMapping, enumflag.EnumCaseInsensitive),
+		ModeFlag, "discovery mode; can be 'sysfs'/'sf', 'netlink'/'nl', or 'both'/'b'")
+	clippy.AddFlags(rootCmd) // ...runs all registered SetupCLI plugins.
+	return
 }
 
-func discoverNetdevs(cmd *cobra.Command, _ []string) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	cizer := turtles.Containerizer(ctx, cmd)
+func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
+	cizer := turtles.Containerizer(cmd.Context(), cmd)
 	defer cizer.Close()
 	allns := discover.Namespaces(
 		discover.WithStandardDiscovery(),
@@ -74,7 +77,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 	)
 	var netdevmap rxtxlayout.NetdevsByNetns
 	var err error
-	switch DisoveryMode {
+	switch mode {
 	case SysfsMode:
 		netdevmap, err = sysfsguess.Discover(allns)
 	case NetlinkMode:
@@ -89,7 +92,7 @@ func discoverNetdevs(cmd *cobra.Command, _ []string) error {
 			netdevmap = rxtxlayout.Fillin(netlinknetdevmap, sysfsnetdevmap)
 		}
 	default:
-		return fmt.Errorf("unsupported error mode %v", DisoveryMode)
+		return fmt.Errorf("unsupported discovery mode %v", mode)
 	}
 	if err != nil {
 		return fmt.Errorf("cannot discover netdevs, reason: %w", err)

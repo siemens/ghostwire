@@ -5,9 +5,7 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/thediveo/clippy"
@@ -19,36 +17,31 @@ import (
 	apiv1 "github.com/siemens/ghostwire/v2/api/v1"
 )
 
-type Mode int
-
+// newRootCmd returns the Cobra "root" command, thus the gostdump tool itself.
 func newRootCmd() (rootCmd *cobra.Command) {
 	rootCmd = &cobra.Command{
-		Use:   "gostdump",
-		Short: "dumps (full) discovery results in JSON REST v1 format",
-		Args:  cobra.NoArgs,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			return clippy.BeforeCommand(cmd)
+		Use:     "gostdump",
+		Short:   "dumps (full) discovery results in JSON REST v1 format",
+		Version: gostwire.SemVersion,
+		Args:    cobra.NoArgs,
+		// See: https://github.com/spf13/cobra/issues/340
+		SilenceUsage: true,
+		PersistentPreRunE: func(*cobra.Command, []string) error {
+			return clippy.BeforeCommand(rootCmd)
 		},
 		RunE: dumpDiscovery,
 	}
-
-	clippy.AddFlags(rootCmd)
-
-	return rootCmd
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	clippy.AddFlags(rootCmd) // ...runs all registered SetupCLI plugins.
+	return
 }
 
+// dumpDiscovery discovers and then writes the discovery results in JSON REST
+// API v1 format to the command's output.
 func dumpDiscovery(cmd *cobra.Command, _ []string) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	cizer := turtles.Containerizer(ctx, cmd)
+	cizer := turtles.Containerizer(cmd.Context(), cmd)
 	defer cizer.Close()
-	discovery := gostwire.Discover(ctx, cizer, nil)
+	discovery := gostwire.Discover(cmd.Context(), cizer, nil)
 	result := apiv1.NewDiscoveryResult(discovery)
-	j, err := json.Marshal(&result)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(j))
-
-	return nil
+	return json.NewEncoder(cmd.OutOrStdout()).Encode(&result)
 }
