@@ -14,6 +14,10 @@ import (
 	"github.com/thediveo/lxkns/species"
 )
 
+// ErrInvalidReference is wrapped by errors from [Run] for invalid netns
+// references, including stale ones.
+var ErrInvalidReference = errors.New("invalid netns reference")
+
 // Run the specified function while temporarily attached in the specified
 // network namespace (and with the OS-level thread locked during the execution
 // of fn).
@@ -35,23 +39,38 @@ func Run(netns model.Namespace, fn func() error) error {
 	if len(ref) > 1 {
 		mntneer, err := mountineer.New(ref[:len(ref)-1], nil)
 		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %w", ref.String(), err)
+			return fmt.Errorf("%w %s: %w", ErrInvalidReference, ref.String(), err)
 		}
 		// we need to keep the mount namespace open only until we've got the
 		// netlink handle, that is, until the end of this method.
 		defer mntneer.Close()
 		netnspath, err = mntneer.Resolve(netnspath)
 		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %w", ref.String(), err)
+			return fmt.Errorf("%w %s: %w", ErrInvalidReference, ref.String(), err)
 		}
+	}
+	// Open the referenced network namespace only once, so that we can check it
+	// is still the expected one (fd-based references might have gone stale)
+	// and then switch into exactly this one.
+	netnsfd, closer, err := ops.NamespacePath(netnspath).NsFd()
+	if err != nil {
+		return fmt.Errorf("%w %s: %w", ErrInvalidReference, ref.String(), err)
+	}
+	defer closer()
+	targetnetnsid, err := ops.NamespaceFd(netnsfd).ID()
+	if err != nil {
+		return fmt.Errorf("%w %s: %w", ErrInvalidReference, ref.String(), err)
+	}
+	if targetnetnsid != netns.ID() {
+		return fmt.Errorf("%w %s: stale, expected net:[%d], got net:[%d]",
+			ErrInvalidReference, ref.String(), netns.ID().Ino, targetnetnsid.Ino)
 	}
 	// Shortcut route in case it's our own network namespace for those running
 	// this without sufficient capabilities, so trying to switch into our own
 	// current network namespace would otherwise fail. This of course begs the
 	// question, why would we do to switch into the same network namespace
 	// anyway? Because.
-	targetnetnsid, targeterr := ops.NamespacePath(netnspath).ID()
-	if ourNetnsErr == nil && targeterr == nil && ourNetnsID == targetnetnsid {
+	if ourNetnsErr == nil && ourNetnsID == targetnetnsid {
 		return fn()
 	}
 	// Normal route where we need to temporarily switch into the target network
@@ -59,7 +78,7 @@ func Run(netns model.Namespace, fn func() error) error {
 	var openerErr error
 	visitErr := ops.Visit(func() {
 		openerErr = fn()
-	}, ops.NamespacePath(netnspath))
+	}, ops.NamespaceFd(netnsfd))
 	if visitErr != nil {
 		return visitErr
 	}

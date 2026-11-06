@@ -23,12 +23,16 @@ import (
 	. "github.com/thediveo/success"
 )
 
+// mockedNamespace is a fake model.Namespace for feeding Run with arbitrary IDs,
+// types, and references; calling any other method panics.
 type mockedNamespace struct {
 	model.Namespace // "inherit" all the methods
+	id              species.NamespaceID
 	typ             species.NamespaceType
 	ref             []string
 }
 
+func (m *mockedNamespace) ID() species.NamespaceID     { return m.id }
 func (m *mockedNamespace) Type() species.NamespaceType { return m.typ }
 func (m *mockedNamespace) Ref() model.NamespaceRef     { return m.ref }
 
@@ -39,6 +43,21 @@ var _ = Describe("in a netns", func() {
 		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		})))
+	})
+
+	It("reports invalid and stale references", func() {
+		Expect(Run(&mockedNamespace{
+			typ: species.CLONE_NEWNET,
+			ref: []string{"/nonexisting"},
+		}, func() error { return nil })).To(MatchError(ErrInvalidReference))
+
+		Expect(Run(&mockedNamespace{
+			id:  species.NamespaceIDfromInode(666),
+			typ: species.CLONE_NEWNET,
+			ref: []string{"/proc/self/ns/net"},
+		}, func() error { return nil })).To(And(
+			MatchError(ErrInvalidReference),
+			MatchError(ContainSubstring("stale, expected net:[666]"))))
 	})
 
 	It("reports a visitation error when powerless", func() {
