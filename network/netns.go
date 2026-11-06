@@ -492,32 +492,48 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 	}
 }
 
+// NetworkNamespacesOption configures [NewNetworkNamespaces].
+type NetworkNamespacesOption func(*networkNamespacesOptions)
+
+type networkNamespacesOptions struct {
+	sockprocs discover.SocketProcesses
+	tuntaps   *TapTunProcessors
+}
+
+// WithSocketProcesses passes the socket-to-processes map from the same lxkns
+// discovery, using its [discover.WithSocketProcesses] option. Otherwise,
+// [NewNetworkNamespaces] scans the open fds of all processes on its own.
+func WithSocketProcesses(sockprocs discover.SocketProcesses) NetworkNamespacesOption {
+	return func(o *networkNamespacesOptions) { o.sockprocs = sockprocs }
+}
+
+// WithTapTunProcessors passes the processes serving TAP/TUN network interfaces
+// collected during the same lxkns discovery, using [discover.WithFdCallback]
+// with [TapTunProcessors.Visit]. Otherwise, [NewNetworkNamespaces] scans the
+// open fds of all processes on its own when there are TAP/TUN interfaces.
+func WithTapTunProcessors(tuntaps *TapTunProcessors) NetworkNamespacesOption {
+	return func(o *networkNamespacesOptions) { o.tuntaps = tuntaps }
+}
+
 // NewNetworkNamespaces takes a set of discovered network namespaces and creates
 // the Gostwire-specific NetworkNamespace objects wrapping them and supplying
 // network layer-related information not discovered by lxkns.
-//
-// Deprecated: use [NewNetworkNamespacesWithSocketProcesses] together with the
-// lxkns discovery option [discover.WithSocketProcesses] instead.
 func NewNetworkNamespaces(
 	allnetns model.NamespaceMap,
 	allprocs model.ProcessTable,
 	containers model.Containers,
+	opts ...NetworkNamespacesOption,
 ) NetworkNamespaces {
-	return NewNetworkNamespacesWithSocketProcesses(
-		allnetns, allprocs, containers, discover.SocketProcesses(discoverAllSockInodes("/proc")))
-}
-
-// NewNetworkNamespacesWithSocketProcesses takes a set of discovered network
-// namespaces and creates the Gostwire-specific NetworkNamespace objects
-// wrapping them and supplying network layer-related information not discovered
-// by lxkns. The socket-to-processes map sockprocs comes from an lxkns discovery
-// using the [discover.WithSocketProcesses] option.
-func NewNetworkNamespacesWithSocketProcesses(
-	allnetns model.NamespaceMap,
-	allprocs model.ProcessTable,
-	containers model.Containers,
-	sockprocs discover.SocketProcesses,
-) NetworkNamespaces {
+	var o networkNamespacesOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	if o.sockprocs == nil {
+		o.sockprocs = discover.Namespaces(
+			discover.WithNamespaceTypes(species.CLONE_NEWNET),
+			discover.WithSocketProcesses(),
+		).SocketProcessMap
+	}
 	// In order to later figure out the tenants of a network namespace, we need
 	// not only to take network namespace leader processes into account but also
 	// container processes, as containers can perfectly share network namespaces
@@ -532,7 +548,7 @@ func NewNetworkNamespacesWithSocketProcesses(
 			netspaces[netnsid] = netwns
 		}
 	}
-	soxProcsMap := socketToProcessMap(sockprocs)
+	soxProcsMap := socketToProcessMap(o.sockprocs)
 	for nsid, netns := range netspaces {
 		slog.Debug("discovering netns details",
 			slog.Uint64("netns", nsid.Ino),
@@ -579,7 +595,7 @@ func NewNetworkNamespacesWithSocketProcesses(
 	// information.
 	resolveSRIOVTopology(netspaces)
 	// Discover the processes serving TAP/TUN devices, if any.
-	resolveTapTunProcessors(netspaces, allprocs)
+	resolveTapTunProcessors(netspaces, allprocs, o.tuntaps)
 	// Complete the forwarded port information based on our almost complete view
 	// now. This needs to be late(r) in the game.
 	completeForwardedPortInformation(netspaces)

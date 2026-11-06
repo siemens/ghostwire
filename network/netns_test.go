@@ -165,6 +165,24 @@ var _ = Describe("network namespace", func() {
 				HaveField("PIDs", ContainElement(model.PIDType(os.Getpid()))))))
 		})
 
+		It("relates open ports to their processes without being passed socket processes", func() {
+			listener := Successful(net.Listen("tcp4", "127.0.0.1:0"))
+			DeferCleanup(listener.Close)
+			port := uint16(AssignableTo[*net.TCPAddr](listener.Addr()).Port)
+
+			disco := discover.Namespaces(
+				discover.FromProcs(),
+				discover.WithNamespaceTypes(
+					species.CLONE_NEWNET|species.CLONE_NEWPID|species.CLONE_NEWNS|species.CLONE_NEWUTS))
+			allnetns := NewNetworkNamespaces(
+				disco.Namespaces[model.NetNS], disco.Processes, disco.Containers)
+			ournetns := allnetns[Successful(ops.NamespacePath("/proc/self/ns/net").ID())]
+			Expect(ournetns.Portsv4).To(ContainElement(And(
+				HaveField("LocalPort", port),
+				HaveField("SimplifiedState", Listening),
+				HaveField("PIDs", ContainElement(model.PIDType(os.Getpid()))))))
+		})
+
 		It("discovers ports in network namespaces without processes", func() {
 			if os.Getuid() != 0 {
 				Skip("needs root")

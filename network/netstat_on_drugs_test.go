@@ -6,8 +6,6 @@ package network
 
 import (
 	"net"
-	"os"
-	"sync"
 	"syscall"
 	"time"
 
@@ -244,36 +242,6 @@ var _ = Describe("discovers transport ports", func() {
 			Expect(port).To(Equal(uint16(0x1234)))
 		})
 
-	})
-
-	It("discovers its own socket's inode-to-PID mapping", func() {
-		// let's create a dummy socket we then next try to find.
-		sock, err := net.Listen("tcp", ":0")
-		Expect(err).NotTo(HaveOccurred())
-		sockClose := sync.OnceFunc(func() {
-			Expect(sock.Close()).To(Succeed())
-		})
-		defer sockClose()
-		sockport := sock.Addr().(*net.TCPAddr).Port
-		Expect(sockport).NotTo(BeZero())
-
-		sockmap := discoverAllSockInodes("/non-exisiting")
-		Expect(sockmap).To(BeEmpty())
-
-		sockmap = discoverAllSockInodes("/proc")
-		Expect(sockmap).NotTo(BeEmpty())
-		pid := os.Getpid()
-
-		Expect(sockmap).To(ContainElement(
-			ConsistOf(model.PIDType(pid)),
-		))
-
-		sockClose()
-		sockmap = discoverAllSockInodes("/proc")
-		Expect(sockmap).NotTo(BeEmpty())
-		Expect(sockmap).NotTo(ContainElement(
-			ConsistOf(model.PIDType(pid)),
-		))
 	})
 
 	It("reads the socket tables of the current thread's network namespace", func() {

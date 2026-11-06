@@ -28,6 +28,7 @@ import (
 )
 
 func discoverRedux() (NetworkNamespaces, *discover.Result) {
+	tuntaps := &TapTunProcessors{}
 	discoverednetns := discover.Namespaces(
 		discover.FromProcs(),
 		discover.FromTasks(),
@@ -37,12 +38,14 @@ func discoverRedux() (NetworkNamespaces, *discover.Result) {
 		discover.WithHierarchy(),
 		discover.WithPIDMapper(),
 		discover.WithSocketProcesses(),
+		discover.WithFdCallback(tuntaps.Visit),
 	)
-	allnetns := NewNetworkNamespacesWithSocketProcesses(
+	allnetns := NewNetworkNamespaces(
 		discoverednetns.Namespaces[model.NetNS],
 		discoverednetns.Processes,
 		discoverednetns.Containers,
-		discoverednetns.SocketProcessMap)
+		WithSocketProcesses(discoverednetns.SocketProcessMap),
+		WithTapTunProcessors(tuntaps))
 	return allnetns, discoverednetns
 }
 

@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/notwork/link"
@@ -64,15 +65,23 @@ var _ = Describe("TAPs and TUNs", func() {
 
 		By("discovering the processor")
 		Expect(iff(fmt.Sprintf("/proc/self/fdinfo/%d", tap.Fds[0].Fd()))).To(Equal(tap.Name))
-		processors := discoverProcessors(result.Processes)
+		tuntaps := &TapTunProcessors{}
+		_ = discover.Namespaces(discover.WithFdCallback(tuntaps.Visit))
 		var processor tuntapProcessor
-		Expect(processors).To(ContainElement(
-			HaveField("Process.PID", model.PIDType(os.Getpid())), &processor))
+		Expect(tuntaps.processors).To(ContainElement(
+			HaveField("PID", model.PIDType(os.Getpid())), &processor))
 		Expect(processor.NetnsID).To(Equal(
 			Successful(ops.NamespacePath("/proc/self/ns/net").ID())))
 		Expect(processor.NifName).To(Equal(tap.Attrs().Name))
 
 		By("updating the discovery results")
+		Expect(gwtap.TunTap().Processors).To(
+			ConsistOf(result.Processes[model.PIDType(os.Getpid())]))
+
+		By("falling back to an fd scan of its own when no processors were collected")
+		allnetns = NewNetworkNamespaces(
+			result.Namespaces[model.NetNS], result.Processes, result.Containers)
+		gwtap = AssignableTo[TunTap](allnetns[currentNetns].NamedNifs[tap.Attrs().Name])
 		Expect(gwtap.TunTap().Processors).To(
 			ConsistOf(result.Processes[model.PIDType(os.Getpid())]))
 	})

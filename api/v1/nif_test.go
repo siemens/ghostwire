@@ -47,9 +47,9 @@ var _ = Describe("v1 network interfaces", func() {
 		discovered := make(chan network.NetworkNamespaces)
 		go func() {
 			lxknsdisco := discover.Namespaces(discover.WithStandardDiscovery(), discover.FromTasks())
-			discovered <- network.NewNetworkNamespacesWithSocketProcesses(
+			discovered <- network.NewNetworkNamespaces(
 				lxknsdisco.Namespaces[model.NetNS], lxknsdisco.Processes, lxknsdisco.Containers,
-				lxknsdisco.SocketProcessMap)
+				network.WithSocketProcesses(lxknsdisco.SocketProcessMap))
 		}()
 		var allnetns network.NetworkNamespaces
 		Eventually(discovered).Within(30 * time.Second).Should(Receive(&allnetns))

@@ -237,46 +237,6 @@ func newProcessSocket(procnetline string, af int, proto int, sm socketToProcessM
 	return
 }
 
-// discoverAllSockInodes returns a map of the inodes-to-PID for all sockets that
-// currently exist in the system.
-func discoverAllSockInodes(procroot string) socketToProcessMap {
-	procentries, err := os.ReadDir(procroot)
-	if err != nil {
-		return nil
-	}
-	spm := socketToProcessMap{}
-	for _, procentry := range procentries {
-		// Get the process PID as a number.
-		pid, err := strconv.ParseInt(procentry.Name(), 10, 32)
-		if err != nil || pid <= 0 {
-			continue
-		}
-		//
-		fdbasepath := procroot + "/" + procentry.Name() + "/fd"
-		fdentries, err := os.ReadDir(fdbasepath)
-		if err != nil {
-			continue
-		}
-		for _, fdentry := range fdentries {
-			stat, err := os.Stat(fdbasepath + "/" + fdentry.Name())
-			if err != nil || stat.Mode()&os.ModeSocket == 0 {
-				continue
-			}
-			sysstat, ok := stat.Sys().(*syscall.Stat_t)
-			if !ok {
-				continue
-			}
-			fdino := sysstat.Ino
-			if pids, ok := spm[fdino]; ok {
-				spm[fdino] = append(pids, model.PIDType(pid))
-			} else {
-				spm[fdino] = []model.PIDType{model.PIDType(pid)}
-			}
-		}
-	}
-	return spm
-}
-
 // decodeSockAddrPort returns the IP (v4/v6) address and port number encoded in
 // the ACII hex string passed to it, taking the platform endianess into account.
 func decodeSockAddrPort(addrport string) (net.IP, uint16) {
