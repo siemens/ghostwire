@@ -5,6 +5,8 @@
 package network
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -314,7 +316,9 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 	// single network namespace. Ouch.
 	nlh, err := n.OpenNetlink()
 	if err != nil {
-		slog.Error("cannot discover NSIDs", xslog.Error(err))
+		slog.LogAttrs(context.Background(), netnsErrLevel(err), "cannot discover NSIDs",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
 	defer func() { _ = nlh.Close() }()
@@ -425,6 +429,16 @@ func (n *NetworkNamespace) OpenInNetworkNamespace(opener func() error) error {
 	return innetns.Run(n, opener)
 }
 
+// netnsErrLevel returns the log level for a failure to work in a network
+// namespace: only a warning for invalid references, as network namespaces
+// can legitimately vanish during discovery, otherwise an error.
+func netnsErrLevel(err error) slog.Level {
+	if errors.Is(err, innetns.ErrInvalidReference) {
+		return slog.LevelWarn
+	}
+	return slog.LevelError
+}
+
 // discoverNetworkInterfaces discovers the network interfaces in this network
 // namespace.
 func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
@@ -455,7 +469,8 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 			ethtoolOpenAttempted = true
 			var err error
 			if ethtoolFd, err = n.OpenEthtool(); err != nil {
-				slog.Error("cannot open ethtool API, skipping bus address discovery",
+				slog.LogAttrs(context.Background(), netnsErrLevel(err),
+					"cannot open ethtool API, skipping bus address discovery",
 					slog.Uint64("netns", n.ID().Ino),
 					xslog.Error(err))
 			} else {

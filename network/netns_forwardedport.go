@@ -5,6 +5,7 @@
 package network
 
 import (
+	"context"
 	"log/slog"
 	"net"
 	"syscall"
@@ -63,7 +64,9 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 		if conn != nil {
 			_ = conn.CloseLasting()
 		}
-		slog.Error("cannot connect to netfilters", xslog.Error(err))
+		slog.LogAttrs(context.Background(), netnsErrLevel(err), "cannot connect to netfilters",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
 	defer func() { _ = conn.CloseLasting() }()
