@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"sort"
@@ -17,6 +18,7 @@ import (
 	"syscall"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"golang.org/x/sys/unix"
 )
 
@@ -132,13 +134,13 @@ type ProcessSockets []ProcessSocket
 type socketToProcessMap map[uint64][]model.PIDType
 
 // discoverSockets discovers the (Process)Sockets of a specific IP version and
-// transport protocol in a network namespace referenced via one of the processes
-// attached to the network namespace.
+// transport protocol from the socket tables in the specified procfs net
+// directory, such as "/proc/thread-self/net".
 //
 // Please note that the following ProcessSocket fields are not set, but instead
 // need to be resolved by the caller: Nifs.
-func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm socketToProcessMap) []ProcessSocket {
-	path := fmt.Sprintf("%s/%d/net/", procroot, pid)
+func discoverSockets(netdir string, af int, proto int, sm socketToProcessMap) []ProcessSocket {
+	path := netdir + "/"
 	switch proto {
 	case syscall.IPPROTO_TCP:
 		path += "tcp"
@@ -157,8 +159,8 @@ func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm s
 	sox := []ProcessSocket{}
 	// "path" is garantueed to be a procfs-based path, so no need to deploy the
 	// mountineers... And no reason for gosec to go berserk: there is no path where
-	// user-controlled input can reach procroot and it is otherwise only used in
-	// unit tests with a test-local fake procfs root.
+	// user-controlled input can reach netdir and it is otherwise only used in
+	// unit tests with a test-local fake procfs.
 	f, err := os.Open(path) // #nosec G304
 	if err != nil {
 		return sox
@@ -174,7 +176,11 @@ func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm s
 			sox = append(sox, procsock)
 		}
 	}
-	_ = scanner.Err()
+	if err := scanner.Err(); err != nil {
+		slog.Error("cannot read socket table",
+			slog.String("path", path),
+			xslog.Error(err))
+	}
 	return sox
 }
 

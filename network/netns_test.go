@@ -165,6 +165,29 @@ var _ = Describe("network namespace", func() {
 				HaveField("PIDs", ContainElement(model.PIDType(os.Getpid()))))))
 		})
 
+		It("discovers ports in network namespaces without processes", func() {
+			if os.Getuid() != 0 {
+				Skip("needs root")
+			}
+
+			netnsfd := netns.NewTransient()
+			var listener net.Listener
+			netns.Execute(netnsfd, func() {
+				listener = Successful(net.Listen("tcp4", "0.0.0.0:0"))
+			})
+			DeferCleanup(listener.Close)
+			port := uint16(AssignableTo[*net.TCPAddr](listener.Addr()).Port)
+
+			allnetns, _ := discoverRedux()
+			portnetns := allnetns[species.NamespaceIDfromInode(netns.Ino(netnsfd))]
+			Expect(portnetns).NotTo(BeNil())
+			Expect(portnetns.Ealdorman()).To(BeNil())
+			Expect(portnetns.Portsv4).To(ContainElement(And(
+				HaveField("LocalPort", port),
+				HaveField("SimplifiedState", Listening),
+				HaveField("PIDs", ContainElement(model.PIDType(os.Getpid()))))))
+		})
+
 	})
 
 })

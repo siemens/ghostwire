@@ -21,6 +21,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("discovers transport ports", func() {
@@ -181,15 +182,15 @@ var _ = Describe("discovers transport ports", func() {
 		})
 
 		It("handles empty socket information", func() {
-			Expect(discoverSockets("./test/proc", 0, unix.AF_INET6, syscall.IPPROTO_TCP, nil)).To(BeEmpty())
+			Expect(discoverSockets("./test/proc/0/net", unix.AF_INET6, syscall.IPPROTO_TCP, nil)).To(BeEmpty())
 		})
 
 		It("discoverSockets() panics on nonsense address families and transport protocols", func() {
 			Expect(func() {
-				_ = discoverSockets("./test/proc", 0, unix.AF_APPLETALK, syscall.IPPROTO_TCP, nil)
+				_ = discoverSockets("./test/proc/0/net", unix.AF_APPLETALK, syscall.IPPROTO_TCP, nil)
 			}).To(Panic())
 			Expect(func() {
-				_ = discoverSockets("./test/proc", 0, unix.AF_INET, syscall.IPPROTO_ICMP, nil)
+				_ = discoverSockets("./test/proc/0/net", unix.AF_INET, syscall.IPPROTO_ICMP, nil)
 			}).To(Panic())
 		})
 
@@ -197,10 +198,10 @@ var _ = Describe("discovers transport ports", func() {
 			sm := socketToProcessMap{
 				71934: []model.PIDType{666},
 			}
-			sox := discoverSockets("./test/proc", 0, unix.AF_INET, syscall.IPPROTO_TCP, sm)
+			sox := discoverSockets("./test/proc/0/net", unix.AF_INET, syscall.IPPROTO_TCP, sm)
 			Expect(sox).To(BeEmpty())
 
-			sox = discoverSockets("./test/proc", 666, unix.AF_INET, syscall.IPPROTO_TCP, sm)
+			sox = discoverSockets("./test/proc/666/net", unix.AF_INET, syscall.IPPROTO_TCP, sm)
 			Expect(sox).To(ConsistOf(
 				MatchFields(IgnoreExtras, Fields{
 					"LocalIP": Equal(net.ParseIP("127.0.0.1").To4()),
@@ -210,7 +211,7 @@ var _ = Describe("discovers transport ports", func() {
 				}),
 			))
 
-			sox = discoverSockets("./test/proc", 666, unix.AF_INET6, syscall.IPPROTO_UDP, sm)
+			sox = discoverSockets("./test/proc/666/net", unix.AF_INET6, syscall.IPPROTO_UDP, sm)
 			Expect(sox).To(ConsistOf(
 				MatchFields(IgnoreExtras, Fields{
 					"LocalIP": Equal(net.ParseIP("127.0.0.10").To4()),
@@ -273,6 +274,17 @@ var _ = Describe("discovers transport ports", func() {
 		Expect(sockmap).NotTo(ContainElement(
 			ConsistOf(model.PIDType(pid)),
 		))
+	})
+
+	It("reads the socket tables of the current thread's network namespace", func() {
+		listener := Successful(net.Listen("tcp4", "127.0.0.1:0"))
+		DeferCleanup(listener.Close)
+		port := uint16(AssignableTo[*net.TCPAddr](listener.Addr()).Port)
+
+		Expect(discoverSockets("/proc/thread-self/net", unix.AF_INET, syscall.IPPROTO_TCP, nil)).To(
+			ContainElement(And(
+				HaveField("LocalPort", port),
+				HaveField("SimplifiedState", Listening))))
 	})
 
 	It("sorts by family, then local and remote address", func() {

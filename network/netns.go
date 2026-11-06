@@ -171,16 +171,25 @@ func (n *NetworkNamespace) related(nsid NSID) *NetworkNamespace {
 // interfaces carrying their traffic. And it notifies about IPv6 sockets
 // handling IPv4 traffic.
 func (n *NetworkNamespace) discoverTransportPorts(sm socketToProcessMap, allprocs model.ProcessTable) {
-	// Without any attached processes, we don't have any /proc/[...]/net/xxx to
-	// read the socket information for this network namespace from.
-	//
-	// FIXME: use mountineer, as other processes might have open fds, yet not
-	// attached to this network namespace.
-	if n.Ealdorman() == nil {
+	// /proc/thread-self/net shows the calling thread's netns, which innetns.Run
+	// switches to, so we don't need any process attached to this netns.
+	type afProto struct{ af, proto int }
+	sockets := map[afProto][]ProcessSocket{}
+	if err := innetns.Run(n, func() error {
+		for _, proto := range []int{syscall.IPPROTO_TCP, syscall.IPPROTO_UDP} {
+			for _, af := range []int{unix.AF_INET, unix.AF_INET6} {
+				sockets[afProto{af, proto}] = discoverSockets("/proc/thread-self/net", af, proto, sm)
+			}
+		}
+		return nil
+	}); err != nil {
+		slog.LogAttrs(context.Background(), netnsErrLevel(err), "cannot discover transport ports",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
-	// Now discover and process TCP und UDP sockets, for both IPv4 and IPv6.
-	// Note our special handling of IPv6 sockets covering IPv4 traffic...
+	// Now process TCP und UDP sockets, for both IPv4 and IPv6. Note our special
+	// handling of IPv6 sockets covering IPv4 traffic...
 	addrToNifs := n.newAddrToNifMap()
 	for _, proto := range []int{syscall.IPPROTO_TCP, syscall.IPPROTO_UDP} {
 		// v4Ports indicates the IPv4 addresses we've seen for this protocol, so
@@ -189,7 +198,7 @@ func (n *NetworkNamespace) discoverTransportPorts(sm socketToProcessMap, allproc
 		// and the IPv6 socket would also include the IPv4 mapped address range.
 		v4Ports := map[comparableAddressPort]struct{}{}
 		for _, af := range []int{unix.AF_INET, unix.AF_INET6} {
-			ports := discoverSockets("/proc", n.Ealdorman().PID, af, proto, sm)
+			ports := sockets[afProto{af, proto}]
 			for idx, port := range ports {
 				procs := allprocs.ProcessesByPIDs(port.PIDs...)
 				ports[idx].Processes = procs
