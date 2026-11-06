@@ -269,7 +269,7 @@ const GhostwireApp = () => {
             />
 
             {/* main content area */}
-            <Box sx={{ m: 0, flex: 1, overflow: "auto" }}>
+            <Box component="main" sx={{ m: 0, flex: 1, overflow: "auto" }}>
                 <Routes>
                     <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
                     <Route path="/w" element={<NetnsWiring ref={snapshotRef} />} />

@@ -155,7 +155,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
         <Refreshee>
             <Tooltip title="refresh">
                 <Wrapper>
-                    <IconButton color="inherit" onClick={() => setRefreshing(true)} size="large"><RefreshIcon /></IconButton>
+                    <IconButton color="inherit" aria-label="refresh" onClick={() => setRefreshing(true)} size="large"><RefreshIcon /></IconButton>
                     {refreshing &&
                         <Fade
                             in={true}

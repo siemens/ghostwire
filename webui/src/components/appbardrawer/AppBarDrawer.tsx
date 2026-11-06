@@ -162,6 +162,7 @@ const AppBarDrawer = ({
                     <ToolbarActionButton
                         edge="start"
                         color="inherit"
+                        aria-label="navigation drawer"
                         onClick={toggleDrawer}
                         size="large">
                         <MenuIcon />
