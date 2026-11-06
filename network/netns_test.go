@@ -5,6 +5,8 @@
 package network
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"maps"
 	"net"
@@ -18,9 +20,13 @@ import (
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
 	"github.com/thediveo/nonstd/xiter"
+	"github.com/thediveo/notwork/dummy"
+	"github.com/thediveo/notwork/nlhandle"
 	"github.com/thediveo/notwork/veth"
 	"github.com/thediveo/spacetest/netns"
 	"github.com/vishvananda/netlink"
+
+	"github.com/siemens/ghostwire/v2/innetns"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -204,6 +210,67 @@ var _ = Describe("network namespace", func() {
 				HaveField("LocalPort", port),
 				HaveField("SimplifiedState", Listening),
 				HaveField("PIDs", ContainElement(model.PIDType(os.Getpid()))))))
+		})
+
+		It("discovers network interface aliases", func() {
+			if os.Getuid() != 0 {
+				Skip("needs root")
+			}
+
+			netnsfd := netns.NewTransient()
+			dmy := dummy.NewTransient(dummy.InNamespace(netnsfd))
+			Expect(nlhandle.New(netnsfd).LinkSetAlias(dmy, "lost-in-space")).To(Succeed())
+
+			allnetns, _ := discoverRedux()
+			dmynetns := allnetns[species.NamespaceIDfromInode(netns.Ino(netnsfd))]
+			Expect(dmynetns).NotTo(BeNil())
+			Expect(dmynetns.NamedNifs[dmy.Attrs().Name].Nif().Alias).To(Equal("lost-in-space"))
+		})
+
+	})
+
+	Context("failing to work in network namespaces", func() {
+
+		It("logs invalid references only as warnings", func() {
+			Expect(netnsErrLevel(fmt.Errorf("%w: foo", innetns.ErrInvalidReference))).To(Equal(slog.LevelWarn))
+			Expect(netnsErrLevel(errors.New("foo"))).To(Equal(slog.LevelError))
+		})
+
+		It("runs in the network namespace using the deprecated API", func() {
+			canary := errors.New("canary")
+			Expect(ownNetworkNamespace().OpenInNetworkNamespace(func() error { return canary })).
+				To(BeIdenticalTo(canary))
+		})
+
+		It("doesn't discover inside an inaccessible network namespace", func() {
+			Expect(NewNetworkNamespace(&mockedNetns{ref: model.NamespaceRef{"/nonexisting"}}, nil)).To(BeNil())
+
+			netns := mockedNetworkNamespace("/nonexisting")
+			Expect(netns.OpenNetlink()).Error().To(MatchError(innetns.ErrInvalidReference))
+			fd, err := netns.OpenEthtool()
+			Expect(err).To(MatchError(innetns.ErrInvalidReference))
+			Expect(fd).To(Equal(-1))
+
+			netns.discoverTransportPorts(nil, nil)
+			Expect(netns.Portsv4).To(BeEmpty())
+			netns.discoverNSIDs(NetworkNamespaces{})
+			Expect(netns.peerNetns).To(BeEmpty())
+		})
+
+		It("skips peer network namespaces it can't determine NSIDs for", func() {
+			ownnetns := ownNetworkNamespace()
+			allnetns := NetworkNamespaces{ownnetns.ID(): ownnetns}
+			for idx, ref := range []model.NamespaceRef{
+				{},
+				{"/nonexisting", "/foo"},
+				{"/proc/self/ns/mnt", "/nonexisting"},
+				{"/nonexisting"},
+				{"/dev/null"}, // not a network namespace, so no NSID.
+			} {
+				allnetns[species.NamespaceIDfromInode(uint64(1000+idx))] = mockedNetworkNamespace(ref...)
+			}
+			ownnetns.discoverNSIDs(allnetns)
+			Expect(ownnetns.peerNetns).To(BeEmpty())
 		})
 
 	})
