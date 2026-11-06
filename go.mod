@@ -42,7 +42,7 @@ require (
 	github.com/thediveo/fdooze v0.3.4
 	github.com/thediveo/go-plugger/v3 v3.2.2
 	github.com/thediveo/ioctl v0.9.5
-	github.com/thediveo/lxkns v0.48.0
+	github.com/thediveo/lxkns v0.49.0
 	github.com/thediveo/morbyd/v2 v2.2.5
 	github.com/thediveo/namspill v0.1.9
 	github.com/thediveo/netdb v1.1.4
