@@ -15,11 +15,11 @@ tools := gostwire gostdump lsallnifs lsnetdev
 DOCKERFILE := deployments/gostwire/Dockerfile
 TRIVY_IMAGE := aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
 
-.PHONY: help clean redocsify deploy undeploy bump-debian
+.PHONY: help clean redocsify deploy undeploy bump-debian e2e e2e-live
 
 help: ## list available targets
 	@# Derived from Gomega's Makefile (github.com/onsi/gomega) under MIT License
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 clean: ## cleans up build and testing artefacts
 	rm -f $(tools) coverage.html coverage.out __debug_bin
@@ -45,6 +45,13 @@ deploy: ## deploy Gostwire service exposed on host port 5000
 
 undeploy: ## remove any Gostwire service deployment
 	docker compose -p gostwire -f deployments/gostwire/docker-compose.yaml down
+
+e2e: ## run web UI end-to-end tests against mocked discovery data
+	cd webui && npx playwright test
+
+# Set GW_E2E_IMAGE to an existing Gostwire image to skip building one.
+e2e-live: ## run web UI end-to-end tests against a containerized Gostwire service
+	cd webui && npx playwright test -c playwright.live.config.ts
 
 # Trivy exits with 3 only when it finds fixable vulnerabilities, so that other
 # failures still abort.
