@@ -53,6 +53,19 @@ var _ = Describe("dockernet decorator", func() {
 			ContainElement("dockernet"))
 	})
 
+	It("skips containers without a discovered network namespace", func() {
+		Expect(func() {
+			processPassedThroughInterfaces(dockerNetworks{
+				engine: &model.ContainerEngine{
+					Containers: model.Containers{{
+						Name:    "fooey",
+						Process: &model.Process{PID: 42},
+					}},
+				},
+			}, network.NetworkNamespaces{})
+		}).NotTo(Panic())
+	})
+
 	When("looking for Docker-managed networks", func() {
 
 		BeforeEach(func() {

@@ -150,7 +150,7 @@ func processPassedThroughInterfaces(dockernets dockerNetworks, allnetns network.
 	visitedNetns := sets.New[*network.NetworkNamespace]()
 	for _, cntr := range dockernets.engine.Containers {
 		netns := allnetns.ByContainer(cntr)
-		if visitedNetns.Contains(netns) {
+		if netns == nil || visitedNetns.Contains(netns) {
 			continue
 		}
 		visitedNetns.Add(netns)
