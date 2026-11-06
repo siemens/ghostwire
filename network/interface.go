@@ -280,8 +280,11 @@ func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 // Note: this is currently needed only for PCI(e) devices and thus does not work
 // correctly for other busses, such as USB.
 func (n *NifAttrs) SysfsBusPath() string {
-	return "/sys/bus/pci/devices/" + n.DriverInfo.BusInfo
+	return sysfsPCIDevicesPath + "/" + n.DriverInfo.BusInfo
 }
+
+// sysfsPCIDevicesPath is where sysfs lists the PCI devices; tests use fake trees.
+var sysfsPCIDevicesPath = "/sys/bus/pci/devices"
 
 // ResolveRelations resolves relations to other network interfaces. Please note
 // that this doesn't include the PF-VF topology, as we're to resolve that
