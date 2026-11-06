@@ -29,6 +29,13 @@ const (
 	CgroupSwitchedFlag = "cgroupswitched"
 )
 
+// Test seams for the cgroup namespace references and re-execution.
+var (
+	initialCgroupnsPath = "/proc/1/ns/cgroup"
+	ownCgroupnsPath     = "/proc/self/ns/cgroup"
+	reexec              = unix.Exec
+)
+
 func init() {
 	plugger.Group[cliplugin.SetupCLI]().Register(
 		setupCLI, plugger.WithPlugin("ghostwire/initialcgroup"))
@@ -69,9 +76,9 @@ func beforeCommand(cmd *cobra.Command) error {
 // cgroup namespace and re-executes this process. It only returns when not
 // re-executing.
 func switchIntoInitialCgroup() error {
-	initialcgroupns := ops.NewTypedNamespacePath("/proc/1/ns/cgroup", species.CLONE_NEWCGROUP)
+	initialcgroupns := ops.NewTypedNamespacePath(initialCgroupnsPath, species.CLONE_NEWCGROUP)
 	initialcgroupnsid, ierr := initialcgroupns.ID()
-	currentcgroupnsid, cerr := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
+	currentcgroupnsid, cerr := ops.NewTypedNamespacePath(ownCgroupnsPath, species.CLONE_NEWCGROUP).ID()
 	if ierr != nil || cerr != nil {
 		slog.Error("cannot determine initial and own cgroup namespaces, not switching cgroup namespace")
 		return nil
@@ -110,7 +117,7 @@ func switchIntoInitialCgroup() error {
 			slog.Debug("current OS thread cgroup namespace",
 				slog.Uint64("cgroup", currentcgroupnsid.Ino))
 		}
-		return unix.Exec(
+		return reexec(
 			"/proc/self/exe",
 			append([]string{os.Args[0], "--" + CgroupSwitchedFlag}, os.Args[1:]...),
 			os.Environ(),
@@ -127,8 +134,8 @@ func switchIntoInitialCgroup() error {
 // which hopefully will be the initial cgroup namespace, and fixes the process
 // name.
 func tidyUpAfterReexecution() {
-	initialcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/1/ns/cgroup", species.CLONE_NEWCGROUP).ID()
-	currentcgroupnsid, _ := ops.NewTypedNamespacePath("/proc/self/ns/cgroup", species.CLONE_NEWCGROUP).ID()
+	initialcgroupnsid, _ := ops.NewTypedNamespacePath(initialCgroupnsPath, species.CLONE_NEWCGROUP).ID()
+	currentcgroupnsid, _ := ops.NewTypedNamespacePath(ownCgroupnsPath, species.CLONE_NEWCGROUP).ID()
 	slog.Info("re-executed",
 		slog.Bool("initial", currentcgroupnsid == initialcgroupnsid),
 		slog.Uint64("cgroup", currentcgroupnsid.Ino))
