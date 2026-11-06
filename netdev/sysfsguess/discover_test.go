@@ -5,7 +5,11 @@
 package sysfsguess
 
 import (
+	"os"
+
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/lxkns/ops"
 	"github.com/vishvananda/netlink"
 
 	"github.com/siemens/ghostwire/v2/netdev/rxtxlayout"
@@ -13,6 +17,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("discover netdev configurations", func() {
@@ -94,6 +99,21 @@ var _ = Describe("discover netdev configurations", func() {
 				HaveField("PID", Not(BeZero())),
 				HaveField("Kthread", Not(BeNil())),
 			))))
+	})
+
+	It("discovers the netdevs of our own network namespace", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+		allnetns := discover.Namespaces(discover.WithStandardDiscovery())
+		ournetns := allnetns.Namespaces[model.NetNS][Successful(ops.NamespacePath("/proc/self/ns/net").ID())]
+		Expect(ournetns).NotTo(BeNil())
+
+		netdevsByNetns := Successful(Discover(allnetns))
+		Expect(netdevsByNetns[ournetns]).To(ContainElement(And(
+			HaveField("Name", "lo"),
+			HaveField("Source", rxtxlayout.SourceSysfs),
+			HaveField("Queues", Not(BeEmpty())))))
 	})
 
 })

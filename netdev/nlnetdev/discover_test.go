@@ -12,6 +12,7 @@ import (
 	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/notwork/dummy"
 	"github.com/thediveo/notwork/link"
 	"github.com/thediveo/notwork/netdevsim"
 	"github.com/thediveo/notwork/netdevsim/ensure"
@@ -25,13 +26,7 @@ import (
 	. "github.com/thediveo/success"
 )
 
-var _ = Describe("netdev NETLINK discovery", Ordered, func() {
-
-	BeforeAll(func() {
-		if !ensure.Netdevsim() {
-			Skip("needs root and netdevsim kernel module")
-		}
-	})
+var _ = Describe("netdev NETLINK discovery", func() {
 
 	BeforeEach(func() {
 		if os.Getuid() != 0 {
@@ -52,6 +47,9 @@ var _ = Describe("netdev NETLINK discovery", Ordered, func() {
 	})
 
 	It("discovers netdev information", func() {
+		if !ensure.Netdevsim() {
+			Skip("needs netdevsim kernel module")
+		}
 		netnsfd := netns.NewTransient()
 		_, ndevsim := netdevsim.NewTransient(
 			netdevsim.WithRxTxQueueCountEach(8),
@@ -71,6 +69,22 @@ var _ = Describe("netdev NETLINK discovery", Ordered, func() {
 		Expect(netdevsByNetns[transientnetns]).To(ContainElement(And(
 			HaveField("Name", ndevsim[0].Attrs().Name),
 			HaveField("Queues", HaveLen(2*8)))))
+	})
+
+	It("discovers netdev information without netdevsim", func() {
+		netnsfd := netns.NewTransient()
+		dmy := dummy.NewTransientUp(dummy.InNamespace(netnsfd))
+
+		allnetns := discover.Namespaces(
+			discover.WithStandardDiscovery(),
+			discover.FromTasks())
+		transientnetns := allnetns.Namespaces[model.NetNS][species.NamespaceIDfromInode(netns.Ino(netnsfd))]
+		Expect(transientnetns).NotTo(BeNil())
+
+		netdevsByNetns := Successful(Discover(allnetns))
+		Expect(netdevsByNetns[transientnetns]).To(ContainElement(And(
+			HaveField("Name", dmy.Attrs().Name),
+			HaveField("Queues", Not(BeEmpty())))))
 	})
 
 })
