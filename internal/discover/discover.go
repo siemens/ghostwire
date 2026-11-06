@@ -27,6 +27,7 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 	// courtesy of lxkns.
 	discoverednetns := lxknsdiscover.Namespaces(
 		lxknsdiscover.FromProcs(),
+		lxknsdiscover.FromFds(),
 		lxknsdiscover.FromBindmounts(),
 		lxknsdiscover.WithNamespaceTypes(
 			species.CLONE_NEWNET|species.CLONE_NEWPID|species.CLONE_NEWNS|species.CLONE_NEWUTS),
