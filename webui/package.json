@@ -9,6 +9,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "e2e": "playwright test",
+    "e2e:live": "playwright test -c playwright.live.config.ts",
     "icons": "node genicons",
     "storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook dev --port 6006 --no-open",
     "build-storybook": "REACT_APP_GIT_VERSION=$(git describe) storybook build"
@@ -77,6 +79,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.0",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
