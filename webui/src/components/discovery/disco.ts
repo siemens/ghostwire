@@ -20,6 +20,8 @@ export const discoveryErrorAtom = atom("")
 
 export const refreshIntervalKey = "gw.refresh.interval"
 
+// Unless users opt into automatic refreshing, they stay in control of when
+// discoveries (and thus host load) happen, so the default interval is null.
 const initialRefreshInterval = (() => {
     try {
         const interval = JSON.parse(localStorage.getItem(refreshIntervalKey) || 'null');
