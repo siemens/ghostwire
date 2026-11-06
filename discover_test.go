@@ -6,6 +6,7 @@ package gostwire
 
 import (
 	"context"
+	"log/slog"
 	"os"
 
 	"github.com/siemens/turtlefinder/v2"
@@ -18,6 +19,13 @@ import (
 )
 
 var _ = Describe("discovery", func() {
+
+	BeforeEach(func() {
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
+	})
 
 	It("discovers our own network namespace, process, and container engines", func(ctx context.Context) {
 		cizerctx, cancel := context.WithCancel(ctx)
