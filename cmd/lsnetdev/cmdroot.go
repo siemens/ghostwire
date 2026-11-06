@@ -106,6 +106,7 @@ func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
 		func(netnsA, netnsB model.Namespace) int {
 			return int(netnsA.ID().Ino) - int(netnsB.ID().Ino)
 		})
+	out := cmd.OutOrStdout()
 	first := true
 	for _, netnsid := range netnsids {
 		netns := allns.Namespaces[model.NetNS][netnsid.ID()]
@@ -116,12 +117,12 @@ func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
 		}
 
 		if !first {
-			fmt.Println()
+			_, _ = fmt.Fprintln(out)
 		}
 		first = false
-		fmt.Printf("net:[%d]\n", netns.ID().Ino)
+		_, _ = fmt.Fprintf(out, "net:[%d]\n", netns.ID().Ino)
 
-		fmt.Println("  leader process(es)")
+		_, _ = fmt.Fprintln(out, "  leader process(es)")
 		leaders := slices.Clone(netns.Leaders())
 		slices.SortFunc(leaders, func(lA, lB *model.Process) int {
 			return int(lA.PID) - int(lB.PID)
@@ -132,14 +133,14 @@ func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
 				s += fmt.Sprintf("%s (%s)", container.Name, container.Flavor)
 			}
 			s += fmt.Sprintf(" %q (%d)", leader.Name, leader.PID)
-			fmt.Println(s)
+			_, _ = fmt.Fprintln(out, s)
 		}
 
-		fmt.Println("  netdev(s)")
+		_, _ = fmt.Fprintln(out, "  netdev(s)")
 		ndevs := slices.Clone(netdevmap[netns])
 		slices.SortFunc(ndevs, rxtxlayout.CompareNetdevsByName)
 		for _, ndev := range ndevs {
-			fmt.Printf("    🕳 %q (ifindex %d) source %s\n",
+			_, _ = fmt.Fprintf(out, "    🕳 %q (ifindex %d) source %s\n",
 				ndev.Name, ndev.Index, ndev.Source)
 
 			// list only IRQs that aren't referenced by queues/NAPIs
@@ -150,16 +151,16 @@ func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
 					}) {
 					continue
 				}
-				fmt.Printf("        🗲 IRQ %d", irq.ID)
+				_, _ = fmt.Fprintf(out, "        🗲 IRQ %d", irq.ID)
 				if irq.Kthread != nil {
-					fmt.Printf(" 🧵 kthread %q (PID %d)",
+					_, _ = fmt.Fprintf(out, " 🧵 kthread %q (PID %d)",
 						irq.Kthread.Name, irq.Kthread.PID)
 					_ = irq.Kthread.RetrieveAffinity()
 					if affinity := irq.Kthread.Affinity; affinity != nil {
-						fmt.Print(" CPU ♥️ " + affinity.String())
+						_, _ = fmt.Fprint(out, " CPU ♥️ "+affinity.String())
 					}
 				}
-				fmt.Printf(" source %s\n", irq.Source)
+				_, _ = fmt.Fprintf(out, " source %s\n", irq.Source)
 			}
 
 			napis := slices.Collect(maps.Values(ndev.NAPIs))
@@ -168,32 +169,32 @@ func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
 					return int(a.ID) - int(b.ID)
 				})
 			for _, napi := range napis {
-				fmt.Printf("        NAPI %d", napi.ID)
+				_, _ = fmt.Fprintf(out, "        NAPI %d", napi.ID)
 				if napi.Kthread != nil {
-					fmt.Printf(" 🧵 kthread %q (PID %d)",
+					_, _ = fmt.Fprintf(out, " 🧵 kthread %q (PID %d)",
 						napi.Kthread.Name, napi.Kthread.PID)
 					_ = napi.Kthread.RetrieveAffinity()
 					if affinity := napi.Kthread.Affinity; affinity != nil {
-						fmt.Print(" CPU ♥️ " + affinity.String())
+						_, _ = fmt.Fprint(out, " CPU ♥️ "+affinity.String())
 					}
 				}
 				if irq := napi.IRQ; irq != nil {
-					fmt.Printf(" IRQ %d", irq.ID)
+					_, _ = fmt.Fprintf(out, " IRQ %d", irq.ID)
 					if irq.Source != ndev.Source {
-						fmt.Printf(" (source %s)", irq.Source)
+						_, _ = fmt.Fprintf(out, " (source %s)", irq.Source)
 					}
 					if irq.Kthread != nil {
-						fmt.Printf(" 🧵 kthread %q (PID %d)",
+						_, _ = fmt.Fprintf(out, " 🧵 kthread %q (PID %d)",
 							irq.Kthread.Name, irq.Kthread.PID)
 						_ = irq.Kthread.RetrieveAffinity()
 						if affinity := irq.Kthread.Affinity; affinity != nil {
-							fmt.Print(" CPU ♥️ " + affinity.String())
+							_, _ = fmt.Fprint(out, " CPU ♥️ "+affinity.String())
 						}
 					}
 				} else {
-					fmt.Print(" IRQ -")
+					_, _ = fmt.Fprint(out, " IRQ -")
 				}
-				fmt.Print("\n")
+				_, _ = fmt.Fprint(out, "\n")
 			}
 
 			queues := slices.Clone(ndev.Queues)
@@ -211,21 +212,21 @@ func discoverNetdevs(cmd *cobra.Command, mode Mode) error {
 				if queue.Type.String() == "TX" {
 					qt = "📤"
 				}
-				fmt.Printf("        %s %s queue %d", qt, queue.Type.String(), queue.ID)
+				_, _ = fmt.Fprintf(out, "        %s %s queue %d", qt, queue.Type.String(), queue.ID)
 				if queue.IRQ != nil {
-					fmt.Printf(" 🗲 IRQ %d", queue.IRQ.ID)
+					_, _ = fmt.Fprintf(out, " 🗲 IRQ %d", queue.IRQ.ID)
 					if queue.IRQ.Source != ndev.Source {
-						fmt.Printf(" (source %s)", queue.IRQ.Source)
+						_, _ = fmt.Fprintf(out, " (source %s)", queue.IRQ.Source)
 					}
 				} else {
-					fmt.Printf(" IRQ -")
+					_, _ = fmt.Fprint(out, " IRQ -")
 				}
 				if queue.NAPI != nil && queue.NAPI.Kthread != nil {
-					fmt.Printf(" NAPI 🏃 kthread %q (PID %d)", queue.NAPI.Kthread.Name, queue.NAPI.Kthread.PID)
+					_, _ = fmt.Fprintf(out, " NAPI 🏃 kthread %q (PID %d)", queue.NAPI.Kthread.Name, queue.NAPI.Kthread.PID)
 				} else {
-					fmt.Printf(" NAPI -")
+					_, _ = fmt.Fprint(out, " NAPI -")
 				}
-				fmt.Printf("\n")
+				_, _ = fmt.Fprint(out, "\n")
 			}
 		}
 	}
