@@ -101,7 +101,10 @@ export const showNamespaceIdsAtom = settingAtom(showNamespaceIds, false)
 
 export const snapshotDensityAtom = settingAtom(snapshotDensityKey, 1)
 
-export const showIEAppIconsAtom = settingAtom(showIEAppIconsKey, false)
+// The server-side "--prefer-showing-app-icons" flag only provides the default;
+// any user setting already stored in the browser takes precedence.
+export const showIEAppIconsAtom = settingAtom(showIEAppIconsKey,
+    window.dynvars?.preferAppIcons === true)
 
 export const showMultiBroadcastRoutesAtom = settingAtom(showMultiBroadcastRoutesKey, false)
 

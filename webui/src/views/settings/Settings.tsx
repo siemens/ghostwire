@@ -219,7 +219,7 @@ export const Settings = () => {
                     <Card>
                         <List>
                             <ListItem>
-                                <ListItemText primary="Experimental: Show IE Apps icons and titles" />
+                                <ListItemText primary="Show IE Apps icons and titles" />
                                 <Toggle
                                     checked={showIEAppIcons}
                                     onChange={() => setShowIEAppIcons(!showIEAppIcons)}

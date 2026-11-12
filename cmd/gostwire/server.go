@@ -19,6 +19,7 @@ import (
 	"github.com/thediveo/spaserve"
 
 	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/appicons"
 	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/brand"
 )
 
@@ -33,16 +34,18 @@ var baseHrefRe = regexp.MustCompile(`<base href="(.*?)"\s*/>`)
 
 // newSPAHandler returns a handler serving the web UI from the specified fs,
 // with spaserve rewriting the base element and us adding the dynamic variables.
-func newSPAHandler(uifs fs.FS, brandName, brandIcon string) http.Handler {
+func newSPAHandler(uifs fs.FS, brandName, brandIcon string, preferAppIcons bool) http.Handler {
 	return spaserve.NewSPAHandler(uifs, "index.html",
-		spaserve.WithIndexRewriter(newDynamicVarsRewriter(brandName, brandIcon)))
+		spaserve.WithIndexRewriter(newDynamicVarsRewriter(brandName, brandIcon, preferAppIcons)))
 }
 
 // newDynamicVarsRewriter returns an index.html rewriter that adds, respective
 // inserts, the "dynamic variables" into the HTML, CSS and Javascript code
 // (soup) that is the index.html file. This includes the base path of the SPA as
 // determined by spaserve from the request and any forwarding proxy headers.
-func newDynamicVarsRewriter(brandName, brandIcon string) spaserve.IndexRewriter {
+// preferAppIcons only sets the web UI's default for showing app icons; it
+// doesn't override any user setting stored in the browser.
+func newDynamicVarsRewriter(brandName, brandIcon string, preferAppIcons bool) spaserve.IndexRewriter {
 	return func(r *http.Request, index string) string {
 		var base string
 		if m := baseHrefRe.FindStringSubmatch(index); m != nil {
@@ -54,11 +57,13 @@ func newDynamicVarsRewriter(brandName, brandIcon string) spaserve.IndexRewriter 
 			EnableCaptureLinks bool   `json:"enableMonolith"`
 			Brand              string `json:"brand"`
 			BrandIcon          string `json:"brandicon"`
+			PreferAppIcons     bool   `json:"preferAppIcons"`
 			Base               string `json:"base,omitempty"`
 		}{
 			EnableCaptureLinks: enableCaptureLinks,
 			Brand:              brandName,
 			BrandIcon:          brandIcon,
+			PreferAppIcons:     preferAppIcons,
 			Base:               base,
 		})
 		if err != nil {
@@ -89,6 +94,7 @@ func newHandler(cmd *cobra.Command, cizer containerizer.Containerizer) http.Hand
 	r := mux.NewRouter()
 	r.Use(requestLogger)
 	registerRouteHandlers(r, cmd, cizer)
-	r.PathPrefix("/").Handler(newSPAHandler(uifs, brand.Name(cmd), brand.Icon(cmd)))
+	r.PathPrefix("/").Handler(newSPAHandler(uifs,
+		brand.Name(cmd), brand.Icon(cmd), appicons.PreferShowing(cmd)))
 	return r
 }

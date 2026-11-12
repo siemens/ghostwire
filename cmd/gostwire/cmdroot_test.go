@@ -35,6 +35,7 @@ var _ = Describe("gostwire command", func() {
 			ContainSubstring("--allowed-origin strings"),
 			MatchRegexp(`--brand string .*\(default "Ghostwire"\)`),
 			ContainSubstring("--brandicon string"),
+			ContainSubstring("--prefer-showing-app-icons"),
 			ContainSubstring("--initialcgroup"),
 			Not(ContainSubstring("--cgroupswitched")),
 			ContainSubstring("--debug"),
