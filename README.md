@@ -92,20 +92,19 @@ one of the "shark fin" buttons starts a Wireshark session, directly capturing
 network traffic inside a container (or even [KinD](https://kind.sigs.k8s.io/)
 pod).
 
-## Edgeshark Project Context
+## Edgeshark Project
 
-`ghostwire/v2` is part of the "Edgeshark" project that consist of several
+Ghostwire is part of the "Edgeshark" project that consist of several
 repositories:
-- [Edgeshark Hub repository](https://github.com/siemens/edgeshark)
-- 🖝 **G(h)ostwire discovery service** 🖜
+- [Edgeshark Hub repository](https://github.com/siemens/edgeshark) with Edgeshark Industrial Edge App.
+- **Ghostwire discovery service**
 - [Packetflix packet streaming service](https://github.com/siemens/packetflix)
 - [Containershark Extcap plugin for
   Wireshark](https://github.com/siemens/cshargextcap)
-- support modules:
-  - [turtlefinder](https://github.com/siemens/turtlefinder)
-  - [csharg (CLI)](https://github.com/siemens/csharg)
-  - [mobydig](https://github.com/siemens/mobydig)
-  - [ieddata](https://github.com/siemens/ieddata)
+- [csharg (CLI)](https://github.com/siemens/csharg)
+- [mobydig](https://github.com/siemens/mobydig)
+- [ieddata](https://github.com/siemens/ieddata)
+- [turtlefinder](https://github.com/siemens/turtlefinder)
 
 ## Documentation
 
