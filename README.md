@@ -1,4 +1,4 @@
-<img align="right" width="100" height="100" src="media/gostwire-mascot-darklight-150x150.png" style="padding: 0 0 1ex 0.8em">
+<img align="right" width="100" height="100" src="docs/media/ghostwire.svg" style="padding: 0 0 1ex 0.8em">
 
 [![Siemens](https://img.shields.io/badge/github-siemens-009999?logo=github)](https://github.com/siemens)
 [![Industrial Edge](https://img.shields.io/badge/github-industrial%20edge-e39537?logo=github)](https://github.com/industrial-edge)
@@ -8,7 +8,7 @@
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/siemens/ghostwire/v2)](https://pkg.go.dev/github.com/siemens/ghostwire/v2)
 [![GitHub](https://img.shields.io/github/license/siemens/ghostwire)](https://img.shields.io/github/license/siemens/ghostwire)
-![build and test](https://github.com/siemens/ghostwire/workflows/build%20and%20test/badge.svg?branch=main)
+[![build and test](https://github.com/siemens/ghostwire/actions/workflows/buildandtest.yaml/badge.svg?branch=main)](https://github.com/siemens/ghostwire/actions/workflows/buildandtest.yaml)
 <br/>
 ![goroutines](https://img.shields.io/badge/go%20routines-not%20leaking-success)
 ![file descriptors](https://img.shields.io/badge/file%20descriptors-not%20leaking-success)
