@@ -4,15 +4,15 @@
 
 import JSBI from 'jsbi'
 
-import { PrimitiveContainee, Busybox, Container, containerState, HostAddressBinding, ContaineeTypes, ContainerFlavors, Pod, isContainer, Project, NetworkNamespaceOrProject } from './containee'
-import { NetworkInterface, NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, TapTunProcessor } from './nif'
-import { Process } from './process'
-import { AddressFamily, addressFamilyByName, IpAddress } from './address'
-import { IpRoute } from './route'
-import { NetworkNamespace, NetworkNamespaces } from './netns'
-import { PortUser, TransportPort } from './ports'
+import { type PrimitiveContainee, type Busybox, type Container, containerState, type HostAddressBinding, ContaineeTypes, ContainerFlavors, type Pod, isContainer, type Project, type NetworkNamespaceOrProject } from './containee'
+import { type NetworkInterface, type NifDriverInfo, OperationalState, SRIOVRole, TapTunMode, type TapTunProcessor } from './nif'
+import type { Process } from './process'
+import { AddressFamily, addressFamilyByName, type IpAddress } from './address'
+import type { IpRoute } from './route'
+import type { NetworkNamespace, NetworkNamespaces } from './netns'
+import type { PortUser, TransportPort } from './ports'
 import { isBusybox } from '.'
-import { ForwardedPort } from './forwardedports'
+import type { ForwardedPort } from './forwardedports'
 
 /* Ghostwire's engine v2 own label namespace for passing additional information. */
 export const GHOSTWIRE_LABEL_ROOT = 'gostwire/'
@@ -183,7 +183,6 @@ export const fromjson = (jsondata: JSONObject) => {
                             }
                             cbox.project = project
                             project.containers.push(cbox)
-                            project.netnses[cbox.netns.netnsid] = cbox.netns
                         }
                     }
                     return primitiveBox
@@ -196,10 +195,12 @@ export const fromjson = (jsondata: JSONObject) => {
                     netns: newnetns,
                     name: jnif.name as string,
                     alias: jnif.alias as string || '',
+                    altnames: jnif.altnames as string[] || [],
                     index: jnif.index as number,
                     kind: jnif.kind as string,
                     operstate: jnif.operstate as OperationalState,
                     isPhysical: jnif.physical as boolean,
+                    isLoopback: !!jnif.loopback,
                     driverinfo: jnif.driverinfo as unknown as NifDriverInfo,
                     isPromiscuous: jnif.promisc as boolean,
                     sriovrole: jnif['sr-iov-role'] as SRIOVRole || SRIOVRole.None,
@@ -228,6 +229,16 @@ export const fromjson = (jsondata: JSONObject) => {
                     nif.vlanDetails = {
                         vid: vlan.vid as number,
                         vlanProtocol: vlan['vlan-protocol'] as number
+                    }
+                }
+                if (jnif.netkit) {
+                    const netkit = jnif.netkit as JSONObject
+                    nif.netkitDetails = {
+                        mode: netkit.mode as string,
+                        policy: netkit.policy as string,
+                        peerPolicy: netkit['peer-policy'] as string | undefined,
+                        primary: netkit.primary as boolean,
+                        single: !!netkit.single,
                     }
                 }
                 nifmap[jnif.id as string] = nif
@@ -268,12 +279,15 @@ export const fromjson = (jsondata: JSONObject) => {
             ).flat()
         })
     // Resolve the references between network interfaces ... now these
-    // references are one of the truely unique features of Ghostwire!
+    // references are one of the truly unique features of Ghostwire!
     Object.values(jsondata['network-namespaces']).forEach(jnetns =>
         (jnetns['network-interfaces'] as JSONObject[]).forEach(jnif => {
             const nif = nifmap[jnif.id as string]
             if (jnif.macvlans) {
                 nif.macvlans = (jnif.macvlans as JSONObject[]).map(nif => nifmap[nif.idref as string])
+            }
+            if (jnif.ipvlans) {
+                nif.ipvlans = (jnif.ipvlans as JSONObject[]).map(nif => nifmap[nif.idref as string])
             }
             if (jnif.slaves) {
                 // Nota bene: while the discovery service classifies VXLAN
@@ -284,10 +298,11 @@ export const fromjson = (jsondata: JSONObject) => {
                 nif.slaves = (jnif.slaves as JSONObject[]).map(nif => nifmap[nif.idref as string])
                     .filter(slave => !slave.vxlanDetails || nif.kind === 'bridge')
             }
-            jnif.pf && (nif.pf = nifmap[(jnif.pf as JSONObject).idref as string])
-            jnif.master && (nif.master = nifmap[(jnif.master as JSONObject).idref as string])
-            jnif.macvlan && (nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string])
-            jnif.peer && (nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string])
+            if (jnif.pf) nif.pf = nifmap[(jnif.pf as JSONObject).idref as string]
+            if (jnif.master) nif.master = nifmap[(jnif.master as JSONObject).idref as string]
+            if (jnif.macvlan) nif.macvlan = nifmap[(jnif.macvlan as JSONObject).idref as string]
+            if (jnif.ipvlan) nif.ipvlan = nifmap[(jnif.ipvlan as JSONObject).idref as string]
+            if (jnif.peer) nif.peer = nifmap[(jnif.peer as JSONObject)['peer-idref'] as string]
             if (jnif.vxlan) {
                 // this VXLAN is the overlay, resolve our underlay reference,
                 // and then backlink the underlay to us (the overlay).
@@ -454,7 +469,7 @@ export const fromjson = (jsondata: JSONObject) => {
             .reduce((project, cntr) => {
                 if (isContainer(cntr)) {
                     if (project === undefined) {
-                        return cntr.project // either associated project or null
+                        return cntr.project ?? null
                     }
                     return cntr.project === project ? project : null
                 }
@@ -466,6 +481,9 @@ export const fromjson = (jsondata: JSONObject) => {
                 return null
             }, undefined as (Project | null | undefined))
         netns.project = project || undefined
+        if (netns.project) {
+            netns.project.netnses[netns.netnsid] = netns
+        }
     })
     // Fix composer project flavors; projects can only exist from our point of
     // view when there is at least a single, lone container in a project.
@@ -519,12 +537,20 @@ export const orderNetnsByContainees = (netnsA: NetworkNamespace, netnsB: Network
  * namespaces for container belonging to the same project, only a single docker
  * composer group will be returned instead.
  *
- * @param netnses list of all discovered network namespaces.
+ * The composer groups returned are shallow copies of the discovered projects,
+ * restricted to exactly those member network namespaces passed in. Callers
+ * filtering the network namespaces beforehand (such as with
+ * `netnsMatchesFilter`) thus get project groups covering only the matching
+ * network namespaces and must not re-filter the group members.
+ *
+ * @param netnses list of (optionally filtered) network namespaces.
  */
 export const sortedNetnsProjects = (netnses: NetworkNamespace[]) => {
 
     const list: NetworkNamespaceOrProject[] = []
-    const projects: Project[] = [] // list of projects already seen
+    // maps the discovered projects to their shallow copies restricted to only
+    // the network namespaces passed in.
+    const projects = new Map<Project, Project>()
 
     netnses.sort(orderNetnsByContainees)
         .forEach(netns => {
@@ -534,12 +560,15 @@ export const sortedNetnsProjects = (netnses: NetworkNamespace[]) => {
             // that only once.
             if (!netns.project) {
                 list.push(netns)
-            } else {
-                if (!projects.includes(netns.project)) {
-                    list.push(netns.project)
-                    projects.unshift(netns.project)
-                }
+                return
             }
+            let project = projects.get(netns.project)
+            if (!project) {
+                project = { ...netns.project, netnses: {} }
+                projects.set(netns.project, project)
+                list.push(project)
+            }
+            project.netnses[netns.netnsid] = netns
         })
 
     return list

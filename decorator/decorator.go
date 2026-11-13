@@ -7,9 +7,9 @@ package decorator
 import (
 	"context"
 
-	"github.com/siemens/ghostwire/v2/network"
-
 	"github.com/thediveo/lxkns/model"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // Decorate is called after the core discovery of network namespaces as well as

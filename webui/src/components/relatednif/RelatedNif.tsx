@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
-import { AddressFamilySet, PrimitiveContainee, NetworkInterface, SRIOVRole } from 'models/gw'
+import { type AddressFamilySet, type PrimitiveContainee, type NetworkInterface, SRIOVRole } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { NamespaceContainees } from 'components/namespacecontainees'
 import { styled } from '@mui/material'
@@ -63,8 +62,8 @@ export interface RelatedNifProps {
  *
  * Network interfaces with related interfaces are:
  *
- * - **`veth`**: the corresponding peer network interface; this is always a
- *   one-to-one relationship.
+ * - **`veth`** and **`netkit`**: the corresponding peer network interface;
+ *   this is always a one-to-one relationship.
  *
  * - **`macvlan`**: the "master" network interface; this is a one-to-many
  *   relationship, where each macvlan network interface has exactly one master
@@ -75,6 +74,9 @@ export interface RelatedNifProps {
  *   the Linux kernel automatically will attach the macvlan interface to the
  *   master hardware interface instead, so there never will be cascades of
  *   macvlans.
+ *
+ * - **`ipvlan`**: the "master" network interface; this is a one-to-many
+ *   relationship, same as with macvlans.
  * 
  * - **`vxlan`**: the "underlay" network interface; this is a one-to-many
  *   relationship, where each vxlan network interface has exactly one underlay
@@ -101,7 +103,11 @@ export const RelatedNif = ({
                 case 'macvlan':
                     othernif = nif.macvlan
                     break
+                case 'ipvlan':
+                    othernif = nif.ipvlan
+                    break
                 case 'veth':
+                case 'netkit':
                     othernif = nif.peer
                     break
                 case 'vxlan':

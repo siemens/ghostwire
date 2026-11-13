@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
-import { Link, LinkProps, useNavigate, useMatch } from 'react-router-dom'
+import { Link, type LinkProps, useNavigate, useMatch } from 'react-router-dom'
 
 import { IconButton, Paper, styled, Tooltip } from '@mui/material'
 import FullscreenIcon from '@mui/icons-material/Fullscreen'
@@ -12,7 +11,7 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit'
 
 import { CardSection } from 'components/cardsection'
 import { ContaineeBadge } from 'components/containeebadge'
-import { AddressFamily, AddressFamilySet, containeeKey, isPod, netnsId, NetworkInterface, NetworkNamespace, nifId, orderRoutes, routeKey, containeesOfNetns, RouteTableLocal, isContainer, isSandbox, sortContaineesByName, Containee, Container } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, containeeKey, isPod, netnsId, type NetworkInterface, type NetworkNamespace, nifId, orderRoutes, routeKey, containeesOfNetns, RouteTableLocal, isContainer, isSandbox, sortContaineesByName, type Containee, type Container } from 'models/gw'
 import { NifTree } from 'components/niftree'
 import { Route } from 'components/route'
 import { useContextualId } from 'components/idcontext'
@@ -94,6 +93,18 @@ const MaxMinIconButton = (styled(IconButton)<LinkProps>(({ theme }) => ({
     left: theme.spacing(1),
 })) as unknown) as typeof IconButton
 
+// Returns true as soon as the summed up row counts exceed the cutoff.
+const rowsExceed = <T,>(items: T[], rows: (item: T) => number, cutoff: number) => {
+    let sum = 0
+    for (const item of items) {
+        sum += rows(item)
+        if (sum > cutoff) {
+            return true
+        }
+    }
+    return false
+}
+
 
 export interface NetnsDetailCardProps {
     /** 
@@ -171,7 +182,7 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families: fam, can
     // other to show a high-level view on what's attached to this network
     // namespace.
     const containees = netns.containers
-        .filter(containee => !isSandbox(containee))
+        .filter((containee): boolean => !isSandbox(containee))
         .filter(containee => !isContainer(containee) || !containee.sandbox || showSandboxes)
     const containeesCutoffState = containees.length > containeesCutoff ? 'collapse' : 'expand'
 
@@ -181,38 +192,19 @@ export const NetnsDetailCard = ({ netns, filterLo, filterMAC, families: fam, can
     const neighborServices = neighborhoodServices(somecontainer)
     const neighborhoodCutoffState = neighborhoodServiceContainerCount(neighborServices) > neighborhoodCutoff ? 'collapse' : 'expand'
 
-    let fwportrows = 0
-    const forwardedPortsCutoffState = (netns.forwardedPorts.find(port => {
-        if (families.includes(port.address.family)) {
-            fwportrows += port.users.length
-            // Make find terminate its "search" as soon as we cross the cutoff.
-            // Otherwise, keep on summing up...
-            return fwportrows > forwardedPortsCutoff
-        }
-        // will not be shown, so keep find searching on...
-        return false
-    })) ? 'collapse' : 'expand'
+    const forwardedPortsCutoffState = rowsExceed(netns.forwardedPorts,
+        port => families.includes(port.address.family) ? port.users.length : 0,
+        forwardedPortsCutoff) ? 'collapse' : 'expand'
 
     // Decide whether we'll cross the cutoff for expanding the transport port
     // table or not. We want to avoid all the filtering, sorting and mapping
     // here as this being done only in the transport port table component. Here,
-    // it sufficies to find out if we're above the threshold or not. And here we
-    // take "find" literally: we slightly mis-appropriate the find() array
-    // operation to calculate the sum of transport table rows until we counted
-    // all elements or until we cross the cutoff point. Please note that we have
-    // to keep in mind that multiple processes might use the same port, not just
-    // a single one.
-    let portrows = 0
-    const portsCutoffState = (netns.transportPorts.find(port => {
-        if (families.includes(port.localAddress.family)) {
-            portrows += port.users.length
-            // Make find terminate its "search" as soon as we cross the cutoff.
-            // Otherwise, keep on summing up...
-            return portrows > portsCutoff
-        }
-        // will not be shown, so keep find searching on...
-        return false
-    })) ? 'collapse' : 'expand'
+    // it sufficies to find out if we're above the threshold or not. Please note
+    // that we have to keep in mind that multiple processes might use the same
+    // port, not just a single one.
+    const portsCutoffState = rowsExceed(netns.transportPorts,
+        port => families.includes(port.localAddress.family) ? port.users.length : 0,
+        portsCutoff) ? 'collapse' : 'expand'
 
     // Nota bene: we don't show routes from the "local" table, so we filter it
     // out here in order to later correctly calculate the number of routes to be

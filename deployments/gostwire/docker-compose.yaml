@@ -1,6 +1,5 @@
 # Gostwire server in a container; further G(h)ostwire-aware projects can then
 # attach to its dedicated G(h)ostwire (internal) network.
-version: '2.4'
 services:
     gostwire:
         image: 'gostwire'
@@ -16,6 +15,10 @@ services:
         build:
             context: ../..
             dockerfile: deployments/gostwire/Dockerfile
+            additional_contexts:
+                webappsrc: ../../webui
+            args:
+                VERSION: ${VERSION:-}
         # Please note: port remapping is only possible when using a separate
         # network namespace, but *NOT* when using the host's network namespace.
         # Also, remapping happens *OUTSIDE* the container, such as in the host,

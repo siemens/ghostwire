@@ -16,7 +16,7 @@ import { CardTray } from 'components/cardtray'
 import { NetnsDetailCard } from 'components/netnsdetailcard'
 
 import { useDiscovery } from 'components/discovery'
-import { emptyNetns, isProject, orderNetnsByContainees, sortedNetnsProjects } from 'models/gw'
+import { emptyNonContainerNetns, isProject, netnsMatchesFilter, orderNetnsByContainees, sortedNetnsProjects } from 'models/gw'
 import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, showEmptyNetnsAtom, showIpFamiliesAtom, showLoopbackAtom, showMACAtom } from 'views/settings'
 import { Ghost } from 'components/ghost'
 import RefreshButton from 'components/refreshbutton'
@@ -42,7 +42,7 @@ const MarkableNetnsDetailCard = styled(NetnsDetailCard)(({ theme }) => ({
 /**
  * Renders a full, detailed view of all discovered network namespaces.
  */
-export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((props, ref) => {
+export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttributes<HTMLDivElement>>((_props, ref) => {
 
     const [showLoopbacks] = useAtom(showLoopbackAtom)
     const [showEmptyNetns] = useAtom(showEmptyNetnsAtom)
@@ -64,20 +64,24 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
     const netnsid = (locmatch && parseInt(locmatch[1])) || 0
 
     const discovery = useDiscovery()
-    const orignetnses = Object.values(discovery.networkNamespaces)
-        .filter(netns => showEmptyNetns || !emptyNetns(netns))
-    const netnses = orignetnses
-        .filter(ns => {
-            if (ns.containers.find(primcntee => filterfn(primcntee.name))) {
-                return true
-            }
-            return ns.pods.find(pod => filterfn(pod.name))
-        })
+    // The candidate network namespaces for containee filter pattern matching:
+    // the "show empty network namespaces" user setting has already been taken
+    // into account here. These candidates also are the baseline deciding
+    // whether an empty result is due to the filter pattern ("no matches") or
+    // due to nothing having been discovered yet ("please refresh").
+    const candidateNetnses = Object.values(discovery.networkNamespaces)
+        .filter(netns => showEmptyNetns || !emptyNonContainerNetns(netns))
+    // The network namespaces to actually render, additionally narrowed down by
+    // the containee filter pattern; the project groups derived next cover only
+    // these matching network namespaces, without any further dropping
+    // downstream.
+    const netnses = candidateNetnses
+        .filter(ns => netnsMatchesFilter(ns, filterfn))
         .sort(orderNetnsByContainees)
     const netnsesAndProjs = sortedNetnsProjects(netnses)
 
     return (
-        <Box m={0} flex={1} overflow="auto">
+        <Box sx={{ m: 0, flex: 1, overflow: 'auto' }}>
             {(netnses.length &&
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />
@@ -94,7 +98,6 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                                     project={netnsOrProj}
                                 >
                                     {Object.values(netnsOrProj.netnses)
-                                        .filter(netns => netns.containers.find(primcntee => filterfn(primcntee.name)))
                                         .sort(orderNetnsByContainees)
                                         .map(netns =>
                                             <MarkableNetnsDetailCard
@@ -122,8 +125,8 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                         })}
                     </CardTray>
                 </div>)
-                || (orignetnses.length &&
-                    <Typography m={1} variant="body1" color="textSecondary" ref={ref}>
+                || (candidateNetnses.length &&
+                    <Typography sx={{ m: 1 }} variant="body1" color="textSecondary" ref={ref}>
                         <FilterAltIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
                         no matches, please check the filter settings in the sidebar.
                     </Typography>)

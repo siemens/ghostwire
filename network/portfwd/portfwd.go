@@ -9,7 +9,7 @@ import (
 	"github.com/thediveo/nufftables/portfinder"
 )
 
-// Portwardings returns forwarded ports discovered from the table map of a
+// PortForwardings returns forwarded ports discovered from the table map of a
 // single specific table family passed to it.
 type PortForwardings func(
 	tables nufftables.TableMap,

@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-//go:generate go run ./internal/gen/version
 package gostwire
 
 // CaptureEnableHeader tells the Ghostwire service to serve its SPA user

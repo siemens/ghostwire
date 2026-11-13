@@ -6,12 +6,13 @@ package network
 
 import (
 	"bufio"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/thediveo/ioctl"
-	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/species"
@@ -19,17 +20,28 @@ import (
 )
 
 // resolveTapTunProcessors checks for the presence of TAP and/or TUN network
-// interfaces and then resolves their serving processes ("processors").
-func resolveTapTunProcessors(netspaces NetworkNamespaces, allprocs model.ProcessTable) {
+// interfaces and then resolves their serving processes ("processors"). If no
+// processors have been collected during the lxkns discovery, it runs an fd scan
+// of its own.
+func resolveTapTunProcessors(netspaces NetworkNamespaces, allprocs model.ProcessTable, tuntaps *TapTunProcessors) {
 	if !hasTapTun(netspaces) {
 		return
 	}
-	processors := discoverProcessors(allprocs)
-	for _, processor := range processors {
+	if tuntaps == nil {
+		tuntaps = &TapTunProcessors{}
+		_ = discover.Namespaces(discover.WithFdCallback(tuntaps.Visit))
+	}
+	for _, processor := range tuntaps.processors {
+		proc := allprocs[processor.PID]
+		if proc == nil {
+			continue
+		}
 		netns := netspaces[processor.NetnsID]
 		if netns == nil {
-			log.Warnf("TAP/TUN serving process %s(%d) related to unknown netns:[%d]",
-				processor.Process.Name, processor.Process.PID, processor.NetnsID.Ino)
+			slog.Warn("TAP/TUN serving process related to unknown netns",
+				slog.String("name", proc.Name),
+				slog.Int("pid", int(proc.PID)),
+				slog.Uint64("netns", processor.NetnsID.Ino))
 			continue
 		}
 		nif := netns.NamedNifs[processor.NifName]
@@ -37,19 +49,30 @@ func resolveTapTunProcessors(netspaces NetworkNamespaces, allprocs model.Process
 			continue
 		}
 		if nif.Nif().Kind != "tuntap" {
-			log.Errorf("mixed-up netdev %s in netns:[%d]",
-				nif.Nif().Name, netns.ID().Ino)
+			slog.Error("mixed-up netdev in netns",
+				slog.String("interface", nif.Nif().Name),
+				slog.Uint64("netns", netns.ID().Ino))
 			continue
 		}
 		tuntap := nif.(TunTap).TunTap()
-		tuntap.Processors = append(tuntap.Processors, processor.Process)
+		tuntap.Processors = append(tuntap.Processors, proc)
 	}
 }
 
-// tuntapProcessor describes a Process serving a TAP/TUN network interface
+// TapTunProcessors collects the processes serving TAP/TUN network interfaces
+// during an lxkns discovery, when registering its [TapTunProcessors.Visit]
+// method using [discover.WithFdCallback].
+type TapTunProcessors struct {
+	processors []tuntapProcessor
+}
+
+// tuntapProcessor describes a process serving a TAP/TUN network interface
 // (netdev).
 type tuntapProcessor struct {
-	Process *model.Process
+	// PID instead of *model.Process, as the processes might have been collected
+	// from a different discovery's process table than the one later resolved
+	// against (such as when NewNetworkNamespaces scans on its own).
+	PID     model.PIDType
 	NifName string
 	NetnsID species.NamespaceID
 }
@@ -64,65 +87,42 @@ func getTapNetdevNetnsFd(fd int) (int, error) {
 	return ioctl.RetFd(fd, ioctl.IO('T', 227))
 }
 
-// discoverProcessors returns a list of processes that have file descriptors
-// referencing TAP/TUN network devices.
-func discoverProcessors(allprocs model.ProcessTable) []tuntapProcessor {
-	var processors []tuntapProcessor
-	for pid, proc := range allprocs {
-		base := "/proc/" + strconv.Itoa(int(pid)) + "/fdinfo"
-		fdinfoEntries, err := os.ReadDir(base)
-		if err != nil {
-			continue
-		}
-		var pidfd int // as we have stdin, stdout, stderr always connected, this fd cannot be 0.
-	scanFds:
-		for _, fdInfoEntry := range fdinfoEntries {
-			iffName := iff(base + "/" + fdInfoEntry.Name())
-			if iffName == "" {
-				continue
-			}
-
-			if pidfd == 0 {
-				pidfd, err = unix.PidfdOpen(int(pid), 0)
-				if err != nil {
-					break scanFds
-				}
-			}
-
-			// Work around bug(s) #14733/#9295 in CodeQL scanning which
-			// currently block correct parsing using ParseUint(...,
-			// strconv.IntSize-1) and then casting to int.
-			fd, err := strconv.ParseInt(fdInfoEntry.Name(), 10, strconv.IntSize)
-			if err != nil || fd < 0 {
-				continue
-			}
-			taptunFd, err := unix.PidfdGetfd(pidfd, int(fd), 0)
-			if err != nil {
-				continue
-			}
-			netnsFd, err := getTapNetdevNetnsFd(taptunFd)
-			unix.Close(taptunFd)
-			if err != nil {
-				continue
-			}
-			netnsID, err := ops.NamespaceFd(netnsFd).ID()
-			unix.Close(netnsFd)
-			if err != nil {
-				continue
-			}
-
-			processors = append(processors, tuntapProcessor{
-				Process: proc,
-				NifName: iffName,
-				NetnsID: netnsID,
-			})
-		}
-		if pidfd > 0 {
-			unix.Close(pidfd)
-			pidfd = 0
-		}
+// Visit checks an open file descriptor of a process for serving a TAP/TUN
+// network interface and if so, collects the process, the interface name, and
+// the network namespace of the interface.
+func (t *TapTunProcessors) Visit(fd discover.FdEntry) {
+	// TAP/TUN fds are always character devices, such as /dev/net/tun.
+	if !strings.HasPrefix(fd.Target, "/dev/") {
+		return
 	}
-	return processors
+	pid := fd.Process.PID
+	iffName := iff("/proc/" + strconv.Itoa(int(pid)) + "/fdinfo/" + strconv.Itoa(fd.Fd))
+	if iffName == "" {
+		return
+	}
+	pidfd, err := fd.PidFd()
+	if err != nil {
+		return
+	}
+	taptunFd, err := unix.PidfdGetfd(pidfd, fd.Fd, 0)
+	if err != nil {
+		return
+	}
+	netnsFd, err := getTapNetdevNetnsFd(taptunFd)
+	_ = unix.Close(taptunFd)
+	if err != nil {
+		return
+	}
+	netnsID, err := ops.NamespaceFd(netnsFd).ID()
+	_ = unix.Close(netnsFd)
+	if err != nil {
+		return
+	}
+	t.processors = append(t.processors, tuntapProcessor{
+		PID:     pid,
+		NifName: iffName,
+		NetnsID: netnsID,
+	})
 }
 
 // iff returns the value of the "iff:" entry from a /proc/$PID/fdinfo/$FD pseudo
@@ -134,7 +134,7 @@ func iff(path string) string {
 	if err != nil {
 		return ""
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -143,6 +143,7 @@ func iff(path string) string {
 			return line[len(iffEntry):]
 		}
 	}
+	_ = scanner.Err()
 	return ""
 }
 

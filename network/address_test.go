@@ -8,10 +8,11 @@ import (
 	"net"
 	"syscall"
 
+	"golang.org/x/sys/unix"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	"golang.org/x/sys/unix"
 )
 
 var _ = Describe("handles network addresses", func() {

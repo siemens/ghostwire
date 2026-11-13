@@ -4,7 +4,7 @@ info:
     version: 1.0.1
     x-logo:
         url: gw-mascot.png
-        altText: Gostwire mascot
+        altText: Ghostwire mascot
 servers:
     -
         url: /
@@ -340,11 +340,6 @@ components:
                     type: string
                 dns:
                     $ref: '#/components/schemas/DNS-Configuration'
-                    description: |-
-                        The optional DNS configuration-related details; empty in
-                        case of bind-mounts, as there is no associated process with
-                        a mount namespace and thus no DNS client-level
-                        configuration.
                 group:
                     description: The JSON document-internal identifier of a container group.
                     type: string
@@ -399,6 +394,9 @@ components:
                         of capability bit numbers.
                     type: string
                 status:
+                    description: |-
+                        The container or process status; empty in case of a
+                        bind-mount.
                     enum:
                         - created
                         - running
@@ -407,6 +405,7 @@ components:
                         - removing
                         - exited
                         - dead
+                        - ''
                     type: string
                 type:
                     type: string
@@ -467,7 +466,6 @@ components:
                     type: string
                 address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: The IP address associated with the (host) name.
         Network-Interface:
             description: |-
                 A network interface with its assigned IP addresses as well as
@@ -515,6 +513,13 @@ components:
                         optional alias name assigned to this network interface.
                         For instance, a Docker network name.
                     type: string
+                altnames:
+                    description: |-
+                        optional list of alternate names assigned to this
+                        network interface.
+                    type: array
+                    items:
+                        type: string
                 id:
                     description: |-
                         The JSON document-internal identifier for this network
@@ -537,6 +542,11 @@ components:
                         parlance) of virtual interface, such as "bridge",
                         "veth", "macvlan", and so on.
                     type: string
+                loopback:
+                    description: |-
+                        Indicates if this is a loopback interface, that is, the
+                        IFF_LOOPBACK flag is set. Omitted if not a loopback.
+                    type: boolean
                 master:
                     description: 'The related "master" network interface, if any.'
                     required:
@@ -636,10 +646,108 @@ components:
                                     that this name might (usually) belong to a
                                     different network namespace!
                                 type: string
+                ipvlan:
+                    description: 'Only for kind="ipvlan" interfaces: the master interface.'
+                    required:
+                        - idref
+                        - name
+                        - index
+                    type: object
+                    properties:
+                        idref:
+                            description: |-
+                                The JSON document-internal reference identifier
+                                of the IPVLAN master interface.
+                            type: string
+                        index:
+                            description: |-
+                                The interface index of the master interface;
+                                please note that this index might (usually)
+                                belong to a different network namespace!
+                            type: integer
+                        name:
+                            description: |-
+                                The name of the master interface; please note
+                                that this name might (usually) belong to a
+                                different network namespace!
+                            type: string
+                ipvlans:
+                    description: |-
+                        The list of "slave" network interfaces that are IPVLAN
+                        network interfaces.
+                    type: array
+                    items:
+                        required:
+                            - idref
+                            - name
+                            - index
+                        type: object
+                        properties:
+                            idref:
+                                description: |-
+                                    The JSON document-internal reference identifier
+                                    of the IPVLAN interface.
+                                type: string
+                            index:
+                                description: |-
+                                    The interface index of the IPVLAN interface;
+                                    please note that this index might (usually)
+                                    belong to a different network namespace!
+                                type: integer
+                            name:
+                                description: |-
+                                    The name of the IPVLAN interface; please
+                                    note that this name might (usually) belong
+                                    to a different network namespace!
+                                type: string
+                netkit:
+                    description: 'Only for kind="netkit" interfaces: netkit-specific configuration.'
+                    required:
+                        - mode
+                        - policy
+                        - primary
+                        - single
+                    type: object
+                    properties:
+                        mode:
+                            description: Layer 2 (Ethernet) or layer 3 (IP) mode.
+                            enum:
+                                - L2
+                                - L3
+                                - ''
+                            type: string
+                        policy:
+                            description: |-
+                                Default policy of this netkit end when no BPF
+                                program is attached.
+                            enum:
+                                - forward
+                                - blackhole
+                                - ''
+                            type: string
+                        peer-policy:
+                            description: |-
+                                Default policy of the peer netkit end; absent
+                                in single-device mode.
+                            enum:
+                                - forward
+                                - blackhole
+                                - ''
+                            type: string
+                        primary:
+                            description: |-
+                                Indicates the primary netkit end, which is
+                                usually located in the host network namespace.
+                            type: boolean
+                        single:
+                            description: |-
+                                Indicates a single-device netkit without any
+                                peer netkit interface.
+                            type: boolean
                 peer:
                     description: |-
-                        Only for kind="veth" interfaces: the related peer
-                        interface.
+                        Only for kind="veth" and kind="netkit" interfaces: the
+                        related peer interface.
                     required:
                         - peer-idref
                         - peer-name
@@ -734,7 +842,6 @@ components:
             properties:
                 address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: Either an IPv4 or an IPv6 address.
                 family:
                     description: The IP address family.
                     type: integer
@@ -777,7 +884,6 @@ components:
                     type: integer
                 destination:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: The destination prefix in form of an IP address.
                 destination-prefixlen:
                     description: The length of the destination prefix.
                     type: integer
@@ -795,10 +901,6 @@ components:
                     type: string
                 nexthop:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: |-
-                        An optional IPv4/IPv6 address of the next hop, if there
-                        is any; otherwise missing in case of direct subnet
-                        routes.
                 preference:
                     description: 'The preference of this route, in two digit binary form, such as "00", et cetera.'
                     enum:
@@ -852,8 +954,6 @@ components:
                     type: integer
                 local-address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: |
-                        Local IP address.
                 local-port:
                     description: Local transport port number.
                     maximum: 65535
@@ -864,8 +964,6 @@ components:
                     type: string
                 remote-address:
                     $ref: '#/components/schemas/IPvX-Address'
-                    description: |
-                        Remote IP address.
                 remote-port:
                     description: |-
                         Remote transport port number. For an unconnected

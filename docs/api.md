@@ -1,6 +1,6 @@
 # API (Woes)
 
-> Are you looking for Gostwire's [REST API](rest-api) instead?
+> Are you looking for Ghostwire's [REST API](rest-api) instead?
 
 ## Pitfalls
 
@@ -47,22 +47,22 @@ Comparing an IPv4 address (such as one gotten from `To4`) with `net.IPv4zero`
 will fail when your IPv4 address has `net.IPv4len`: the length of `net.IPv4zero`
 is 16!
 
-> [!NOTE] The Gostwire API returns IPv4 addresses **always** as `net.IP`s with a
-> length of `IPv4len` – as does the Go netlink Gostwire relies on. No if's or
+> [!NOTE] The Ghostwire API returns IPv4 addresses **always** as `net.IP`s with a
+> length of `IPv4len` – as does the Go netlink Ghostwire relies on. No if's or
 > but's.
 
-## Gostwire's API Design
+## Ghostwire's API Design
 
 ### Network Interfaces
 
-In Gostwire, `NetworkInterface` is actually a "network interface" interface and
+In Ghostwire, `NetworkInterface` is actually a "network interface" interface and
 is implemented by all backing types of network interfaces.
 
 The attributes, or properties, common to all network interfaces (`NifAttrs`) are
 then accessed through the `Nif()*NifAttrs` accessor[^oops], including the
 specific `Type` of network interface.
 
-For some types, Gostwire defines additional attributes, such as for bridges in
+For some types, Ghostwire defines additional attributes, such as for bridges in
 form of `BridgeAttrs`. If `nif` is a `NetworkInterface` interface, then all
 attributes of a bridge are accessible via `nif.(Bridge).Bridge()` returning a
 `*BridgeAttr` pointer.

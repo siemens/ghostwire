@@ -13,7 +13,7 @@ import SyncDisabledIcon from '@mui/icons-material/SyncDisabled'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 import { discoveryRefreshingAtom, discoveryRefreshIntervalAtom } from 'components/discovery'
-import useId from 'hooks/id'
+import useId from 'hooks/id/id'
 
 
 const defaultThrobberThreshold = 500/* ms */
@@ -155,7 +155,7 @@ const Refresher = ({ throbberThreshold, intervals }: RefresherProps) => {
         <Refreshee>
             <Tooltip title="refresh">
                 <Wrapper>
-                    <IconButton color="inherit" onClick={() => setRefreshing(true)} size="large"><RefreshIcon /></IconButton>
+                    <IconButton color="inherit" aria-label="refresh" onClick={() => setRefreshing(true)} size="large"><RefreshIcon /></IconButton>
                     {refreshing &&
                         <Fade
                             in={true}

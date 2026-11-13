@@ -7,21 +7,26 @@ package mobydig
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"time"
+
+	"github.com/siemens/mobydig/messymoby"
+	"github.com/siemens/turtlefinder/v2"
+	lxknsdiscover "github.com/thediveo/lxkns/discover"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/notwork/dummy"
+	"github.com/thediveo/notwork/macvlan"
 
 	"github.com/siemens/ghostwire/v2/decorator/dockernet"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/mobydig/messymoby"
-	"github.com/siemens/turtlefinder"
-	lxknsdiscover "github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/model"
+
+	"github.com/onsi/gomega/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gleak"
-	"github.com/onsi/gomega/types"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
 )
@@ -53,10 +58,22 @@ var _ = Describe("docker network neighborhood services", Ordered, func() {
 			Skip("needs root")
 		}
 
+		DeferCleanup(slog.SetDefault, slog.Default())
+		slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
+
 		By("Cleaning up test containers and networks")
 		messymoby.Cleanup(ctx)
 		By("Tearing down any left-over test harness")
 		messymoby.DockerCompose(ctx, DcTestDnArgs...)
+
+		By("creating a MACVLAN parent with a host-side shim MACVLAN")
+		parent := dummy.NewTransientUp()
+		macvlan.NewTransient(parent)
+		DeferCleanup(os.Unsetenv, "GHOSTWIRE_TEST_MACVLAN_PARENT")
+		Expect(os.Setenv("GHOSTWIRE_TEST_MACVLAN_PARENT", parent.Attrs().Name)).To(Succeed())
+
 		By("Bringing up the test harness")
 		messymoby.DockerCompose(ctx, DcTestUpArgs...)
 
@@ -78,6 +95,10 @@ var _ = Describe("docker network neighborhood services", Ordered, func() {
 			HaveField("Name", "neighborhood-service-a-2"),
 			HaveField("Name", "neighborhood-service-b-1"),
 			HaveField("Name", "neighborhood-service-c-1"),
+			HaveField("Name", "neighborhood-service-m-1"),
+			HaveField("Name", "neighborhood-service-n-1"),
+			HaveField("Name", "neighborhood-service-i-1"),
+			HaveField("Name", "neighborhood-service-h-1"),
 		))
 	})
 
@@ -129,6 +150,10 @@ var _ = Describe("docker network neighborhood services", Ordered, func() {
 		Entry("at service-c_1", toSucceed, "neighborhood-service-c-1", []string{
 			"ghostwire-test-net-a", "ghostwire-test-net-b",
 		}),
+		Entry("at service-m_1", toSucceed, "neighborhood-service-m-1", []string{
+			"ghostwire-test-net-m", "ghostwire-test-net-i",
+		}),
+		Entry("at host-networked service-h_1, ignoring host-side shim MACVLAN", toSucceed, "neighborhood-service-h-1", []string{}),
 	)
 
 	DescribeTable("discovers neighborhood services",
@@ -241,6 +266,46 @@ var _ = Describe("docker network neighborhood services", Ordered, func() {
 		}),
 		Entry("of service-z-1", toSucceed, "neighborhood-service-z-1", Services{
 			// nothing should be found when on the default network (docker0)
+		}),
+		Entry("of service-n-1", toSucceed, "neighborhood-service-n-1", Services{
+			{
+				Name: "service-m",
+				Servants: Containers{
+					&model.Container{Name: "neighborhood-service-m-1"},
+				},
+				NetworkLabels: []string{
+					"ghostwire-test-net-m",
+				},
+			},
+			{
+				Name: "service-n",
+				Servants: Containers{
+					&model.Container{Name: "neighborhood-service-n-1"},
+				},
+				NetworkLabels: []string{
+					"ghostwire-test-net-m",
+				},
+			},
+		}),
+		Entry("of service-i-1", toSucceed, "neighborhood-service-i-1", Services{
+			{
+				Name: "service-m",
+				Servants: Containers{
+					&model.Container{Name: "neighborhood-service-m-1"},
+				},
+				NetworkLabels: []string{
+					"ghostwire-test-net-i",
+				},
+			},
+			{
+				Name: "service-i",
+				Servants: Containers{
+					&model.Container{Name: "neighborhood-service-i-1"},
+				},
+				NetworkLabels: []string{
+					"ghostwire-test-net-i",
+				},
+			},
 		}),
 	)
 

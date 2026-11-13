@@ -19,14 +19,14 @@ func validate(openapispec *openapi3.T, schemaname string, jsondata []byte) error
 	if !ok {
 		return fmt.Errorf("invalid schema reference %q", schemaname)
 	}
-	var jsonobj interface{}
+	var jsonobj any
 	if err := json.Unmarshal(jsondata, &jsonobj); err != nil {
 		return err
 	}
 	return schemaref.Value.VisitJSON(jsonobj)
 }
 
-func jsnp(obj interface{}, expr string) interface{} {
+func jsnp(obj any, expr string) any {
 	xpr, err := jp.ParseString(expr)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "invalid JSONPATH expression: %s", expr)
 	r := xpr.Get(obj)
@@ -34,7 +34,7 @@ func jsnp(obj interface{}, expr string) interface{} {
 	return r[0]
 }
 
-func jsnpsl(obj interface{}, expr string) []interface{} {
+func jsnpsl(obj any, expr string) []any {
 	xpr, err := jp.ParseString(expr)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "invalid JSONPATH expression: %s", expr)
 	r := xpr.Get(obj)

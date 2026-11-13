@@ -8,20 +8,23 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"maps"
 	"net"
 	"strconv"
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
-	"github.com/siemens/turtlefinder/activator/podman"
+	"github.com/siemens/turtlefinder/v2"
+	"github.com/siemens/turtlefinder/v2/activator/podman"
+	"github.com/thediveo/cpus"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/engineclient/moby"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
-	"github.com/thediveo/whalewatcher/watcher/cri"
+	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
+	"github.com/thediveo/whalewatcher/v2/watcher/cri"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 var titler = cases.Title(language.Und)
@@ -173,11 +176,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					// label.
 					var cc = *c
 					c = &cc
-					label := model.Labels{}
-					for k, v := range c.Labels {
-						label[k] = v
-					}
-					c.Labels = label
+					c.Labels = maps.Clone(c.Labels)
 					c.Labels[privilegedContainerLabelName] = ""
 				}
 				typ := v1ContainerType(c.Type)
@@ -199,7 +198,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					TypeText: titler.String(typ),
 					Affinity: tenant.Process.Affinity,
 					Policy:   tenant.Process.Policy,
-					Priority: tenant.Process.Policy,
+					Priority: tenant.Process.Priority,
 					Nice:     tenant.Process.Nice,
 				})
 			} else {
@@ -223,7 +222,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 					TypeText: "Process",
 					Affinity: tenant.Process.Affinity,
 					Policy:   tenant.Process.Policy,
-					Priority: tenant.Process.Policy,
+					Priority: tenant.Process.Priority,
 					Nice:     tenant.Process.Nice,
 				})
 			}
@@ -233,6 +232,7 @@ func (n *networkNamespace) marshal(allnetns *networkNamespaces) ([]byte, error) 
 		// Ghostwire v1 emits a bind-mount "container" instead.
 		cntrs = append(cntrs, container{
 			ID:       "bmnt-" + strconv.FormatUint(n.ID().Ino, 10),
+			DNS:      dns{EtcHosts: []namedIP{}},
 			Type:     "bindmount",
 			TypeText: "Bind-mounted",
 			Name:     strings.Join(n.Ref(), ":"),
@@ -277,6 +277,8 @@ type containerGroup struct {
 	TypeText     string   `json:"type-text"`
 }
 
+// container represents a Ghostwire API v1 "container", which is either a
+// real container, a stand-alone process, or a bind-mounted network namespace.
 type container struct {
 	Cmdline  string        `json:"cmdline"`
 	DNS      dns           `json:"dns"`
@@ -293,7 +295,7 @@ type container struct {
 	Status   string        `json:"status"`
 	Type     string        `json:"type"`
 	TypeText string        `json:"type-text"`
-	Affinity model.CPUList `json:"affinity,omitempty"`
+	Affinity cpus.List     `json:"affinity,omitempty"`
 	Policy   int           `json:"policy,omitempty"`
 	// priority value is considered by the following schedulers:
 	//   - SCHED_FIFO: prio 1..99.
@@ -311,16 +313,21 @@ type container struct {
 	Nice int `json:"nice,omitempty"`
 }
 
+// dns represents the Ghostwire API v1 DNS configuration of a container,
+// including its /etc/hosts entries.
 type dns struct {
 	*network.DnsConfiguration
 	EtcHosts []namedIP `json:"etc-hosts"`
 }
 
+// namedIP represents a single /etc/hosts entry, mapping a host name to an IP
+// address.
 type namedIP struct {
 	Name string `json:"name"`
 	IP   net.IP `json:"address"`
 }
 
+// newDns returns the API v1 DNS configuration of the specified tenant.
 func newDns(t *network.Tenant) dns {
 	etchosts := make([]namedIP, 0, len(t.DNS.Hosts))
 	for name, ip := range t.DNS.Hosts {
@@ -335,6 +342,16 @@ func newDns(t *network.Tenant) dns {
 	}
 }
 
+// v1ContainerType returns the API v1 container type identifier for the
+// specified lxkns container type, or the type unchanged if there's no mapping.
+// It maps the domain-scoped lxkns container types to the plain v1 identifiers
+// as follows:
+//   - "docker.com" → "docker"
+//   - "containerd.io" → "containerd"
+//   - "podman.io" → "podman"
+//   - "cri-o.io" → "CRI"
+//
+// Any other type, such as "foo.example.org", is returned as is.
 func v1ContainerType(typ string) string {
 	if v1type, ok := containerTypesToV1[typ]; ok {
 		return v1type

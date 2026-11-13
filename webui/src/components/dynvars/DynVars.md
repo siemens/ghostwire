@@ -18,7 +18,7 @@ const FooBar = ({ text }) => {
 <>
   <FooBar text="default dynvars" />
   <DynVarsProvider value={{ foobar: "hooray!" }}>
-    <FooBar text="locally overriden dynvars" />
+    <FooBar text="locally overridden dynvars" />
   </DynVarsProvider>
 </>;
 ```

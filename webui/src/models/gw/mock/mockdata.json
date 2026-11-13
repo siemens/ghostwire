@@ -60,7 +60,9 @@
                         "nameservers": [
                             "127.0.0.53"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": [
                             "mockbox"
                         ]
@@ -128,10 +130,14 @@
                     "id": "nif-1",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -139,6 +145,10 @@
                         "ipv6": [],
                         "mac": "74:d4:35:13:53:b4"
                     },
+                    "altnames": [
+                        "enx74d4351353b4",
+                        "siemens.iedge.orig-ifname=eth1"
+                    ],
                     "id": "nif-2",
                     "index": 2,
                     "kind": "",
@@ -164,7 +174,13 @@
                             "index": 324,
                             "name": "vxtestlan"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "r8169",
+                        "version": "6.12.48",
+                        "fwversion": "rtl8168h-2_0.0.2 02/26/15",
+                        "businfo": "0000:03:00.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -198,7 +214,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -240,7 +260,12 @@
                             "index": 38,
                             "name": "veth8ae620b"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 },
                 {
                     "addresses": {
@@ -274,7 +299,11 @@
                         "peer-name": "eth1"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -308,7 +337,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -342,7 +375,11 @@
                         "peer-name": "eth1"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -412,7 +449,12 @@
                     "name": "wlx74da38d40a6f",
                     "operstate": "UP",
                     "physical": true,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "rtl8xxxu",
+                        "version": "6.12.48",
+                        "businfo": "1-2:1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -446,7 +488,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -518,7 +564,12 @@
                             "index": 322,
                             "name": "vethfdf7c1b"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 },
                 {
                     "addresses": {
@@ -565,7 +616,12 @@
                             "index": 307,
                             "name": "vetha2c8d7c"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 },
                 {
                     "addresses": {
@@ -599,7 +655,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -633,7 +693,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -667,7 +731,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -701,7 +769,11 @@
                         "peer-name": "eth1"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -735,7 +807,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -769,7 +845,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -803,7 +883,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -837,7 +921,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -871,7 +959,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -897,6 +989,10 @@
                             "low": 0
                         },
                         "vid": 12346
+                    },
+                    "driverinfo": {
+                        "driver": "vxlan",
+                        "version": "0.1"
                     }
                 },
                 {
@@ -962,7 +1058,12 @@
                             "index": 329,
                             "name": "vethd4477eb"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 },
                 {
                     "addresses": {
@@ -996,7 +1097,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -1030,7 +1135,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -1077,7 +1186,12 @@
                             "index": 269,
                             "name": "vethde6b5ff"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 },
                 {
                     "addresses": {
@@ -1119,7 +1233,12 @@
                             "index": 267,
                             "name": "vethfa09941"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 },
                 {
                     "addresses": {
@@ -1161,7 +1280,12 @@
                             "index": 259,
                             "name": "veth16d4586"
                         }
-                    ]
+                    ],
+                    "driverinfo": {
+                        "driver": "bridge",
+                        "version": "2.3",
+                        "fwversion": "N/A"
+                    }
                 }
             ],
             "routes": {
@@ -3224,6 +3348,10 @@
                         "state": "connected"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -3273,7 +3401,9 @@
                         "nameservers": [
                             "127.0.0.53"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": [
                             "mockbox"
                         ]
@@ -3322,10 +3452,14 @@
                     "id": "nif-46",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 }
             ],
             "routes": {
@@ -3401,6 +3535,10 @@
                 ]
             },
             "transport-ports": {
+                "ipv4": [],
+                "ipv6": []
+            },
+            "forwarded-ports": {
                 "ipv4": [],
                 "ipv6": []
             }
@@ -3452,7 +3590,9 @@
                         "nameservers": [
                             "127.0.0.53"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": [
                             "mockbox"
                         ]
@@ -3501,10 +3641,14 @@
                     "id": "nif-47",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 }
             ],
             "routes": {
@@ -3582,6 +3726,10 @@
             "transport-ports": {
                 "ipv4": [],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -3631,7 +3779,9 @@
                             "8.8.8.8",
                             "8.8.4.4"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "d6076fea5f33"
                     },
                     "id": "container-4",
@@ -3680,10 +3830,14 @@
                     "id": "nif-48",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -3712,7 +3866,11 @@
                         "peer-name": "veth8ae620b"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -3874,6 +4032,10 @@
                         "state": "listening"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -3922,7 +4084,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "2b7e06afb7fc"
                     },
                     "id": "container-5",
@@ -3969,10 +4133,14 @@
                     "id": "nif-49",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -4001,7 +4169,11 @@
                         "peer-name": "veth16d4586"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -4030,7 +4202,11 @@
                         "peer-name": "vethbccf9d0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -4276,6 +4452,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -4324,7 +4504,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "7064e0fcef7d"
                     },
                     "id": "container-6",
@@ -4371,10 +4553,14 @@
                     "id": "nif-50",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -4403,7 +4589,11 @@
                         "peer-name": "vethfa09941"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -4432,7 +4622,11 @@
                         "peer-name": "vethde6b5ff"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -4682,6 +4876,10 @@
                         "state": "listening"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -4731,7 +4929,9 @@
                         "nameservers": [
                             "127.0.0.53"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": [
                             "mockbox"
                         ]
@@ -4760,10 +4960,14 @@
                     "id": "nif-51",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "DOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 }
             ],
             "routes": {
@@ -4771,6 +4975,10 @@
                 "ipv6": []
             },
             "transport-ports": {
+                "ipv4": [],
+                "ipv6": []
+            },
+            "forwarded-ports": {
                 "ipv4": [],
                 "ipv6": []
             }
@@ -4821,7 +5029,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "26fe59837da8"
                     },
                     "id": "container-8",
@@ -4867,10 +5077,14 @@
                     "id": "nif-52",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -4899,7 +5113,10 @@
                     "name": "eth0",
                     "operstate": "LOWERLAYERDOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "macvlan"
+                    }
                 }
             ],
             "routes": {
@@ -5053,6 +5270,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -5101,7 +5322,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "dda0fd68edb5"
                     },
                     "id": "container-9",
@@ -5148,10 +5371,14 @@
                     "id": "nif-53",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -5180,7 +5407,11 @@
                         "peer-name": "veth420bc57"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -5334,6 +5565,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -5382,7 +5617,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "4ce837081f33"
                     },
                     "id": "container-10",
@@ -5428,10 +5665,14 @@
                     "id": "nif-54",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -5460,7 +5701,11 @@
                         "peer-name": "veth331ca5e"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -5614,6 +5859,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -5662,7 +5911,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "b3ab2c983fdb"
                     },
                     "id": "container-11",
@@ -5727,7 +5978,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "b3ab2c983fdb"
                     },
                     "id": "container-12",
@@ -5792,7 +6045,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "b3ab2c983fdb"
                     },
                     "id": "container-13",
@@ -5857,7 +6112,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "b3ab2c983fdb"
                     },
                     "id": "container-14",
@@ -5903,10 +6160,14 @@
                     "id": "nif-55",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -5935,7 +6196,11 @@
                         "peer-name": "vethd82a8e0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -6089,6 +6354,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -6137,7 +6406,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "b4fc2e957471"
                     },
                     "id": "container-15",
@@ -6183,10 +6454,14 @@
                     "id": "nif-56",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -6215,7 +6490,11 @@
                         "peer-name": "veth5b738c9"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -6369,6 +6648,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -6417,7 +6700,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "e2cf34a5ddcb"
                     },
                     "id": "container-16",
@@ -6463,10 +6748,14 @@
                     "id": "nif-57",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -6495,7 +6784,11 @@
                         "peer-name": "vethf755d46"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -6521,6 +6814,10 @@
                             "low": 0
                         },
                         "vid": 12345
+                    },
+                    "driverinfo": {
+                        "driver": "vxlan",
+                        "version": "0.1"
                     }
                 }
             ],
@@ -6675,6 +6972,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -6723,7 +7024,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "8273d7af5750"
                     },
                     "id": "container-17",
@@ -6769,10 +7072,14 @@
                     "id": "nif-58",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -6801,7 +7108,11 @@
                         "peer-name": "veth3892215"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -6955,6 +7266,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -7003,7 +7318,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "d67e33b1ef7e"
                     },
                     "id": "container-18",
@@ -7049,10 +7366,14 @@
                     "id": "nif-59",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -7081,7 +7402,11 @@
                         "peer-name": "vetha2c8d7c"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -7110,7 +7435,11 @@
                         "peer-name": "veth911ea5d"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -7308,6 +7637,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -7356,7 +7689,9 @@
                         "nameservers": [
                             "127.0.0.11"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "a930d872db80"
                     },
                     "id": "container-19",
@@ -7402,10 +7737,14 @@
                     "id": "nif-60",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -7434,7 +7773,11 @@
                         "peer-name": "vethfdf7c1b"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -7588,6 +7931,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -7659,7 +8006,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-worker"
                     },
                     "id": "container-20",
@@ -7688,7 +8037,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-worker"
                     },
                     "group": "containergroup-1",
@@ -7726,7 +8077,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-worker"
                     },
                     "group": "containergroup-2",
@@ -7795,7 +8148,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-worker"
                     },
                     "group": "containergroup-1",
@@ -7862,7 +8217,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-worker"
                     },
                     "group": "containergroup-2",
@@ -7921,10 +8278,14 @@
                     "id": "nif-61",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -7953,7 +8314,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -8001,7 +8366,11 @@
                         "peer-name": "veth9870018"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -8621,6 +8990,10 @@
                         "state": "connected"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -8732,7 +9105,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "id": "container-25",
@@ -8794,7 +9169,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-3",
@@ -8861,7 +9238,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-4",
@@ -8928,7 +9307,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-5",
@@ -8962,7 +9343,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-6",
@@ -8997,7 +9380,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-4",
@@ -9032,7 +9417,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-3",
@@ -9100,7 +9487,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-7",
@@ -9134,7 +9523,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-8",
@@ -9202,7 +9593,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-6",
@@ -9269,7 +9662,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-8",
@@ -9303,7 +9698,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-7",
@@ -9341,7 +9738,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "kindlymock-control-plane"
                     },
                     "group": "containergroup-5",
@@ -9404,10 +9803,14 @@
                     "id": "nif-64",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -9436,7 +9839,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -9465,7 +9872,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -9494,7 +9905,11 @@
                         "peer-name": "eth0"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 },
                 {
                     "addresses": {
@@ -9542,7 +9957,11 @@
                         "peer-name": "vethd4477eb"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -14232,6 +14651,10 @@
                         "state": "connected"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -14293,7 +14716,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "coredns-f9fd979d6-bz2tc"
                     },
                     "group": "containergroup-9",
@@ -14327,7 +14752,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "coredns-f9fd979d6-bz2tc"
                     },
                     "group": "containergroup-9",
@@ -14384,10 +14811,14 @@
                     "id": "nif-71",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -14426,7 +14857,11 @@
                         "peer-name": "vethfad43124"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -14842,6 +15277,10 @@
                         "state": "listening"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -14868,7 +15307,9 @@
                         "nameservers": [
                             "10.96.0.10"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "local-path-provisioner-78776bfc44-7jcvx"
                     },
                     "group": "containergroup-10",
@@ -14934,7 +15375,9 @@
                         "nameservers": [
                             "10.96.0.10"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "local-path-provisioner-78776bfc44-7jcvx"
                     },
                     "group": "containergroup-10",
@@ -14990,10 +15433,14 @@
                     "id": "nif-72",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -15032,7 +15479,11 @@
                         "peer-name": "vethff777a13"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -15222,6 +15673,10 @@
                     }
                 ],
                 "ipv6": []
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -15283,7 +15738,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "coredns-f9fd979d6-jk2s8"
                     },
                     "group": "containergroup-11",
@@ -15317,7 +15774,9 @@
                             "2001:4860:4860::8888",
                             "2001:4860:4860::8844"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "coredns-f9fd979d6-jk2s8"
                     },
                     "group": "containergroup-11",
@@ -15374,10 +15833,14 @@
                     "id": "nif-73",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -15416,7 +15879,11 @@
                         "peer-name": "vethb039e8fc"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -15832,6 +16299,10 @@
                         "state": "listening"
                     }
                 ]
+            },
+            "forwarded-ports": {
+                "ipv4": [],
+                "ipv6": []
             }
         },
         {
@@ -15858,7 +16329,9 @@
                         "nameservers": [
                             "10.96.0.10"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "busybox"
                     },
                     "group": "containergroup-12",
@@ -15923,7 +16396,9 @@
                         "nameservers": [
                             "10.96.0.10"
                         ],
-                        "searchlist": "mock.example.org",
+                        "searchlist": [
+                            "mock.example.org"
+                        ],
                         "uts-hostname": "busybox"
                     },
                     "group": "containergroup-12",
@@ -15979,10 +16454,14 @@
                     "id": "nif-74",
                     "index": 1,
                     "kind": "",
+                    "loopback": true,
                     "name": "lo",
                     "operstate": "UNKNOWN",
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": ""
+                    }
                 },
                 {
                     "addresses": {
@@ -16021,7 +16500,11 @@
                         "peer-name": "vethfbb3f523"
                     },
                     "physical": false,
-                    "promisc": false
+                    "promisc": false,
+                    "driverinfo": {
+                        "driver": "veth",
+                        "version": "1.0"
+                    }
                 }
             ],
             "routes": {
@@ -16187,6 +16670,10 @@
                 ]
             },
             "transport-ports": {
+                "ipv4": [],
+                "ipv6": []
+            },
+            "forwarded-ports": {
                 "ipv4": [],
                 "ipv6": []
             }

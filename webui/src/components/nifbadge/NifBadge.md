@@ -41,7 +41,7 @@ let nifs = [
 
 ### Physical Network Interface
 
-"Physical" network interfaces are designed by a "NIC" icon preceeding the badge.
+"Physical" network interfaces are designated by a "NIC" icon preceding the badge.
 
 ```tsx
 import { Box } from "@mui/material";

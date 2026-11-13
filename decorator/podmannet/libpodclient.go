@@ -118,7 +118,7 @@ func ensureReaderClosed(resp *http.Response) {
 		return
 	}
 	_, _ = io.CopyN(io.Discard, resp.Body, 512)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 // ping the /_ping API endpoint (which is unversioned) and return the value of

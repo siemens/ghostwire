@@ -51,13 +51,15 @@ export const Discovery = () => {
             setDiscoveryRefreshing(true)
         }
         localStorage.setItem(refreshIntervalKey, JSON.stringify(interval))
-    }, [interval])
+    }, [interval, setDiscoveryRefreshing])
 
     useEffect(
         () => {
-            discoveryError && enqueueSnackbar(discoveryError, { variant: 'error' })
+            if (discoveryError) {
+                enqueueSnackbar(discoveryError, { variant: 'error' })
+            }
         },
-        [discoveryError])
+        [discoveryError, enqueueSnackbar])
 
     // Do not render anything.
     return null

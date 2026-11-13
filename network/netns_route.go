@@ -23,7 +23,7 @@ type Route struct {
 	Nif                  Interface
 	Table                int
 	Priority             int
-	Preference           uint8 // TODO: support from vishvananda/netlink missing
+	Preference           uint8 // TODO: missing RTA_PREF support in upstream vishvananda/netlink missing
 }
 
 // RouteType represents the type of route and allows converting it to a string,
@@ -97,7 +97,9 @@ func (n *NetworkNamespace) discoverRoutes(nlh *netlink.Handle, family int) []Rou
 			Nif:                  n.Nifs[route.LinkIndex], // also works for blackhole routes, etc., giving nil.
 			Table:                route.Table,
 			Priority:             route.Priority,
-			// default to ICMPV6_ROUTER_PREF_MEDIUM for the moment; TODO: support from vishvananda/netlink
+			// default to ICMPV6_ROUTER_PREF_MEDIUM for the moment
+			//
+			// TODO: missing support for RTA_PREF in upstream vishvananda/netlink
 			Preference: 0,
 		}
 		routes = append(routes, r)

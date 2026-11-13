@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
-
 import { dockerdefaultcaps } from 'utils/capabilities'
 import { styled } from '@mui/material';
 

@@ -6,21 +6,23 @@ package v1
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	gostwire "github.com/siemens/ghostwire/v2"
-	"github.com/siemens/ghostwire/v2/decorator/ieappicon"
-	"github.com/siemens/ghostwire/v2/test/nerdctl"
-	"github.com/siemens/ghostwire/v2/util"
-	"github.com/siemens/turtlefinder"
+	"github.com/siemens/turtlefinder/v2"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/decorator"
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
+
+	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/decorator/ieappicon"
+	"github.com/siemens/ghostwire/v2/test/nerdctl"
+	"github.com/siemens/ghostwire/v2/util"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -111,6 +113,11 @@ var _ = BeforeSuite(func(ctx context.Context) {
 	if os.Getuid() != 0 {
 		return
 	}
+
+	DeferCleanup(slog.SetDefault, slog.Default())
+	slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})))
 
 	By("loading the v1 specification")
 	var err error

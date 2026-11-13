@@ -1,13 +1,14 @@
 /*
 Package podmannet implements a Gostwire decorator that discovers podman (v4+)
 managed networks and then decorates their corresponding Linux-kernel network
-interfaces. Supported types of podman networks are “bridge” and “macvlan”.
+interfaces. Supported types of podman networks are “bridge”, “macvlan”, and
+“ipvlan”.
 
 In case of “bridge” networks this decorator assigns network names as alias names
 to the corresponding Linux-kernel bridges and also as a Gostwire-specific label.
 
-For “MACVLAN” networks this decorator assigns the network names as alias names
-to the “parent” network interface (or “master” in Linux parlance).
+For “MACVLAN” and “IPVLAN” networks this decorator assigns the network names as
+alias names to the “parent” network interface (or “master” in Linux parlance).
 
 This decorator also copies any network labels it finds into the corresponding
 network.Interface instances in a Gostwire discovery information model.

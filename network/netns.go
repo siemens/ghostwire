@@ -5,21 +5,30 @@
 package network
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"log/slog"
+	"maps"
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 
-	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/lxkns/discover"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/ops"
 	"github.com/thediveo/lxkns/ops/mountineer"
 	"github.com/thediveo/lxkns/species"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/innetns"
 )
 
 // NetworkNamespaces maps all NetworkNamespace objects known to us.
@@ -76,11 +85,12 @@ func NewNetworkNamespace(netns model.Namespace, tenantProcs []*model.Process) *N
 	// Get an RTNETLINK socket wired up to this particular network namespace.
 	nlh, err := nns.OpenNetlink()
 	if err != nil {
-		log.Warnf("cannot discover inside net:[%d], reason: %s",
-			netns.ID().Ino, err.Error())
+		slog.Warn("cannot discover inside network namespace",
+			slog.Uint64("netns", netns.ID().Ino),
+			xslog.Error(err))
 		return nil
 	}
-	defer nlh.Close()
+	defer func() { _ = nlh.Close() }()
 	// Discover the network interfaces in this network namespace, together with
 	// the addresses assigned to these network interfaces.
 	nns.discoverNetworkInterfaces(nlh)
@@ -117,9 +127,9 @@ func (n *NetworkNamespace) DisplayName() string {
 	var name string
 	proc := tenants[0].Process
 	if c := proc.Container; c != nil {
-		name = fmt.Sprintf("📦 %s ◉ %.8s…", c.Name, c.Engine.ID)
+		name = fmt.Sprintf("%s (%.8s)…", c.Name, c.Engine.ID)
 	} else {
-		name = fmt.Sprintf("⚙️  %s(%d)", proc.Name, proc.PID)
+		name = fmt.Sprintf("%s(%d)", proc.Name, proc.PID)
 	}
 	if len(tenants) > 1 {
 		return name + ", …"
@@ -161,16 +171,25 @@ func (n *NetworkNamespace) related(nsid NSID) *NetworkNamespace {
 // interfaces carrying their traffic. And it notifies about IPv6 sockets
 // handling IPv4 traffic.
 func (n *NetworkNamespace) discoverTransportPorts(sm socketToProcessMap, allprocs model.ProcessTable) {
-	// Without any attached processes, we don't have any /proc/[...]/net/xxx to
-	// read the socket information for this network namespace from.
-	//
-	// FIXME: use mountineer, as other processes might have open fds, yet not
-	// attached to this network namespace.
-	if n.Ealdorman() == nil {
+	// /proc/thread-self/net shows the calling thread's netns, which innetns.Run
+	// switches to, so we don't need any process attached to this netns.
+	type afProto struct{ af, proto int }
+	sockets := map[afProto][]ProcessSocket{}
+	if err := innetns.Run(n, func() error {
+		for _, proto := range []int{syscall.IPPROTO_TCP, syscall.IPPROTO_UDP} {
+			for _, af := range []int{unix.AF_INET, unix.AF_INET6} {
+				sockets[afProto{af, proto}] = discoverSockets("/proc/thread-self/net", af, proto, sm)
+			}
+		}
+		return nil
+	}); err != nil {
+		slog.LogAttrs(context.Background(), netnsErrLevel(err), "cannot discover transport ports",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
-	// Now discover and process TCP und UDP sockets, for both IPv4 and IPv6.
-	// Note our special handling of IPv6 sockets covering IPv4 traffic...
+	// Now process TCP und UDP sockets, for both IPv4 and IPv6. Note our special
+	// handling of IPv6 sockets covering IPv4 traffic...
 	addrToNifs := n.newAddrToNifMap()
 	for _, proto := range []int{syscall.IPPROTO_TCP, syscall.IPPROTO_UDP} {
 		// v4Ports indicates the IPv4 addresses we've seen for this protocol, so
@@ -179,7 +198,7 @@ func (n *NetworkNamespace) discoverTransportPorts(sm socketToProcessMap, allproc
 		// and the IPv6 socket would also include the IPv4 mapped address range.
 		v4Ports := map[comparableAddressPort]struct{}{}
 		for _, af := range []int{unix.AF_INET, unix.AF_INET6} {
-			ports := discoverSockets("/proc", n.Ealdorman().PID, af, proto, sm)
+			ports := sockets[afProto{af, proto}]
 			for idx, port := range ports {
 				procs := allprocs.ProcessesByPIDs(port.PIDs...)
 				ports[idx].Processes = procs
@@ -306,13 +325,15 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 	// single network namespace. Ouch.
 	nlh, err := n.OpenNetlink()
 	if err != nil {
-		log.Errorf("cannot discover NSIDs: %s", err.Error())
+		slog.LogAttrs(context.Background(), netnsErrLevel(err), "cannot discover NSIDs",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
-	defer nlh.Close()
+	defer func() { _ = nlh.Close() }()
 	for _, peerNetns := range allnetns {
-		if peerNetns == n.Namespace {
-			continue
+		if peerNetns == n {
+			continue // don't try to ask for an nsid to yourself
 		}
 		ref := peerNetns.Ref()
 		if len(ref) == 0 {
@@ -327,6 +348,7 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 			}
 			netnspath, err = mntneer.Resolve(netnspath)
 			if err != nil {
+				mntneer.Close()
 				continue
 			}
 		}
@@ -335,20 +357,33 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 			mntneer.Close()
 		}
 		if err != nil {
-			log.Errorf("cannot access peer netns %s", ref)
+			slog.Error("cannot access peer netns",
+				slog.String("ref", ref.String()),
+				xslog.Error(err))
 			continue
 		}
 		nsid, err := nlh.GetNetNsIdByFd(netnsfd)
+		closer()
 		if err != nil {
-			log.Errorf("cannot determine NSID of peer netns %s, error: %s", ref, err.Error())
+			slog.Error("cannot determine NSID of peer netns",
+				slog.String("ref", ref.String()),
+				xslog.Error(err))
 			continue
 		}
-		closer()
 		if NSID(nsid) == NSID_NONE {
+			// slog.Debug("no nsid mapping", slog.Uint64("peer.netns", peerNetns.ID().Ino))
 			continue
 		}
 		n.peerNetns[NSID(nsid)] = peerNetns
-		log.Debugf("net:[%d] NSID %d ↦ net:[%d] %s", n.ID().Ino, nsid, peerNetns.ID().Ino, peerNetns.DisplayName())
+		slog.Debug("nsid mapping",
+			slog.Group("self",
+				slog.Uint64("netns", n.ID().Ino),
+				slog.Uint64("nsid", uint64(nsid)),
+			),
+			slog.Group("peer",
+				slog.Uint64("netns", peerNetns.ID().Ino),
+				slog.String("tenant", peerNetns.DisplayName()),
+			))
 	}
 }
 
@@ -358,14 +393,14 @@ func (n *NetworkNamespace) discoverNSIDs(allnetns NetworkNamespaces) {
 // guaranteed to be an invalid fd, whereas 0 most probably is valid.
 func (n *NetworkNamespace) OpenEthtool() (fd int, err error) {
 	fd = -1
-	if err := n.OpenInNetworkNamespace(func() error {
+	if err := innetns.Run(n, func() error {
 		var err error
 		fd, err = unix.Socket(unix.AF_INET, unix.SOCK_DGRAM, unix.IPPROTO_IP)
 		return err
 	}); err != nil {
 		// Note: this cannot be placed inside the function passed to
-		// OpenInNetworkNamespace, because we here must deal with the situation
-		// where switching back the namespace failed and in this case properly
+		// innetns.Run, because we here must deal with the situation where
+		// switching back the namespace failed and in this case properly
 		// dispose of the socket fd now connected to the wrong network
 		// namespace.
 		if fd >= 0 {
@@ -378,17 +413,17 @@ func (n *NetworkNamespace) OpenEthtool() (fd int, err error) {
 
 // OpenNetlink returns a netlink (route) handle for netlink queries and
 // operations on this network namespace. The caller is responsible for releasing
-// the resources associated with the returned netlink handle by calling
-// Delete(!) on it when not needed anymore.
+// the resources associated with the returned netlink handle by calling Close on
+// it when not needed anymore.
 func (n *NetworkNamespace) OpenNetlink() (*netlink.Handle, error) {
 	var nlHandle *netlink.Handle
-	if err := n.OpenInNetworkNamespace(func() error {
+	if err := innetns.Run(n, func() error {
 		var err error
 		nlHandle, err = netlink.NewHandle(unix.NETLINK_ROUTE)
 		return err
 	}); err != nil {
 		if nlHandle != nil {
-			nlHandle.Close() // safety net
+			_ = nlHandle.Close() // safety net
 		}
 		return nil, err
 	}
@@ -397,59 +432,20 @@ func (n *NetworkNamespace) OpenNetlink() (*netlink.Handle, error) {
 
 // OpenInNetworkNamespace calls the supplied opener function in the context of
 // this network namespace.
+//
+// Deprecated: use [innetns.Run] instead.
 func (n *NetworkNamespace) OpenInNetworkNamespace(opener func() error) error {
-	ref := n.Namespace.Ref()
-	if len(ref) == 0 {
-		return fmt.Errorf("invalid empty netns reference")
-	}
-	// Do we have a single network namespace path or are there multiple paths,
-	// where the last path references a bind-mounted network namespace in some
-	// mount namespace?
-	netnspath := ref[len(ref)-1]
-	if len(ref) > 1 {
-		mntneer, err := mountineer.New(ref[:len(ref)-1], nil)
-		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %s", ref.String(), err.Error())
-		}
-		// we need to keep the mount namespace open only until we've got the
-		// netlink handle, that is, until the end of this method.
-		defer mntneer.Close()
-		netnspath, err = mntneer.Resolve(netnspath)
-		if err != nil {
-			return fmt.Errorf("invalid netns reference %s: %s", ref.String(), err.Error())
-		}
-	}
-	// Shortcut route in case it's our own network namespace for those running
-	// the Gostwire discovery engine without sufficient capabilities, so trying
-	// to switch into our own current network namespace would otherwise fail.
-	// This of course begs the question, why would we do to switch into the same
-	// network namespace anyway? Because.
-	targetnetnsid, targeterr := ops.NamespacePath(netnspath).ID()
-	if gwnetnserr == nil && targeterr == nil && gwnetnsid == targetnetnsid {
-		return opener()
-	}
-	// Normal route where we need to temporarily switch into the target network
-	// namespace in order to open a file descriptor in that context.
-	var openerErr error
-	visitErr := ops.Visit(func() {
-		openerErr = opener()
-	}, ops.NamespacePath(netnspath))
-	if visitErr != nil {
-		return visitErr
-	}
-	return openerErr
+	return innetns.Run(n, opener)
 }
 
-var (
-	gwnetnsid  species.NamespaceID // our own network namespace ID when starting.
-	gwnetnserr error               // there should not be any, except for a botched procfs.
-)
-
-// Fetch the ID of network namespace we (=main Go routine) are running in for
-// once and all. All Go routines normally run attached to this network
-// namespace, except for short and carefully locked "critical" sections.
-func init() {
-	gwnetnsid, gwnetnserr = ops.NamespacePath("/proc/self/ns/net").ID()
+// netnsErrLevel returns the log level for a failure to work in a network
+// namespace: only a warning for invalid references, as network namespaces
+// can legitimately vanish during discovery, otherwise an error.
+func netnsErrLevel(err error) slog.Level {
+	if errors.Is(err, innetns.ErrInvalidReference) {
+		return slog.LevelWarn
+	}
+	return slog.LevelError
 }
 
 // discoverNetworkInterfaces discovers the network interfaces in this network
@@ -457,13 +453,16 @@ func init() {
 func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 	links, err := nlh.LinkList()
 	if err != nil {
+		slog.Error("cannot list network interfaces",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
 	// We only open the ethtool API socket on demand when we find actual
 	// physical network interfaces. This way, we don't need to switch network
 	// namespaces and open the socket for containers without any physical
 	// (SR-IOV VF) network interface(s) present.
-	physNifsPresent := false
+	ethtoolOpenAttempted := false
 	ethtoolFd := -1 // optional AF_INET+SOCK_DGRAM+IPPROTO_IP socket, opened on the fly
 	for _, link := range links {
 		nif := NewInterface(nlh, n, link)
@@ -473,17 +472,47 @@ func (n *NetworkNamespace) discoverNetworkInterfaces(nlh *netlink.Handle) {
 		if !nif.Nif().Physical {
 			continue
 		}
-		// It's a physical network interface and if we haven't done so already,
-		// we now open the ethtool API in this network namespace.
-		if !physNifsPresent {
+		// It's a physical network interface and if we haven't tried so
+		// already, we now open the ethtool API in this network namespace.
+		if !ethtoolOpenAttempted {
+			ethtoolOpenAttempted = true
 			var err error
-			if ethtoolFd, err = n.OpenEthtool(); err == nil { // TODO: improve error handling
-				physNifsPresent = true
-				defer unix.Close(ethtoolFd)
+			if ethtoolFd, err = n.OpenEthtool(); err != nil {
+				slog.LogAttrs(context.Background(), netnsErrLevel(err),
+					"cannot open ethtool API, skipping bus address discovery",
+					slog.Uint64("netns", n.ID().Ino),
+					xslog.Error(err))
+			} else {
+				defer func() { _ = unix.Close(ethtoolFd) }()
 			}
 		}
-		nif.Nif().discoverBusAddress(ethtoolFd)
+		if ethtoolFd >= 0 {
+			nif.Nif().discoverBusAddress(ethtoolFd)
+		}
 	}
+}
+
+// NetworkNamespacesOption configures [NewNetworkNamespaces].
+type NetworkNamespacesOption func(*networkNamespacesOptions)
+
+type networkNamespacesOptions struct {
+	sockprocs discover.SocketProcesses
+	tuntaps   *TapTunProcessors
+}
+
+// WithSocketProcesses passes the socket-to-processes map from the same lxkns
+// discovery, using its [discover.WithSocketProcesses] option. Otherwise,
+// [NewNetworkNamespaces] scans the open fds of all processes on its own.
+func WithSocketProcesses(sockprocs discover.SocketProcesses) NetworkNamespacesOption {
+	return func(o *networkNamespacesOptions) { o.sockprocs = sockprocs }
+}
+
+// WithTapTunProcessors passes the processes serving TAP/TUN network interfaces
+// collected during the same lxkns discovery, using [discover.WithFdCallback]
+// with [TapTunProcessors.Visit]. Otherwise, [NewNetworkNamespaces] scans the
+// open fds of all processes on its own when there are TAP/TUN interfaces.
+func WithTapTunProcessors(tuntaps *TapTunProcessors) NetworkNamespacesOption {
+	return func(o *networkNamespacesOptions) { o.tuntaps = tuntaps }
 }
 
 // NewNetworkNamespaces takes a set of discovered network namespaces and creates
@@ -493,7 +522,18 @@ func NewNetworkNamespaces(
 	allnetns model.NamespaceMap,
 	allprocs model.ProcessTable,
 	containers model.Containers,
+	opts ...NetworkNamespacesOption,
 ) NetworkNamespaces {
+	var o networkNamespacesOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	if o.sockprocs == nil {
+		o.sockprocs = discover.Namespaces(
+			discover.WithNamespaceTypes(species.CLONE_NEWNET),
+			discover.WithSocketProcesses(),
+		).SocketProcessMap
+	}
 	// In order to later figure out the tenants of a network namespace, we need
 	// not only to take network namespace leader processes into account but also
 	// container processes, as containers can perfectly share network namespaces
@@ -508,23 +548,38 @@ func NewNetworkNamespaces(
 			netspaces[netnsid] = netwns
 		}
 	}
-	soxProcsMap := discoverAllSockInodes("/proc")
+	soxProcsMap := socketToProcessMap(o.sockprocs)
 	for nsid, netns := range netspaces {
-		log.Debugf("discovering details of net:[%d]...", nsid.Ino)
+		slog.Debug("discovering netns details",
+			slog.Uint64("netns", nsid.Ino),
+			xslog.Lazy("tenant", func() string { return netns.DisplayName() }))
 		netns.discoverNSIDs(netspaces)
 		netns.discoverTransportPorts(soxProcsMap, allprocs)
 		netns.discoverForwardedPorts()
-		log.Debugfn(func() string {
-			nifNames := make([]string, 0, len(netns.Nifs))
-			for _, nif := range netns.Nifs {
-				name := nif.Nif().Name
-				if alias := nif.Nif().Alias; alias != "" {
-					name += fmt.Sprintf("(~%s)", alias)
+
+		slog.Debug("network interfaces",
+			slog.Uint64("netns", nsid.Ino),
+			xslog.Lazy("interfaces", func() string {
+				var names strings.Builder
+				first := true
+				for _, nifIndex := range slices.Sorted(maps.Keys(netns.Nifs)) {
+					if !first {
+						names.WriteRune(',')
+					}
+					first = false
+					nif := netns.Nifs[nifIndex]
+					names.WriteString(nif.Nif().Name)
+					if alias := nif.Nif().Alias; alias != "" {
+						names.WriteString("(~")
+						names.WriteString(alias)
+						names.WriteRune(')')
+					}
+					names.WriteRune('(')
+					names.WriteString(strconv.FormatInt(int64(nif.Nif().Index), 10))
+					names.WriteRune(')')
 				}
-				nifNames = append(nifNames, name)
-			}
-			return "found nifs: " + strings.Join(nifNames, ", ")
-		})
+				return names.String()
+			}))
 	}
 	// Resolve the network interfaces topology, except for SR-IOV PFs/VFs. In
 	// the case of SR-IOV we first only build a map of the discovered PFs and
@@ -540,7 +595,7 @@ func NewNetworkNamespaces(
 	// information.
 	resolveSRIOVTopology(netspaces)
 	// Discover the processes serving TAP/TUN devices, if any.
-	resolveTapTunProcessors(netspaces, allprocs)
+	resolveTapTunProcessors(netspaces, allprocs, o.tuntaps)
 	// Complete the forwarded port information based on our almost complete view
 	// now. This needs to be late(r) in the game.
 	completeForwardedPortInformation(netspaces)
@@ -607,9 +662,16 @@ func resolveSRIOVTopology(netspaces NetworkNamespaces) {
 			}
 			nif.Nif().PF = pfnif
 			pfnif.Nif().Slaves = append(pfnif.Nif().Slaves, nif.Interface())
-			log.Debugf("PF %s net:[%d] ↔ VF %s net:[%d]",
-				pfnif.Nif().Name, pfnif.Nif().Netns.ID().Ino,
-				nif.Nif().Name, nif.Nif().Netns.ID().Ino)
+			slog.Debug("discovered pf-vf mapping",
+				slog.Group("pf",
+					slog.String("interface", pfnif.Nif().Name),
+					slog.Uint64("netns", pfnif.Nif().Netns.ID().Ino),
+				),
+				slog.Group("vf",
+					slog.String("interface", nif.Nif().Name),
+					slog.Uint64("netns", nif.Nif().Netns.ID().Ino),
+				))
+
 			continue
 		}
 		// Is this a PF? Then it has to have some PF-specific device nodes with

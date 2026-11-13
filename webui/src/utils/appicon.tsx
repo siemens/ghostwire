@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { SvgIcon } from '@mui/material'
-import { Container, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
-import React from 'react'
+import { SvgIcon, type SvgIconProps } from '@mui/material'
+import { type Container, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
 
 /**
  * Returns the IE app icon for the container if it is an IE app container as
@@ -15,6 +14,6 @@ import React from 'react'
 export const IEAppProjectIcon = (containee: Container) => {
     const iconData = containee.labels[GHOSTWIRE_LABEL_ROOT+'icon']
     return iconData
-        ? (props) => <SvgIcon {...props}><image href={iconData} width="24px" height="24px" /></SvgIcon>
+        ? (props: SvgIconProps) => <SvgIcon {...props}><image href={iconData} width="24px" height="24px" /></SvgIcon>
         : null
 }

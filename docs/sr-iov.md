@@ -1,6 +1,6 @@
 # SR-IOV
 
-Gostwire discovers the topology of
+Ghostwire discovers the topology of
 [SR-IOV](https://en.wikipedia.org/wiki/Single-root_input/output_virtualization)
 physical functions ("PF") and virtual functions ("VF"). In SR-IOV, both PFs and
 VFs are _physical_ PCI(e) network devices – they all appear as PCI(e) bus

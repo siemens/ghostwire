@@ -10,13 +10,14 @@ import (
 
 	"github.com/google/nftables/expr"
 	"github.com/google/nftables/xt"
-	"github.com/siemens/ghostwire/v2/network/portfwd"
-	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/nufftables"
 	"github.com/thediveo/nufftables/dsl"
 	"github.com/thediveo/nufftables/portfinder"
 	"golang.org/x/sys/unix"
+
+	"github.com/siemens/ghostwire/v2/network/portfwd"
+	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 )
 
 const (
@@ -156,16 +157,6 @@ func getComment(match *expr.Match) (string, bool) {
 		return "", false
 	}
 	return string(*info), true
-}
-
-// getPort returns the port number from a Cmp expression; otherwise, returns
-// false.
-func getPort(cmp *expr.Cmp) (uint16, bool) {
-	if len(cmp.Data) != 2 {
-		return 0, false
-	}
-	// network order
-	return uint16(cmp.Data[0])<<8 + uint16(cmp.Data[1]), true
 }
 
 // getJumpVerdictServiceChain returns the chain name for a service as given in a

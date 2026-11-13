@@ -14,7 +14,7 @@ classifiers.
 > [!ATTENTION] In case a MACVLAN master interface or VETH peer interface has –
 > by sheer coincidence – the same index number as the index of the MACVLAN or
 > VETH interface itself, then rtnetlink **will drop the `IFLA_LINK` attribute**.
-> Gostwire thus needs to handle this special case and regenerate the index
+> Ghostwire thus needs to handle this special case and regenerate the index
 > number for the MACVLAN or VETH interface itself. _Bummer_.
 
 ## Network Indices

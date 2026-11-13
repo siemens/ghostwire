@@ -49,7 +49,12 @@ communication details, but without any graphical wiring. Instead, network
 interfaces related to other network interfaces will show these "relatives" next
 to them.
 
-<Box m={2}>
+Like the wiring view, the details view honors the containee filter from the
+navigation drawer: only the IP stacks with matching containees or composer
+projects are shown. See the [navigation drawer help](/help/drawer) for the
+exact matching rules.
+
+<Box sx={{ m: 2 }}>
   <NetnsDetailCard netns={morbidNetns} />
 </Box>
 
@@ -64,7 +69,7 @@ a busy Linux host.
 
 ##### Section "Containees"
 
-Lists one or more ["containees"](containees) using this (virtual) IP stack,
+Lists one or more ["containees"](/help/containees) using this (virtual) IP stack,
 among other things details about:
 
 - DNS configuration information read from a container's `/etc/hostname` (*as
@@ -98,7 +103,8 @@ among other things details about:
 ##### Section "Neighborhood Services"
 
 This section appears only when a Docker container is attached to at least one
-non-default ("custom") bridge network. Otherwise, this section is hidden.
+non-default ("custom") bridge, MACVLAN, or IPVLAN network. Otherwise, this
+section is hidden.
 
 Docker provides purely host-internal DNS names of services and their containers
 that are addressable from at least one of the Docker user-defined networks the

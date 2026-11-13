@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { atom, useAtom, Setter } from 'jotai'
+import { atom, useAtom, type Setter } from 'jotai'
 
-import { Discovery as DiscoveryResult, fromjson } from 'models/gw'
+import { type Discovery as DiscoveryResult, fromjson } from 'models/gw'
 import { showIEAppIconsAtom } from 'views/settings'
 
 /** Internal discovery result state; can be used only via useDiscovery(). */
@@ -20,13 +20,15 @@ export const discoveryErrorAtom = atom("")
 
 export const refreshIntervalKey = "gw.refresh.interval"
 
+// Unless users opt into automatic refreshing, they stay in control of when
+// discoveries (and thus host load) happen, so the default interval is null.
 const initialRefreshInterval = (() => {
     try {
         const interval = JSON.parse(localStorage.getItem(refreshIntervalKey) || 'null');
         if (interval === null || (Number.isInteger(interval) && interval > 500)) {
             return interval
         }
-    } catch (e) { /* empty */ }
+    } catch { /* empty */ }
     return 5000;
 })()
 
@@ -80,17 +82,15 @@ const fetchDiscoveryData = (set: Setter, query: string) => {
             // we've converted the result into our internal representation and
             // just right before we set the result.
 
-            // fetch() doesn't throw an error for non-2xx reponse status codes, so
+            // fetch() doesn't throw an error for non-2xx response status codes, so
             // we throw up here instead, so we can catch below later in the promise
             // chain.
             if (!httpresult.ok) {
                 throw Error(httpresult.status + " " + httpresult.statusText)
             }
-            try {
-                return httpresult.json()
-            } catch (e) {
-                throw Error('malformed discovery API response')
-            }
+            return httpresult.json().catch((e: unknown) => {
+                throw Error('malformed discovery API response', { cause: e })
+            })
         })
         .then(jsondata => fromjson(jsondata))
         .then(discovery => {
@@ -110,7 +110,7 @@ const fetchDiscoveryData = (set: Setter, query: string) => {
             // shown.
             set(discoveryErrorAtom, '')
             set(discoveryErrorAtom,
-                'refreshing failed: ' + error.toString().replace(/^[E|e]rror: /, ''))
+                'refreshing failed: ' + error.toString().replace(/^[Ee]rror: /, ''))
             console.log(error)
         })
 }

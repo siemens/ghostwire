@@ -5,19 +5,22 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
-	"net"
+	"io/fs"
+	"log/slog"
 	"net/http"
 	"regexp"
-	"sync"
-	"time"
+	"strings"
 
 	"github.com/gorilla/mux"
-	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns/containerizer"
-	"github.com/thediveo/lxkns/log"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/thediveo/spaserve"
+
+	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/appicons"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/brand"
 )
 
 // dynVarsRe matches the window.dynvars assignment, so we can rewrite (or
@@ -25,80 +28,73 @@ import (
 // changed based on the particular HTTP request.
 var dynVarsRe = regexp.MustCompile(`(<script>window\.dynvars\s*=\s*){}(\s*</script>)`)
 
-var (
-	once   sync.Once
-	server *http.Server
-)
+// baseHrefRe matches the base element that spaserve has already rewritten to
+// the base path of the SPA as seen by the client.
+var baseHrefRe = regexp.MustCompile(`<base href="(.*?)"\s*/>`)
 
-// AddDynamicVars adds, respective inserts, the "dynamic variables" into the
-// HTML, CSS and Javascript code (soup) that is the index.html file.
-func AddDynamicVars(r *http.Request, index string) string {
-	// HAL, do we get signalled to enable capture links? Affirmative, Dave...
-	_, enableCaptureLinks := r.Header[gostwire.CaptureEnableHeader]
-	dynvars, err := json.Marshal(struct {
-		EnableCaptureLinks bool   `json:"enableMonolith"`
-		Brand              string `json:"brand"`
-		BrandIcon          string `json:"brandicon"`
-	}{
-		EnableCaptureLinks: enableCaptureLinks,
-		Brand:              *brandName,
-		BrandIcon:          *brandIcon,
-	})
-	if err != nil {
-		log.Errorf("cannot marshal dynamic variables into index.html, reason: %s",
-			err.Error())
-		return index
+// newSPAHandler returns a handler serving the web UI from the specified fs,
+// with spaserve rewriting the base element and us adding the dynamic variables.
+func newSPAHandler(uifs fs.FS, brandName, brandIcon string, preferAppIcons bool) http.Handler {
+	return spaserve.NewSPAHandler(uifs, "index.html",
+		spaserve.WithIndexRewriter(newDynamicVarsRewriter(brandName, brandIcon, preferAppIcons)))
+}
+
+// newDynamicVarsRewriter returns an index.html rewriter that adds, respective
+// inserts, the "dynamic variables" into the HTML, CSS and Javascript code
+// (soup) that is the index.html file. This includes the base path of the SPA as
+// determined by spaserve from the request and any forwarding proxy headers.
+// preferAppIcons only sets the web UI's default for showing app icons; it
+// doesn't override any user setting stored in the browser.
+func newDynamicVarsRewriter(brandName, brandIcon string, preferAppIcons bool) spaserve.IndexRewriter {
+	return func(r *http.Request, index string) string {
+		var base string
+		if m := baseHrefRe.FindStringSubmatch(index); m != nil {
+			base = m[1]
+		}
+		// HAL, do we get signalled to enable capture links? Affirmative, Dave...
+		_, enableCaptureLinks := r.Header[gostwire.CaptureEnableHeader]
+		dynvars, err := json.Marshal(struct {
+			EnableCaptureLinks bool   `json:"enableMonolith"`
+			Brand              string `json:"brand"`
+			BrandIcon          string `json:"brandicon"`
+			PreferAppIcons     bool   `json:"preferAppIcons"`
+			Base               string `json:"base,omitempty"`
+		}{
+			EnableCaptureLinks: enableCaptureLinks,
+			Brand:              brandName,
+			BrandIcon:          brandIcon,
+			PreferAppIcons:     preferAppIcons,
+			Base:               base,
+		})
+		if err != nil {
+			slog.Error("cannot marshal dynamic variables into index.html",
+				xslog.Error(err))
+			return index
+		}
+		// Escape "$" so that it isn't taken as a submatch reference.
+		return dynVarsRe.ReplaceAllString(index,
+			"${1}"+strings.ReplaceAll(string(dynvars), "$", "$$")+"${2}")
 	}
-	index = dynVarsRe.ReplaceAllString(string(index), "${1}"+string(dynvars)+"${2}")
-	return index
 }
 
 // requestLogger is a middleware that closes the specified HTTP handler so that
 // requests get logged at info level.
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Infof("http %s %s", req.Method, req.RequestURI)
+		slog.Info("http request",
+			slog.String("method", req.Method),
+			slog.String("path", req.URL.Path))
 		next.ServeHTTP(w, req)
 	})
 }
 
-func startServer(address string, cizer containerizer.Containerizer) (net.Addr, error) {
-	// Create the HTTP server listening transport...
-	listener, err := net.Listen("tcp", address)
-	if err != nil {
-		return nil, err
-	}
-
-	// Finally create the request router and set the routes to the individual
-	// handlers.
+// newHandler returns the HTTP request router with the API routes registered via
+// plugins, as well as the web UI.
+func newHandler(cmd *cobra.Command, cizer containerizer.Containerizer) http.Handler {
 	r := mux.NewRouter()
 	r.Use(requestLogger)
-	registerDiscovery(cizer)
-	registerMobyDigger(cizer)
-	registerRouteHandlers(r)
-
-	r.PathPrefix("/").Handler(spaserve.NewSPAHandler(
-		uifs, "index.html", spaserve.WithIndexRewriter(AddDynamicVars)))
-
-	server = &http.Server{Handler: r}
-	go func() {
-		log.Infof("starting gostwire server to serve at %s", listener.Addr().String())
-		if err := server.Serve(listener); err != nil {
-			log.Errorf("gostwire server error: %s", err.Error())
-		}
-	}()
-	return listener.Addr(), nil
-}
-
-func stopServer(wait time.Duration) {
-	once.Do(func() {
-		if server != nil {
-			log.Infof("gracefully shutting down gostwire server, waiting up to %s...",
-				wait)
-			ctx, cancel := context.WithTimeout(context.Background(), wait)
-			defer cancel()
-			_ = server.Shutdown(ctx)
-			log.Infof("gostwire server stopped.")
-		}
-	})
+	registerRouteHandlers(r, cmd, cizer)
+	r.PathPrefix("/").Handler(newSPAHandler(uifs,
+		brand.Name(cmd), brand.Icon(cmd), appicons.PreferShowing(cmd)))
+	return r
 }

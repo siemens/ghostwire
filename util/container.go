@@ -5,13 +5,14 @@
 package util
 
 import (
-	"sort"
+	"slices"
 	"strings"
-
-	"github.com/siemens/ghostwire/v2/network"
 
 	"github.com/thediveo/lxkns/decorator/kuhbernetes"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/sets"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // FindContainer returns the container matching the specified name and type.
@@ -49,24 +50,19 @@ func AllContainerNamesWithGroups(containers []*model.Container) []string {
 	return names
 }
 
-// AllPods returns the names of all k8s pods the specified containers belong to
-// (if any).
+// AllPods returns the (sorted) list of names of the k8s pods the specified
+// containers belong to (if any).
 func AllPods(containers []*model.Container) []string {
-	podIndex := map[string]struct{}{}
-	names := []string{}
+	podDict := sets.New[string]()
 	for _, container := range containers {
-		names = append(names, container.Name)
 		for _, group := range container.Groups {
 			if group.Type != kuhbernetes.PodGroupType {
 				continue
 			}
-			podIndex[group.Name] = struct{}{}
+			podDict.Add(group.Name)
 		}
 	}
-	pods := make([]string, 0, len(podIndex))
-	for podname := range podIndex {
-		pods = append(pods, podname)
-	}
-	sort.Strings(pods)
+	pods := podDict.Elements()
+	slices.Sort(pods)
 	return pods
 }

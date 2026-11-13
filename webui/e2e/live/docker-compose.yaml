@@ -1,0 +1,49 @@
+# Ghostwire service plus well-known containees for the live web UI end-to-end
+# tests; brought up and down by setup.ts.
+services:
+    gostwire:
+        image: ${GW_E2E_IMAGE:-gostwire:e2e}
+        read_only: true
+        entrypoint:
+            - /gostwire
+            - --http
+            - "[::]:5000"
+            - --brand
+            - ${GW_E2E_BRAND:-Ghostwire E2E}
+        ports:
+            - "127.0.0.1:${GW_E2E_PORT:-5099}:5000"
+        user: "65534"
+        security_opt:
+            - apparmor:unconfined
+            - seccomp:../../../deployments/gostwire/seccomp/gostwire.json
+        cap_drop:
+            - ALL
+        cap_add:
+            - SYS_ADMIN
+            - SYS_CHROOT
+            - SYS_PTRACE
+            - DAC_READ_SEARCH
+            - DAC_OVERRIDE
+            - NET_RAW
+            - NET_ADMIN
+        pid: host
+
+    alpha:
+        image: busybox
+        container_name: gw-e2e-alpha
+        command: ["httpd", "-f", "-p", "8080"]
+        ports:
+            - "127.0.0.1:${GW_E2E_FORWARDED_PORT:-5098}:8080"
+        networks:
+            - default
+            - wires
+
+    beta:
+        image: busybox
+        container_name: gw-e2e-beta
+        command: ["sleep", "1000000"]
+        networks:
+            - wires
+
+networks:
+    wires:

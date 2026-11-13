@@ -6,18 +6,19 @@ package network
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"log/slog"
 	"net"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"syscall"
-	"unsafe"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"golang.org/x/sys/unix"
 )
 
@@ -133,13 +134,13 @@ type ProcessSockets []ProcessSocket
 type socketToProcessMap map[uint64][]model.PIDType
 
 // discoverSockets discovers the (Process)Sockets of a specific IP version and
-// transport protocol in a network namespace referenced via one of the processes
-// attached to the network namespace.
+// transport protocol from the socket tables in the specified procfs net
+// directory, such as "/proc/thread-self/net".
 //
 // Please note that the following ProcessSocket fields are not set, but instead
 // need to be resolved by the caller: Nifs.
-func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm socketToProcessMap) []ProcessSocket {
-	path := fmt.Sprintf("%s/%d/net/", procroot, pid)
+func discoverSockets(netdir string, af int, proto int, sm socketToProcessMap) []ProcessSocket {
+	path := netdir + "/"
 	switch proto {
 	case syscall.IPPROTO_TCP:
 		path += "tcp"
@@ -157,9 +158,9 @@ func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm s
 	}
 	sox := []ProcessSocket{}
 	// "path" is garantueed to be a procfs-based path, so no need to deploy the
-	// mountineers... And no reason for gosec to go berserk: there is path where
-	// user-controlled input can reach procroot and it is otherwise only used in
-	// unit tests with a test-local fake procfs root.
+	// mountineers... And no reason for gosec to go berserk: there is no path where
+	// user-controlled input can reach netdir and it is otherwise only used in
+	// unit tests with a test-local fake procfs.
 	f, err := os.Open(path) // #nosec G304
 	if err != nil {
 		return sox
@@ -174,6 +175,11 @@ func discoverSockets(procroot string, pid model.PIDType, af int, proto int, sm s
 		if procsock := newProcessSocket(scanner.Text(), af, proto, sm); procsock.State != 0 {
 			sox = append(sox, procsock)
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		slog.Error("cannot read socket table",
+			slog.String("path", path),
+			xslog.Error(err))
 	}
 	return sox
 }
@@ -229,46 +235,6 @@ func newProcessSocket(procnetline string, af int, proto int, sm socketToProcessM
 	procsock.Family = AddressFamily(af)
 	procsock.Protocol = Protocol(proto)
 	return
-}
-
-// discoverAllSockInodes returns a map of the inodes-to-PID for all sockets that
-// currently exist in the system.
-func discoverAllSockInodes(procroot string) socketToProcessMap {
-	procentries, err := ioutil.ReadDir(procroot)
-	if err != nil {
-		return nil
-	}
-	spm := socketToProcessMap{}
-	for _, procentry := range procentries {
-		// Get the process PID as a number.
-		pid, err := strconv.ParseInt(procentry.Name(), 10, 32)
-		if err != nil || pid <= 0 {
-			continue
-		}
-		//
-		fdbasepath := procroot + "/" + procentry.Name() + "/fd"
-		fdentries, err := ioutil.ReadDir(fdbasepath)
-		if err != nil {
-			continue
-		}
-		for _, fdentry := range fdentries {
-			stat, err := os.Stat(fdbasepath + "/" + fdentry.Name())
-			if err != nil || stat.Mode()&os.ModeSocket == 0 {
-				continue
-			}
-			sysstat, ok := stat.Sys().(*syscall.Stat_t)
-			if !ok {
-				continue
-			}
-			fdino := sysstat.Ino
-			if pids, ok := spm[fdino]; ok {
-				spm[fdino] = append(pids, model.PIDType(pid))
-			} else {
-				spm[fdino] = []model.PIDType{model.PIDType(pid)}
-			}
-		}
-	}
-	return spm
 }
 
 // decodeSockAddrPort returns the IP (v4/v6) address and port number encoded in
@@ -327,20 +293,7 @@ func reverseUint32(b []byte, idx int) {
 // Since the Linux kernel in part simply dumps certain data fields of a socket
 // "as is" in form of a hex string, we need to know what endianess we're
 // operating with.
-var isLE bool
-
-func init() {
-	buf := [2]byte{}
-	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xCAFE) // #nosec G103
-	switch buf {
-	case [2]byte{0xFE, 0xCA}:
-		isLE = true
-	case [2]byte{0xCA, 0xFE}:
-		isLE = false
-	default:
-		panic("can not determine native endianness.")
-	}
-}
+var isLE = binary.NativeEndian.Uint16([]byte{1, 0}) == 1
 
 // Sort sorts a list of ProcessSocket elements:
 // - local port,
@@ -382,7 +335,7 @@ func (p ProcessSockets) Sort() {
 		case ipA < ipB:
 			return true
 		case ipA > ipB:
-			return true
+			return false
 		}
 		ipA = Exploded(p[a].RemoteIP)
 		ipB = Exploded(p[b].RemoteIP)
@@ -390,7 +343,7 @@ func (p ProcessSockets) Sort() {
 		case ipA < ipB:
 			return true
 		case ipA > ipB:
-			return true
+			return false
 		}
 		return p[a].RemotePort < p[b].RemotePort
 	})

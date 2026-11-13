@@ -2,19 +2,19 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import React, { type JSX } from 'react'
 import clsx from 'clsx'
 
-import { Button, styled, SvgIconProps } from '@mui/material'
+import { Button, styled, type SvgIconProps } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
 import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
 
-import { AddressFamily, AddressFamilySet, GHOSTWIRE_LABEL_ROOT, NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
+import { AddressFamily, type AddressFamilySet, GHOSTWIRE_LABEL_ROOT, type NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
 import { OperationalState } from 'models/gw'
 import { useContextualId } from 'components/idcontext'
 import { TooltipWrapper } from 'utils/tooltipwrapper'
-import { relationClassName } from 'utils/relclassname'
+import { passiveRelationClassName, relationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 import { TargetCapture } from 'components/targetcapture'
 import { NifCheckbox } from 'components/nifcheckbox'
@@ -44,7 +44,7 @@ const Badge = styled('span')(({ theme }) => ({
     },
 }))
 
-// (Optional) "hardware" NIC icon preceeding the network interface badge,
+// (Optional) "hardware" NIC icon preceding the network interface badge,
 // if a network interface has been marked as "physical". Whatever
 // "physical" is worth in our virtualized world...
 const HWNif = styled('span')(({ theme }) => ({
@@ -105,7 +105,7 @@ const Nif = styled(Button)(({ theme }) => ({
 
     // Style the nif name and alias differently for better
     // differentiation...
-    '& .name': { fontWeight: 'bold' },
+    '& .name': { fontWeight: 600 },
     '& .alias': { fontStyle: 'italic' },
 
     // Ensure to use the proper button appearance when linking to a
@@ -191,7 +191,9 @@ const nifKindTips: { [key: string]: string } = {
 
     'bridge': 'virtual bridge',
     'dummy': 'all packets swallowing dummy',
+    'ipvlan': 'IPVLAN',
     'macvlan': 'MACVLAN',
+    'netkit': 'BPF-programmable netkit',
     'tap': 'layer 2 TAP',
     'tun': 'layer 3 TUNnel',
     'veth': 'virtual peer-to-peer Ethernet',
@@ -265,14 +267,17 @@ export interface NifBadgeProps {
  * gets shown.
  *
  * Supported kinds of network interfaces:
- * - **generic**: that is, `kind===""` or `kind==="lo"`, results in a generic
+ * - **generic**: that is, `kind===""`, results in a generic
  *   "Ethernet" plug icon being shown.
+ *   - **`lo`**: the plug's cable loops back into the plug itself.
  *   - **hardware**: an additionally "NIC" (network interface card) is
  *     rendered next to the interface badge.
- *   - **`macvlan`** master: the interface type icon changes from the generic
+ *   - **`macvlan`** or **`ipvlan`** master: the interface type icon changes from the generic
  *       "Ethernet" plug type with a single cable to one with two cables.
- * - **`veth`** peer: the interface type icon shows a pair of plugs.
- * - **`macvlan`**: the type icon shows a down-pointing plug.
+ * - **`veth`** peers: the interface type icon shows a pair of plugs.
+ * - **`netkit`** peers: the interface type icon shows a pair of plugs with a
+ *   (simplified) eBPF bee; a single-device netkit shows only a single plug.
+ * - **`macvlan`** and **`ipvlan`**: the type icon shows a down-pointing plug.
  *
  * `NifBadge`s automatically get (additional) CSS class names reflecting their
  * relationships with other network interfaces (making use of the
@@ -284,8 +289,9 @@ export interface NifBadgeProps {
  * in these situations:
  * - "physical" network interface (which has a relation to the external
  *   "world").
- * - veth pair.
+ * - veth or netkit pair.
  * - MACVLAN network interface and its MACVLAN master.
+ * - IPVLAN network interface and its IPVLAN master.
  * - VXLAN.
  * - TODO: TAPTUN.
  */
@@ -340,15 +346,19 @@ export const NifBadge = ({
     ])
     const tooltipInternalNetwork = (nif.labels[GHOSTWIRE_LABEL_ROOT + 'bridge/internal'] === 'True') ? 'internal ' : ''
     const withMacvlans = (tooltipBase && nif.macvlans && ' with additional MACVLAN interface(s)') || ''
+    const withIpvlans = (tooltipBase && nif.ipvlans && ' with additional IPVLAN interface(s)') || ''
     const withOverlays = (tooltipBase && nif.overlays && ' with VXLAN overlay(s)') || ''
     const vxlanDetails = (nif.vxlanDetails && ` ID ${nif.vxlanDetails.vid}`) || ''
+    const netkitDetails = (nif.netkitDetails &&
+        ` (${nif.netkitDetails.mode} mode${nif.netkitDetails.single ? ', single device'
+            : nif.netkitDetails.primary ? ', primary' : ''})`) || ''
     const nifAddrs = nif.addresses
         .filter(addr => addr.family !== AddressFamily.MAC)
         .filter(addr => families.includes(addr.family))
         .sort(orderAddresses)
         .map(addr => <span key={addr.address}>{addr.address}<br /></span>)
     const tooltip = <>
-        {(tooltipBase ? tooltipInternalNetwork + tooltipBase + ' network interface' : '')}{vxlanDetails}{withOverlays}{withOverlays && withMacvlans ? ' and' : ''}{withMacvlans}<br />
+        {(tooltipBase ? tooltipInternalNetwork + tooltipBase + ' network interface' : '')}{vxlanDetails}{netkitDetails}{[withOverlays, withMacvlans, withIpvlans].filter(s => s).join(' and')}<br />
         {nifAddrs}
     </>
 
@@ -367,14 +377,29 @@ export const NifBadge = ({
     if (nif.macvlans) { // ...we're the master of some MACVLANs.
         relationClasses.push(...nif.macvlans.map(macvlan => relationClassName(domIdBase, nif, macvlan)))
     }
+    if (nif.ipvlan) { // ...we're one of the IPVLANs.
+        relationClasses.push(relationClassName(domIdBase, nif, nif.ipvlan))
+    }
+    if (nif.ipvlans) { // ...we're the master of some IPVLANs.
+        relationClasses.push(...nif.ipvlans.map(ipvlan => relationClassName(domIdBase, nif, ipvlan)))
+    }
     if (nif.overlays) { // ...and have some overlays.
         relationClasses.push(...nif.overlays.map(vxlan => relationClassName(domIdBase, nif, vxlan)))
     }
-    if (nif.peer) { // ...peer-to-peer virtual Ethernet cable relationship.
+    if (nif.peer) { // ...peer-to-peer virtual Ethernet cable or netkit relationship.
         relationClasses.push(relationClassName(domIdBase, nif, nif.peer))
     }
     if (nif.underlay) { // ...we're the VXLAN overlay, because we have an underlay :)
         relationClasses.push(relationClassName(domIdBase, nif, nif.underlay))
+    }
+    // Hovering over a VLAN master doesn't light up its VLANs.
+    if (nif.kind === 'vlan' && nif.master) {
+        relationClasses.push(relationClassName(domIdBase, nif, nif.master))
+    }
+    if (nif.slaves) {
+        relationClasses.push(...nif.slaves
+            .filter(vlan => vlan.kind === 'vlan' && vlan.master === nif)
+            .map(vlan => passiveRelationClassName(relationClassName(domIdBase, nif, vlan))))
     }
     if (nif.isPhysical) { // ..."external" relation.
         switch (nif.sriovrole) {

@@ -6,11 +6,11 @@ package network
 
 import (
 	"net"
-	"os"
 	"syscall"
 	"time"
 
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslices"
 	"golang.org/x/sys/unix"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -19,6 +19,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	. "github.com/thediveo/fdooze"
 	. "github.com/thediveo/namspill"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("discovers transport ports", func() {
@@ -179,15 +180,15 @@ var _ = Describe("discovers transport ports", func() {
 		})
 
 		It("handles empty socket information", func() {
-			Expect(discoverSockets("./test/proc", 0, unix.AF_INET6, syscall.IPPROTO_TCP, nil)).To(BeEmpty())
+			Expect(discoverSockets("./test/proc/0/net", unix.AF_INET6, syscall.IPPROTO_TCP, nil)).To(BeEmpty())
 		})
 
 		It("discoverSockets() panics on nonsense address families and transport protocols", func() {
 			Expect(func() {
-				_ = discoverSockets("./test/proc", 0, unix.AF_APPLETALK, syscall.IPPROTO_TCP, nil)
+				_ = discoverSockets("./test/proc/0/net", unix.AF_APPLETALK, syscall.IPPROTO_TCP, nil)
 			}).To(Panic())
 			Expect(func() {
-				_ = discoverSockets("./test/proc", 0, unix.AF_INET, syscall.IPPROTO_ICMP, nil)
+				_ = discoverSockets("./test/proc/0/net", unix.AF_INET, syscall.IPPROTO_ICMP, nil)
 			}).To(Panic())
 		})
 
@@ -195,10 +196,10 @@ var _ = Describe("discovers transport ports", func() {
 			sm := socketToProcessMap{
 				71934: []model.PIDType{666},
 			}
-			sox := discoverSockets("./test/proc", 0, unix.AF_INET, syscall.IPPROTO_TCP, sm)
+			sox := discoverSockets("./test/proc/0/net", unix.AF_INET, syscall.IPPROTO_TCP, sm)
 			Expect(sox).To(BeEmpty())
 
-			sox = discoverSockets("./test/proc", 666, unix.AF_INET, syscall.IPPROTO_TCP, sm)
+			sox = discoverSockets("./test/proc/666/net", unix.AF_INET, syscall.IPPROTO_TCP, sm)
 			Expect(sox).To(ConsistOf(
 				MatchFields(IgnoreExtras, Fields{
 					"LocalIP": Equal(net.ParseIP("127.0.0.1").To4()),
@@ -208,7 +209,7 @@ var _ = Describe("discovers transport ports", func() {
 				}),
 			))
 
-			sox = discoverSockets("./test/proc", 666, unix.AF_INET6, syscall.IPPROTO_UDP, sm)
+			sox = discoverSockets("./test/proc/666/net", unix.AF_INET6, syscall.IPPROTO_UDP, sm)
 			Expect(sox).To(ConsistOf(
 				MatchFields(IgnoreExtras, Fields{
 					"LocalIP": Equal(net.ParseIP("127.0.0.10").To4()),
@@ -243,31 +244,54 @@ var _ = Describe("discovers transport ports", func() {
 
 	})
 
-	It("discovers its own socket's inode-to-PID mapping", func() {
-		// let's create a dummy socket we then next try to find.
-		sock, err := net.Listen("tcp", ":0")
-		Expect(err).NotTo(HaveOccurred())
-		defer sock.Close()
-		sockport := sock.Addr().(*net.TCPAddr).Port
-		Expect(sockport).NotTo(BeZero())
+	It("reads the socket tables of the current thread's network namespace", func() {
+		listener := Successful(net.Listen("tcp4", "127.0.0.1:0"))
+		DeferCleanup(listener.Close)
+		port := uint16(AssignableTo[*net.TCPAddr](listener.Addr()).Port)
 
-		sockmap := discoverAllSockInodes("/non-exisiting")
-		Expect(sockmap).To(BeEmpty())
+		Expect(discoverSockets("/proc/thread-self/net", unix.AF_INET, syscall.IPPROTO_TCP, nil)).To(
+			ContainElement(And(
+				HaveField("LocalPort", port),
+				HaveField("SimplifiedState", Listening))))
+	})
 
-		sockmap = discoverAllSockInodes("/proc")
-		Expect(sockmap).NotTo(BeEmpty())
-		pid := os.Getpid()
-
-		Expect(sockmap).To(ContainElement(
-			ConsistOf(model.PIDType(pid)),
-		))
-
-		sock.Close()
-		sockmap = discoverAllSockInodes("/proc")
-		Expect(sockmap).NotTo(BeEmpty())
-		Expect(sockmap).NotTo(ContainElement(
-			ConsistOf(model.PIDType(pid)),
-		))
+	It("sorts by family, then local and remote address", func() {
+		v4 := func(local, remote string) ProcessSocket {
+			return ProcessSocket{
+				Family:   unix.AF_INET,
+				LocalIP:  net.ParseIP(local).To4(),
+				RemoteIP: net.ParseIP(remote).To4(),
+			}
+		}
+		v6 := func(local, remote string) ProcessSocket {
+			return ProcessSocket{
+				Family:   unix.AF_INET6,
+				LocalIP:  net.ParseIP(local),
+				RemoteIP: net.ParseIP(remote),
+			}
+		}
+		// exploded "::a" sorts before exploded "10.0.0.10", so family must take precedence.
+		sorted := ProcessSockets{
+			v4("10.0.0.1", "10.0.0.9"),
+			v4("10.0.0.2", "10.0.0.1"),
+			v4("10.0.0.2", "10.0.0.2"),
+			v4("10.0.0.9", "10.0.0.1"),
+			v4("10.0.0.10", "10.0.0.9"),
+			v4("10.0.0.10", "10.0.0.10"),
+			v6("::a", "::1"),
+			v6("::10", "::a"),
+			v6("::10", "::10"),
+		}
+		for _, order := range [][]int{
+			{0, 1, 2, 3, 4, 5, 6, 7, 8},
+			{8, 7, 6, 5, 4, 3, 2, 1, 0},
+			{6, 0, 7, 1, 8, 2, 3, 4, 5},
+			{4, 8, 3, 7, 2, 6, 1, 5, 0},
+		} {
+			s := ProcessSockets(xslices.Map(order, func(idx int) ProcessSocket { return sorted[idx] }))
+			s.Sort()
+			Expect(s).To(Equal(sorted), "order %v", order)
+		}
 	})
 
 })

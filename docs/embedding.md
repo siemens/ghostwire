@@ -13,7 +13,7 @@ properties where this might not be any problem. For example:
   even more for the various specific network interface types, such as bridges,
   MACVLANs, VETHs, TAPs, TUNs, et cetera.
   [@vishvananda/netlink](https://github.com/vishvananda/netlink) is one Go
-  module that has to deal with this situation, Gostwire another example.
+  module that has to deal with this situation, Ghostwire another example.
 
 - **Linux namespace properties**: there are exactly three levels of abstraction,
   each one built upon the previous one. These are: namespaces, hierarchical
@@ -54,10 +54,10 @@ inheritance**. Remember, only interfaces provide (sorry for the C++ terminology)
      `Link` interface pointer to a pointer to the backing `Bridge` type. For
      instance: `bridge := bridge.(*Bridge)`.
 
-   - Gostwire: `bridge := bridge.Bridge()` in order to access the properties of
+   - Ghostwire: `bridge := bridge.Bridge()` in order to access the properties of
      a bridge network interface. Please note that the problem didn't exist in
-     the Ghostwire Python3 code base, because Python offers class-based
-     inheritance.
+     the original Python3-based Ghostwire code base, because Python offers
+     class-based inheritance.
 
    Of course, you can also go with a potentially large number of confusing
    variables in your code in order to avoid local variable redefinitions: `br :=

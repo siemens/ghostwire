@@ -9,7 +9,7 @@ containers to discovered namespaces and processes. lxkns itself comes with a
 built-in Containerizer that handles a static and pre-configured set of container
 engine watchers, namely: a Docker host daemon and a containerd host daemon.
 
-Gostwire supplies its own Containerizer that features dynamic discovery of
+Ghostwire supplies its own Containerizer that features dynamic discovery of
 container engines, whereever they are: in the host, in containers, et cetera.
 The engine detection bases on daemon process names.
 
@@ -22,7 +22,7 @@ The engine detection bases on daemon process names.
    `"lxkns/plugingroup/decorator"`, defined as constant
    [`decorator.PluginGroup`](https://github.com/TheDiveO/lxkns/blob/master/decorator/decorator.go#L21).
 
-2. A Gostwire plugin that post-processes the discovered network namespaces. For
+2. A Ghostwire plugin that post-processes the discovered network namespaces. For
    instance, to gather the names of Docker networks, et cetera.
 
 #### Detector

@@ -2,11 +2,10 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { styled, Tooltip } from '@mui/material'
 
-import { AddressFamily, IpAddress, IpRoute, NetworkInterface, RouteTableLocal } from 'models/gw'
+import { AddressFamily, type IpAddress, type IpRoute, type NetworkInterface, RouteTableLocal } from 'models/gw'
 import { Address } from 'components/address'
 import { NifBadge } from 'components/nifbadge'
 import RouteVia from 'icons/routes/RouteVia'
@@ -74,7 +73,7 @@ export const Route = ({ route, onNavigation, className }: RouteProps) => {
     // the route, that is, how many destination(s) are covered. Also determine
     // the tooltip title which reflects the type of route in text instead of a
     // graphical depiction, effectively complementing it.
-    let tooltip = ''
+    let tooltip: string
     let RouteIcon
     if (route.type === 'multicast' || route.type === 'broadcast') {
         tooltip = route.type + ' route'

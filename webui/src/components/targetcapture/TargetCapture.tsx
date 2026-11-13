@@ -2,17 +2,16 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 import clsx from 'clsx'
 
-import { Button, styled, Theme } from '@mui/material'
+import { Button, styled, type Theme } from '@mui/material'
 
-import { NetworkInterface, NetworkNamespace, Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType, PrimitiveContainee, Pod, isContainer, Container } from 'models/gw'
+import { type NetworkInterface, type NetworkNamespace, type Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType, type PrimitiveContainee, isContainer } from 'models/gw'
 import { CaptureIcon } from 'icons/Capture'
 import { CaptureOffIcon } from 'icons/CaptureOff'
 import { useDynVars } from 'components/dynvars'
 import { rgba } from 'utils/rgba'
-import { Target } from 'models/packetflix/target'
+import { type Target } from 'models/packetflix/target'
 import { keyframes } from '@mui/system';
 
 
@@ -209,13 +208,13 @@ export const TargetCapture = ({ target, targetNifs, size = 'medium', className, 
         netns: netns!.netnsid,
         'network-interfaces': nifs,
         name: containee && containee.name || '',
-        type: (!containee && '')
-            || (!isPod(containee as Containee) && containeeType(containee as PrimitiveContainee))
-            || (isPod(containee as Containee) && (containee as Pod).flavor)
+        type: !containee ? ''
+            : (!isPod(containee) && containeeType(containee as PrimitiveContainee))
+            || (isPod(containee) && containee.flavor)
             || '',
-        prefix: (!containee && '')
-            || (isContainer(containee as Containee) && (containee as Container).turtleNamespace)
-            || (isPod(containee as Containee) && (containee as Pod).containers[0].turtleNamespace)
+        prefix: !containee ? ''
+            : (isContainer(containee) && containee.turtleNamespace)
+            || (isPod(containee) && containee.containers[0].turtleNamespace)
             || '',
     }
     const capturl = `packetflix:${baseURI.toString()}capture`
@@ -225,7 +224,7 @@ export const TargetCapture = ({ target, targetNifs, size = 'medium', className, 
     return (
         <SharkButton
             className={clsx(className, `${size}size`)}
-            href={demo ? '' : capturl}
+            href={demo ? undefined : capturl}
             size={size}
             variant="outlined"
             disabled={!biting}

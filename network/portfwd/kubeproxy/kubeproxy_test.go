@@ -16,6 +16,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("kube-proxy port forwarding", func() {
@@ -23,26 +24,30 @@ var _ = Describe("kube-proxy port forwarding", func() {
 	Context("detecting forwarded kube-proxy ports", func() {
 
 		It("doesn't crash", func() {
-			Expect(PortForwardings(nufftables.TableMap{}, nufftables.TableFamilyINet))
-			Expect(PortForwardings(nil, nufftables.TableFamilyIPv4))
-			Expect(PortForwardings(nufftables.TableMap{
-				nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{},
-			}, nufftables.TableFamilyIPv4))
-			Expect(PortForwardings(nufftables.TableMap{
-				nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{
-					ChainsByName: map[string]*nufftables.Chain{
-						kubeServicesChain: {
-							Rules: []nufftables.Rule{
-								{
-									Rule: &nftables.Rule{
-										Exprs: nil,
+			Expect(func() { _ = PortForwardings(nufftables.TableMap{}, nufftables.TableFamilyINet) }).NotTo(Panic())
+			Expect(func() { _ = PortForwardings(nil, nufftables.TableFamilyIPv4) }).NotTo(Panic())
+			Expect(func() {
+				_ = PortForwardings(nufftables.TableMap{
+					nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{},
+				}, nufftables.TableFamilyIPv4)
+			}).NotTo(Panic())
+			Expect(func() {
+				_ = PortForwardings(nufftables.TableMap{
+					nufftables.TableKey{Name: "nat", Family: nufftables.TableFamilyIPv4}: &nufftables.Table{
+						ChainsByName: map[string]*nufftables.Chain{
+							kubeServicesChain: {
+								Rules: []nufftables.Rule{
+									{
+										Rule: &nftables.Rule{
+											Exprs: nil,
+										},
 									},
 								},
 							},
 						},
 					},
-				},
-			}, nufftables.TableFamilyIPv4))
+				}, nufftables.TableFamilyIPv4)
+			}).NotTo(Panic())
 		})
 
 		It("detects forwarded ports", func() {
@@ -259,13 +264,8 @@ var _ = Describe("kube-proxy port forwarding", func() {
 		})
 
 		It("returns port", func() {
-			port, ok := getTcpUdp(&expr.Cmp{Data: []byte{unix.IPPROTO_TCP}})
-			Expect(ok).To(BeTrue())
-			Expect(port).To(Equal("tcp"))
-
-			port, ok = getTcpUdp(&expr.Cmp{Data: []byte{unix.IPPROTO_UDP}})
-			Expect(ok).To(BeTrue())
-			Expect(port).To(Equal("udp"))
+			Expect(Allright(getTcpUdp(&expr.Cmp{Data: []byte{unix.IPPROTO_TCP}}))).To(Equal("tcp"))
+			Expect(Allright(getTcpUdp(&expr.Cmp{Data: []byte{unix.IPPROTO_UDP}}))).To(Equal("udp"))
 		})
 
 	})
@@ -293,12 +293,10 @@ var _ = Describe("kube-proxy port forwarding", func() {
 		})
 
 		It("returns the service target chain name", func() {
-			chain, ok := getJumpVerdictServiceChain(&expr.Verdict{
+			Expect(Allright(getJumpVerdictServiceChain(&expr.Verdict{
 				Kind:  expr.VerdictJump,
 				Chain: "KUBE-SVC-HELLORLD",
-			})
-			Expect(ok).To(BeTrue())
-			Expect(chain).NotTo(BeEmpty())
+			}))).NotTo(BeEmpty())
 
 		})
 
@@ -327,12 +325,10 @@ var _ = Describe("kube-proxy port forwarding", func() {
 		})
 
 		It("returns the service target chain name", func() {
-			chain, ok := getJumpVerdictSeparationChain(&expr.Verdict{
+			Expect(Allright(getJumpVerdictSeparationChain(&expr.Verdict{
 				Kind:  expr.VerdictJump,
 				Chain: "KUBE-SEP-HELLORLD",
-			})
-			Expect(ok).To(BeTrue())
-			Expect(chain).NotTo(BeEmpty())
+			}))).NotTo(BeEmpty())
 
 		})
 
@@ -354,12 +350,10 @@ var _ = Describe("kube-proxy port forwarding", func() {
 
 		It("returns comments", func() {
 			xtc := xt.Comment("Hellorld!")
-			comment, ok := getComment(&expr.Match{
+			Expect(Allright(getComment(&expr.Match{
 				Name: "comment",
 				Info: &xtc,
-			})
-			Expect(ok).To(BeTrue())
-			Expect(comment).To(Equal("Hellorld!"))
+			}))).To(Equal("Hellorld!"))
 		})
 
 	})

@@ -25,17 +25,21 @@ import { initNetns, morbidNetns } from 'views/help/mockdata'
 
 The wiring view shows the discovered (virtual) IP stacks, as well as the
 "virtual wiring" between the network interfaces of these IP stacks. For each IP
-stack (network namespace), <Brand/> also shows the ["containees"](containees)
+stack (network namespace), <Brand/> also shows the ["containees"](/help/containees)
 (pods, containers, stand-alone processes, et cetera) using that particular IP
 stack. For example:
 
-<Box m={2} style={{width: '25em'}}>
+<Box sx={{ m: 2 }} style={{width: '25em'}}>
   <Breadboard netns={[initNetns, morbidNetns]}>
     <NetnsPlainCard netns={initNetns} />
-    <Box m={1}/>
+    <Box sx={{ m: 1 }}/>
     <NetnsPlainCard netns={morbidNetns} />
   </Breadboard>
 </Box>
+
+The wiring view honors the containee filter from the navigation drawer: only
+the IP stacks with matching containees or composer projects are shown. See the
+[navigation drawer help](/help/drawer) for the exact matching rules.
 
 ##### Zoom Into IP Stack Details
 

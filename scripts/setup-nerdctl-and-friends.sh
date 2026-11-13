@@ -7,8 +7,8 @@ set -e
 # On purpose, we're not going to install from often totally outdated or "sparse"
 # distro repositories, but from the Github projects directly.
 
-CNI_PLUGINS_VERSION=v1.3.0
-NERDCTL_VERSION=v1.6.2
+CNI_PLUGINS_VERSION=v1.6.0
+NERDCTL_VERSION=v1.7.7
 
 WGET_PREX="/tmp/nerdctl-and-friends"
 
@@ -25,7 +25,8 @@ wget -q -P ${WGET_PREX} --backups=1 https://github.com/containernetworking/plugi
 wget -q -P ${WGET_PREX} --backups=1 https://github.com/containerd/nerdctl/releases/download/${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION#v}-linux-${ARCH}.tar.gz
 
 echo "installing CNI plugins into ${CNIBINDIR}"
-mkdir -p ${CNIBINDIR}
+sudo mkdir -p ${CNIBINDIR}
 sudo tar -x -v -z -f ${WGET_PREX}/cni-plugins-linux-${ARCH}-${CNI_PLUGINS_VERSION}.tgz -C ${CNIBINDIR}
 echo "installing nerdctl into ${BINDIR}"
+sudo mkdir -p ${BINDIR}
 sudo tar -x -v -z -f ${WGET_PREX}/nerdctl-${NERDCTL_VERSION#v}-linux-${ARCH}.tar.gz -C ${BINDIR}

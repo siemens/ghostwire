@@ -6,7 +6,10 @@ import scrollIntoView from 'scroll-into-view-if-needed'
 
 export const scrollIdIntoView = (id: string) => {
     const node = document.getElementById(id)
-    node && scrollIntoView(node, {
+    if (!node) {
+        return
+    }
+    scrollIntoView(node, {
         scrollMode: 'if-needed',
         behavior: 'smooth',
         block: 'start',

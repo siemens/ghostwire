@@ -2,18 +2,18 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
+import type { JSX } from 'react'
 
-import { SvgIconProps } from '@mui/material'
+import { type SvgIconProps } from '@mui/material'
 
-import { NetworkInterface } from 'models/gw/nif'
+import { type NetworkInterface } from 'models/gw/nif'
 import BridgeIcon from 'icons/nifs/Bridge'
 import DummyIcon from 'icons/nifs/Dummy'
 import MacvlanIcon from 'icons/nifs/Macvlan'
 import TapIcon from 'icons/nifs/Tap'
 import TunIcon from 'icons/nifs/Tun'
 import VethIcon from 'icons/nifs/Veth'
-import { BridgeInternalIcon, MacvlanMasterIcon, NicIcon, OverlayIcon } from 'icons/nifs'
+import { BridgeInternalIcon, LoopbackIcon, MacvlanMasterIcon, NetkitIcon, NetkitSingleIcon, NicIcon, OverlayIcon } from 'icons/nifs'
 import { GHOSTWIRE_LABEL_ROOT } from 'models/gw/model'
 import { NifHWIcon } from 'components/nifhwicon'
 
@@ -22,7 +22,9 @@ import { NifHWIcon } from 'components/nifhwicon'
 const nifTypeIcons: { [key: string]: (props: SvgIconProps) => JSX.Element } = {
     'bridge': BridgeIcon,
     'dummy': DummyIcon,
+    'ipvlan': MacvlanIcon,
     'macvlan': MacvlanIcon,
+    'netkit': NetkitIcon,
     'tap': TapIcon,
     'tun': TunIcon,
     'veth': VethIcon,
@@ -36,6 +38,13 @@ export interface NifIconProps extends SvgIconProps {
     considerPhysical?: boolean
 }
 
+/**
+ * Renders the type icon of a network interface, such as bridge, veth, macvlan
+ * or ipvlan (master), TAP/TUN, VXLAN overlay, or a generic NIC as the
+ * fallback. Bridges marked as internal get their own icon, and hardware NICs
+ * optionally get their SR-IOV-specific hardware icon. Renders nothing if no
+ * network interface is specified.
+ */
 export const NifIcon = ({ nif, considerPhysical, ...props }: NifIconProps) => {
     if (!nif) {
         return <></>
@@ -47,8 +56,11 @@ export const NifIcon = ({ nif, considerPhysical, ...props }: NifIconProps) => {
         return <BridgeInternalIcon {...props} />
     }
     const Icon = (nif.tuntapDetails && nifTypeIcons[nif.tuntapDetails.mode]) ||
-        (nif.macvlans && MacvlanMasterIcon) ||
-        nifTypeIcons[nif.kind] || NicIcon
+        (nif.netkitDetails?.single && NetkitSingleIcon) ||
+        ((nif.macvlans || nif.ipvlans) && MacvlanMasterIcon) ||
+        nifTypeIcons[nif.kind] ||
+        (nif.name === 'lo' && LoopbackIcon) ||
+        NicIcon
     return <Icon {...props} />
 }
 

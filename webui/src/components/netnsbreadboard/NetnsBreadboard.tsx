@@ -2,13 +2,12 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { useNavigate, useLocation, useMatch } from 'react-router-dom'
 
 import { styled } from '@mui/material'
 
-import { AddressFamilySet, PrimitiveContainee, emptyNetns, NetworkInterface, NetworkNamespace, NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
+import { type AddressFamilySet, type PrimitiveContainee, emptyNonContainerNetns, loFiNetns, type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
 import { Breadboard } from 'components/breadboard/Breadboard'
 import { CardTray } from 'components/cardtray'
 import { NetnsPlainCard } from 'components/netnsplaincard'
@@ -87,11 +86,11 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
     } else if (netns) {
         netnses = Object.values(netns)
     }
-    // Drop all namespaces with only a lonely loopback network interface, to
-    // reduce noise. And yes, we even accept a network namespace without a
-    // loopback network interface, but a different network interface.
+    // Drop all non-container namespaces with only a lonely loopback network
+    // interface, to reduce noise. And yes, we even accept a network namespace
+    // without a loopback network interface, but a different network interface.
     if (filterEmpty) {
-        netnses = netnses.filter(netnsOrProj => isProject(netnsOrProj) || !emptyNetns(netnsOrProj as NetworkNamespace))
+        netnses = netnses.filter(netnsOrProj => isProject(netnsOrProj) || !emptyNonContainerNetns(netnsOrProj as NetworkNamespace))
     }
 
     // Navigate to another (related) network interface within the same
@@ -136,7 +135,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
                                     <AccentableNetnsCard
                                         key={netns.netnsid}
                                         className={netns.netnsid === netnsid ? 'highlight' : 'normal'}
-                                        netns={loFilteredNetns(netns, filterLo || false)}
+                                        netns={loFiNetns(netns, filterLo || false)}
                                         families={families}
                                         onNavigation={handleNavigation}
                                         onNetnsZoom={handleNetnsZoom}
@@ -148,7 +147,7 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
                         return <AccentableNetnsCard
                             key={netnsOrProj.netnsid}
                             className={netnsOrProj.netnsid === netnsid ? 'highlight' : 'normal'}
-                            netns={loFilteredNetns(netnsOrProj, filterLo || false)}
+                            netns={loFiNetns(netnsOrProj, filterLo || false)}
                             families={families}
                             onNavigation={handleNavigation}
                             onNetnsZoom={handleNetnsZoom}
@@ -159,18 +158,4 @@ export const NetnsBreadboard = ({ netns, filterLo, filterEmpty, families }: Netn
             </CardTray>
         </Breadboard>
     )
-}
-
-// Returns a network namespace with the lo interface filtered out, if told so.
-// Otherwise returns the original network namespace.
-const loFilteredNetns = (netns: NetworkNamespace, filterLo: boolean) => {
-    if (!filterLo) {
-        return netns
-    }
-    const newnetns = { ...netns, nifs: { ...netns.nifs } }
-    const lo = Object.keys(newnetns.nifs).find(nifidx => newnetns.nifs[nifidx as unknown as number].name === 'lo')
-    if (lo) {
-        delete newnetns.nifs[lo as unknown as number]
-    }
-    return newnetns
 }

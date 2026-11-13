@@ -7,10 +7,9 @@ package v1
 import (
 	"time"
 
-	"github.com/siemens/ghostwire/v2/metadata"
-	_ "github.com/siemens/ghostwire/v2/metadata/all"
-
 	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/meta"
+	_ "github.com/siemens/ghostwire/v2/meta/all"
 )
 
 // CreatorID specifies the metadata creator ID.
@@ -18,7 +17,7 @@ const CreatorID = "gostwire"
 
 // Metadata holds meta information about a discovery, such as the creator used
 // ("Dr. Livingstone, I presume") and when the discovery was done.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 // NewMetadata returns new and properly filled-in discovery meta data. It
 // invokes the registered metadata plugins to augment the baseline metadata with
@@ -30,7 +29,7 @@ func NewMetadata(result gostwire.DiscoveryResult) Metadata {
 		"creator-version":    gostwire.SemVersion,
 		"creation-timestamp": time.Now().UTC(),
 	}
-	md, err := metadata.Augment(result, basemd)
+	md, err := meta.Augment(result, basemd)
 	if err != nil {
 		return basemd
 	}

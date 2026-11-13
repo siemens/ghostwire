@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build kind
-// +build kind
 
 package kind
 

@@ -5,13 +5,15 @@
 package network
 
 import (
+	"log/slog"
+	"maps"
 	"net"
 	"sort"
 	"strings"
 
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
@@ -44,9 +46,11 @@ type NifAttrs struct {
 	Kind        string            // kind of interface.
 	Name        string            // interface name.
 	Alias       string            // alias name.
+	AltNames    []string          // alternate names, if any.
 	Index       int               // interface index.
 	State       OperState         // operational state.
 	Physical    bool              // or more metaphorical: it has an associated driver.
+	Loopback    bool              // IFF_LOOPBACK flag set.
 	DriverInfo  NifDriverInfo     // ethtool-derived nif driver information.
 	Promiscuous bool              // does snoop all traffic?
 	Labels      model.Labels      // optional labels attached by Gostwire decorators.
@@ -142,8 +146,8 @@ func collectNifMakers() {
 	for _, nm := range plugger.Group[NifMaker]().PluginsSymbols() {
 		nifMakers[nm.Plugin] = nm.S
 	}
-	log.Infof("available specialized network interface plugins for kinds: %s",
-		strings.Join(plugger.Group[NifMaker]().Plugins(), ", "))
+	slog.Info("available specialized network interface plugins",
+		slog.String("plugins", strings.Join(plugger.Group[NifMaker]().Plugins(), ",")))
 }
 
 // nifMakers maps link type names to their "maker" (factories) functions.
@@ -206,9 +210,11 @@ func (n *NifAttrs) Init(nlh *netlink.Handle, netns *NetworkNamespace, link netli
 		Kind:        kind,
 		Name:        attrs.Name,
 		Alias:       attrs.Alias,
+		AltNames:    attrs.AltNames,
 		Index:       attrs.Index,
 		State:       OperState(attrs.OperState),
 		Physical:    link.Type() == "device" && (attrs.Flags&net.FlagLoopback == 0),
+		Loopback:    attrs.Flags&net.FlagLoopback != 0,
 		Promiscuous: attrs.Flags&unix.IFF_PROMISC != 0,
 		Labels:      model.Labels{},
 		L2Addr:      l2addr,
@@ -249,7 +255,9 @@ func (n *NifAttrs) HasAddress(ip net.IP) bool {
 func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 	driverInfo, err := unix.IoctlGetEthtoolDrvinfo(ethtoolFd, n.Name)
 	if err != nil {
-		log.Errorf("cannot query ethtool API driver information for nif %q, reason: %s", n.Name, err.Error())
+		slog.Error("cannot query ethtool API driver information",
+			slog.String("interface", n.Name),
+			xslog.Error(err))
 		return
 	}
 	n.DriverInfo.Driver = strings.TrimRight(string(driverInfo.Driver[:]), "\x00")
@@ -260,7 +268,10 @@ func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 	// to use it on some kinds of virtual network interfaces, but on others it
 	// does return driver information :)
 	n.DriverInfo.BusInfo = strings.TrimRight(string(driverInfo.Bus_info[:]), "\x00")
-	log.Debugf("physical network interface %s has device bus address: %s", n.Name, n.DriverInfo.BusInfo)
+	slog.Debug("physical network interface",
+		slog.Uint64("netns", n.Netns.ID().Ino),
+		slog.String("interface", n.Name),
+		slog.String("bus-address", n.DriverInfo.BusInfo))
 }
 
 // SysfsBusPath returns a device directory path for the physical device of this
@@ -269,8 +280,11 @@ func (n *NifAttrs) discoverBusAddress(ethtoolFd int) {
 // Note: this is currently needed only for PCI(e) devices and thus does not work
 // correctly for other busses, such as USB.
 func (n *NifAttrs) SysfsBusPath() string {
-	return "/sys/bus/pci/devices/" + n.DriverInfo.BusInfo
+	return sysfsPCIDevicesPath + "/" + n.DriverInfo.BusInfo
 }
+
+// sysfsPCIDevicesPath is where sysfs lists the PCI devices; tests use fake trees.
+var sysfsPCIDevicesPath = "/sys/bus/pci/devices"
 
 // ResolveRelations resolves relations to other network interfaces. Please note
 // that this doesn't include the PF-VF topology, as we're to resolve that
@@ -279,23 +293,35 @@ func (n *NifAttrs) ResolveRelations(allns NetworkNamespaces) {
 	// Could this be a bridge "port" interface? Its bridge can only be in the
 	// same network namespace.
 	idx := n.Link.Attrs().MasterIndex
-	if idx != 0 {
-		if bridge := n.Netns.Nifs[idx]; bridge != nil && bridge.Nif().Kind == "bridge" {
-			n.Bridge = bridge
-			brattrs := bridge.(*BridgeAttrs)
-			// Go AWAY, that's flawed object-oriented design! Because we're here
-			// *NifAttrs, we're thus not network.Interface anymore. And
-			// therefore we can't simply "cast" back from *NifAttrs to
-			// network.Interface, because a network.Interface pointer actually
-			// now says: "I'm a *NifAttrs satisfying network.Interface". It has
-			// forgotten what ever original type it was that embedded the
-			// NifAttrs. Oh, bummer.
-			brattrs.Ports = append(brattrs.Ports, n.Interface())
-		} else if bridge == nil {
-			log.Warnf("missing bridge network interface idx %d", idx)
-		} else {
-			log.Warnf("master network interface is not a bridge, but of type '%s'", bridge.Nif().Kind)
-		}
+	if idx <= 0 {
+		return
+	}
+	nif := n.Netns.Nifs[idx]
+	if nif == nil {
+		slog.Warn("missing bridge network interface", slog.Int("index", idx))
+		return
+	}
+	if bridge, _ := nif.(*BridgeAttrs); bridge != nil {
+		n.Bridge = bridge
+		// Go AWAY, that's flawed object-oriented design! Because we're here
+		// *NifAttrs, we're thus not network.Interface anymore. And
+		// therefore we can't simply "cast" back from *NifAttrs to
+		// network.Interface, because a network.Interface pointer actually
+		// now says: "I'm a *NifAttrs satisfying network.Interface". It has
+		// forgotten what ever original type it was that embedded the
+		// NifAttrs. Oh, bummer.
+		bridge.Ports = append(bridge.Ports, n.Interface())
+		return
+	}
+	if nif.Nif().Kind != "openvswitch" {
+		// Skip warning in case of openvswitch that uses the master-slave
+		// relationships in a creative way not related to how Linux kernel
+		// standard bridges use them; it appears as if openvswitch uses the
+		// master-slave relationship for general tracking of any
+		// netdev-based openvswitch port attachment.
+		slog.Warn("master network interface is not a bridge",
+			slog.String("interface", nif.Nif().Name),
+			slog.String("kind", nif.Nif().Kind))
 	}
 }
 
@@ -303,9 +329,7 @@ func (n *NifAttrs) ResolveRelations(allns NetworkNamespaces) {
 // assigned to this network interface. Added labels take precedence over
 // existing labels, replacing them in case of conflict.
 func (n *NifAttrs) AddLabels(labels model.Labels) {
-	for key, val := range labels {
-		n.Labels[key] = val
-	}
+	maps.Copy(n.Labels, labels)
 }
 
 // Sort sorts the list of Interface elements in-place.

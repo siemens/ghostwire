@@ -2,22 +2,28 @@
 //
 // SPDX-License-Identifier: MIT
 
-// Wraps a server-side websocket connection with its own human-readable unique
-// ID. This helps to clearly map log debug and error messages to their
-// respective websocket connections, thus keeping them clearly separated.
-// Additionally, we also associate the capturing process (if any) with this
-// connection, so we can sanely manage it.
+// Package wsconn wraps a server-side websocket connection with its own
+// human-readable unique ID. This helps to clearly map log debug and error
+// messages to their respective websocket connections, thus keeping them clearly
+// separated. Additionally, we also associate the capturing process (if any)
+// with this connection, so we can sanely manage it.
 package wsconn
 
 import (
-	"fmt"
+	"context"
+	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
+	"github.com/thediveo/nonstd/sets"
+	"github.com/thediveo/nonstd/xslices"
+	"github.com/thediveo/nonstd/xslog"
 )
 
 // ClosingDeadline specifies the maximum amount of time to wait for a full
@@ -25,9 +31,45 @@ import (
 const ClosingDeadline = 5 * time.Second
 
 var wsupgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: checkOrigin,
+}
+
+var allowedOrigins atomic.Pointer[sets.Set[string]]
+
+// AllowOrigins additionally accepts websocket handshakes from the specified
+// origins, such as "https://gw.example"; "*" accepts any origin. It replaces
+// any previously allowed origins.
+func AllowOrigins(origins ...string) {
+	allowed := sets.New(xslices.Map(origins, normalizeOrigin)...)
+	allowedOrigins.Store(&allowed)
+}
+
+func normalizeOrigin(origin string) string {
+	return strings.ToLower(strings.TrimSuffix(strings.TrimSpace(origin), "/"))
+}
+
+// checkOrigin rejects cross-origin websocket handshakes, unless explicitly
+// allowed, but also accepts the original host behind reverse proxies; browsers
+// cannot set X-Forwarded-Host on websocket handshakes.
+func checkOrigin(req *http.Request) bool {
+	origin := req.Header.Get("Origin")
+	if origin == "" {
 		return true
-	},
+	}
+	if allowed := allowedOrigins.Load(); allowed != nil &&
+		(allowed.Contains("*") || allowed.Contains(normalizeOrigin(origin))) {
+		return true
+	}
+	originURL, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	if strings.EqualFold(originURL.Host, req.Host) {
+		return true
+	}
+	fwdHost, _, _ := strings.Cut(req.Header.Get("X-Forwarded-Host"), ",")
+	fwdHost = strings.TrimSpace(fwdHost)
+	return fwdHost != "" && strings.EqualFold(originURL.Host, fwdHost)
 }
 
 // Things are tricky, since we have to juggle with an external process that can
@@ -98,37 +140,43 @@ const (
 // allows differentiating multiple (concurrent) websocket connections in the
 // logs.
 type WSConn struct {
-	*websocket.Conn             // usual (gorilla) websocket connection.
-	ID              string      // unique ID string for this connection.
-	mux             sync.Mutex  // protects the following fields...
-	state           WSConnState // what's up???
+	*websocket.Conn              // usual (gorilla) websocket connection.
+	log             *slog.Logger // per-connection logger with static ID attribute.
+	mux             sync.Mutex   // protects the following fields...
+	state           WSConnState  // what's up???
 }
 
 // NewWSConn returns a new websocket connection wrapper that features an
 // additional ID, so multiple (concurrent) websocket connections can still be
 // differentiated in the logs.
 func NewWSConn(w http.ResponseWriter, req *http.Request) (*WSConn, error) {
-	wsconnid := petname.Generate(2, "-")
 	c := &WSConn{
-		ID: fmt.Sprint(wsconnid),
+		log: slog.Default().With(
+			slog.String("connection", petname.Generate(2, "-"))),
 	}
 	var err error
 	c.Conn, err = wsupgrader.Upgrade(w, req, nil)
 	if err != nil {
-		c.Errorf("websocket upgrade process failed: %s", err.Error())
+		c.Error("websocket upgrade process failed",
+			xslog.Error(err))
 		return nil, err
 	}
+	// We handle close control messages explicitly, so we have to set a dummy
+	// handler.
+	c.SetCloseHandler(func(int, string) error { return nil })
 	return c, nil
 }
 
-// Debugf logs a formatted debug message, prefixed by the connection ID.
-func (c *WSConn) Debugf(format string, args ...interface{}) {
-	log.Debugf("("+c.ID+") "+format, args...)
+// Debug logs a structured debug message that includes the unique random
+// connection ID.
+func (c *WSConn) Debug(msg string, attrs ...slog.Attr) {
+	c.log.LogAttrs(context.Background(), slog.LevelDebug, msg, attrs...)
 }
 
-// Errorf logs a formatted error message, prefixed by the connection ID.
-func (c *WSConn) Errorf(format string, args ...interface{}) {
-	log.Errorf("("+c.ID+") "+format, args...)
+// Error logs a structured error message that includes the unique random
+// connection ID.
+func (c *WSConn) Error(msg string, attrs ...slog.Attr) {
+	c.log.LogAttrs(context.Background(), slog.LevelError, msg, attrs...)
 }
 
 // Watch watches the websocket connection for any signs of closing or failure.
@@ -140,11 +188,13 @@ func (c *WSConn) Watch() {
 	c.mux.Unlock()
 	switch state {
 	case WSConnClosed:
+		slog.Debug("won't monitor already closed websocket connection")
 		return
 	case WSConnClosing:
 		_ = c.SetReadDeadline(time.Now().Add(ClosingDeadline))
 	}
-	c.Debugf("monitoring websocket connection...")
+	c.Debug("monitoring of websocket connection started")
+	defer c.Debug("monitoring of websocket connection ended")
 	for {
 		_, _, err := c.ReadMessage()
 		if err != nil {
@@ -153,34 +203,36 @@ func (c *WSConn) Watch() {
 				// message sent by the client. We now need to see if we need to
 				// acknowledge it or if it was the final close message in the
 				// handshake originally initiated by us.
-				if c.state == WSConnOpen {
+				switch c.state {
+				case WSConnOpen:
 					// Let's try to gracefully acknowledge the close, and then
 					// we're done.
 					c.mux.Lock()
 					c.state = WSConnClosed
 					c.mux.Unlock()
-					c.Debugf(
-						"websocket peer started close sequence with code %d, reason \"%s\"",
-						cerr.Code, cerr.Text)
-					c.Debugf("acknowledging websocket close (ciao!)")
-					_ = c.SetWriteDeadline(time.Now().Add(ClosingDeadline))
-					_ = c.WriteMessage(
+					c.Debug("websocket peer started close sequence",
+						slog.Int("code", cerr.Code),
+						slog.String("reason", cerr.Text))
+					c.Debug("acknowledging websocket close (ciao!)")
+					_ = c.WriteControl(
 						websocket.CloseMessage,
-						websocket.FormatCloseMessage(cerr.Code, "ciao"))
-				} else if c.state == WSConnClosing {
+						websocket.FormatCloseMessage(cerr.Code, "ciao"),
+						time.Now().Add(ClosingDeadline))
+				case WSConnClosing:
 					// It is already the final ack, so we're done now too.
 					c.mux.Lock()
 					c.state = WSConnClosed
 					c.mux.Unlock()
-					c.Debugf(
-						"websocket peer acknowledged close with code %d, reason \"%s\"",
-						cerr.Code, cerr.Text)
+					c.Debug(
+						"websocket peer acknowledged close",
+						slog.Int("code", cerr.Code),
+						slog.String("reason", cerr.Text))
 				}
 			}
 			// Any error means that the websocket is broken, and any close means
 			// that we're done by now. So release resources.
-			c.Debugf("websocket closed")
-			c.Close()
+			c.Debug("websocket closed")
+			_ = c.Close()
 			return
 		}
 		// Whatever the websocket client is sending us ... we'll ignore it. And
@@ -199,23 +251,32 @@ func (c *WSConn) InitiateGracefulClose(code int, reason string) {
 	c.mux.Lock()
 	state := c.state
 	c.mux.Unlock()
-	if state == WSConnOpen {
-		c.Debugf(
-			"beginning graceful websocket connection close "+
-				"with code %d, reason \"%s\"...",
-			code, reason)
-		_ = c.SetWriteDeadline(time.Now().Add(ClosingDeadline))
+	if state != WSConnOpen {
+		c.Debug("websocket connection already closing or closed")
+		return
+	}
+	c.Debug(
+		"beginning graceful websocket connection close",
+		slog.Int("code", code),
+		slog.String("reason", reason))
+	c.mux.Lock()
+	c.state = WSConnClosing
+	c.mux.Unlock()
+	err := c.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(code, reason),
+		time.Now().Add(ClosingDeadline))
+	// note that the WriteControl call might not report any error when the
+	// underlying TCP connection has already been closed, becaused that might
+	// not propagate back yet via WriteControl. Instead, we'll see it only when
+	// we next try to read the next (control) message.
+	if err != nil {
 		c.mux.Lock()
-		c.state = WSConnClosing
+		c.state = WSConnClosed
 		c.mux.Unlock()
-		err := c.WriteMessage(
-			websocket.CloseMessage,
-			websocket.FormatCloseMessage(code, reason))
-		if err != nil {
-			c.state = WSConnClosed
-			c.Errorf("sending graceful websocket close control message failed: %s", err.Error())
-			c.Close()
-		}
+		c.Error("sending graceful websocket close control message failed",
+			xslog.Error(err))
+		_ = c.Close()
 	}
 }
 

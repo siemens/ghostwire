@@ -1,0 +1,71 @@
+{
+    "name": "ghostwire (fully privileged, Docker-in-Docker)",
+    "portsAttributes": {
+        "6060": {
+            "label": "ghostwire Go package documentation",
+            "onAutoForward": "silent",
+            "protocol": "http"
+        }
+    },
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+        "ghcr.io/devcontainers/features/node:2": {},
+        "ghcr.io/devcontainers/features/go:1": {},
+        "ghcr.io/thediveo/devcontainer-features/local-pkgsite:1": {
+            "port": "6060"
+        },
+        "ghcr.io/thediveo/devcontainer-features/pinact:0": {},
+        "ghcr.io/thediveo/devcontainer-features/go-mod-upgrade:1": {},
+        "ghcr.io/thediveo/devcontainer-features/lazygit:0": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:4": {
+            "version": "latest",
+            "moby": false, // go for the upstream Docker-CE
+            "iptablesSwitchAtRuntime": false
+        },
+        "ghcr.io/thediveo/devcontainer-features/nerdctl:0": {},
+        "./ipnufftables":{},
+        "ghcr.io/thediveo/devcontainer-features/gocover:1": {
+            "root": true, // test both as ordinary user and root
+            "num-programs": "1", // do never run package-level tests in parallel
+            "race": true, // enable race detector
+            "verbose": true,
+            "html": true, // generate coverage.html
+            "tags": "matchers",
+            "uncovered-packages": "github.com/siemens/ghostwire/v2/util"
+        },
+        "ghcr.io/thediveo/devcontainer-features/docsify:1": {}
+    },
+    "runArgs": [
+        "--pid=host",
+        "--cgroupns=host"
+    ],
+    "securityOpt": [
+        "apparmor=unconfined"
+    ],
+    "remoteEnv": {
+        "GOPATH": "/home/vscode/go",
+        "PATH": "/home/vscode/go/bin:/go/bin:/usr/local/go/bin:${localEnv:PATH}"
+    },
+    "postCreateCommand": {
+        "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",
+        "yawn": ". ${NVM_DIR}/nvm.sh && cd webui && corepack enable && corepack enable && corepack install",
+        "go-for-root": "echo 'Defaults:vscode secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin\"' | sudo tee -a /etc/sudoers.d/vscode",
+        "nft": "sudo bash -c 'nft add table ip4 && nft add table nat && nft add table filter && nft add chain nat POSTROUTING'",
+        "no-first-run-notice": "rm -f /workspaces/.codespaces/shared/first-run-notice.txt",
+        "enable-userns-aa": "echo 0 | sudo tee -a /proc/sys/kernel/apparmor_restrict_unprivileged_userns",
+        "enable-userns-clone": "echo 1 | sudo tee -a /proc/sys/kernel/unprivileged_userns_clone"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dnut.rewrap-revived",
+                "brunnerh.insert-unicode",
+                "mhutchie.git-graph",
+                "ms-vscode.live-server",
+                "docker.docker",
+                "42Crunch.vscode-openapi",
+                "unifiedjs.vscode-mdx"
+            ]
+        }
+    }
+}

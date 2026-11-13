@@ -5,14 +5,17 @@
 package docker
 
 import (
+	"log/slog"
+
 	"github.com/google/nftables/xt"
-	"github.com/siemens/ghostwire/v2/network/portfwd"
-	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/nufftables"
 	"github.com/thediveo/nufftables/dsl"
 	"github.com/thediveo/nufftables/portfinder"
+
+	"github.com/siemens/ghostwire/v2/network/portfwd"
+	"github.com/siemens/ghostwire/v2/network/portfwd/nftget"
+	"github.com/siemens/ghostwire/v2/network/portfwd/slogpfwd"
 )
 
 // Register this PortForwardings plugin.
@@ -60,7 +63,7 @@ func forwardedPortsMk1(nattable *nufftables.Table) []*portfinder.ForwardedPortRa
 			if fp == nil {
 				continue
 			}
-			log.Debugf("discovered %s", fp)
+			slog.Debug("port forwarding", slogpfwd.ForwardedPortAttrs(fp)...)
 			forwardedPorts = append(forwardedPorts, fp)
 		}
 	}
@@ -91,7 +94,7 @@ func forwardedPortsInChainMk2(chain *nufftables.Chain) []*portfinder.ForwardedPo
 			ForwardIP:      dnat.MinIP,
 			ForwardPortMin: dnat.MinPort,
 		}
-		log.Debugf("discovered %s", fp)
+		slog.Debug("port forwarding", slogpfwd.ForwardedPortAttrs(fp)...)
 		forwardedPorts = append(forwardedPorts, fp)
 	}
 	return forwardedPorts
@@ -133,7 +136,7 @@ func forwardedPortsInChainMk3(chain *nufftables.Chain) []*portfinder.ForwardedPo
 			ForwardIP:      dnat.MinIP,
 			ForwardPortMin: dnat.MinPort,
 		}
-		log.Debugf("discovered %s", fp)
+		slog.Debug("port forwarding", slogpfwd.ForwardedPortAttrs(fp)...)
 		forwardedPorts = append(forwardedPorts, fp)
 	}
 	return forwardedPorts

@@ -8,9 +8,9 @@ import (
 	"net"
 	"strings"
 
-	"github.com/siemens/ghostwire/v2/network"
-
 	"github.com/thediveo/lxkns/model"
+
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // networkInterface is the API v1 JSON representation of an individual network
@@ -20,18 +20,23 @@ type networkInterface struct {
 	Kind          string                `json:"kind"`
 	Name          string                `json:"name"`
 	Alias         string                `json:"alias,omitempty"`
+	AltNames      []string              `json:"altnames,omitempty"`
 	Index         int                   `json:"index"`
 	Addresses     addresses             `json:"addresses"`
 	Operstate     string                `json:"operstate"`
 	Physical      bool                  `json:"physical"`
+	Loopback      bool                  `json:"loopback,omitempty"`
 	DriverInfo    network.NifDriverInfo `json:"driverinfo"`
 	Promiscuous   bool                  `json:"promisc"`
 	Labels        model.Labels          `json:"labels,omitempty"`
 	Master        *nifRef               `json:"master,omitempty"`
 	MacvlanMaster *nifRef               `json:"macvlan,omitempty"` // admittedly stupid naming.
 	Macvlans      []*nifRef             `json:"macvlans,omitempty"`
+	IpvlanMaster  *nifRef               `json:"ipvlan,omitempty"`
+	Ipvlans       []*nifRef             `json:"ipvlans,omitempty"`
 	Slaves        []*nifRef             `json:"slaves,omitempty"`
 	Peer          *peerNifRef           `json:"peer,omitempty"`
+	Netkit        *netkitConfig         `json:"netkit,omitempty"`
 	TunTap        *tuntapConfig         `json:"tuntap,omitempty"`
 	Vxlan         *vxlanConfig          `json:"vxlan,omitempty"`
 	Vlan          *vlanConfig           `json:"vlan,omitempty"`
@@ -52,7 +57,7 @@ type vxlanConfig struct {
 	VID             uint32          `json:"vid"`
 	ArpProxy        bool            `json:"arp-proxy"`
 	Source          *sourceIP       `json:"source,omitempty"`
-	SourcePortRange sourcePortRange `json:"source-portrange,omitempty"`
+	SourcePortRange sourcePortRange `json:"source-portrange"`
 	Remote          *remoteIP       `json:"remote,omitempty"`
 	RemotePort      uint16          `json:"remote-port"`
 }
@@ -86,6 +91,16 @@ type vlanConfig struct {
 	VlanProtocol int    `json:"vlan-protocol"`
 }
 
+// netkitConfig is optional and carries netkit-specific network interface
+// information.
+type netkitConfig struct {
+	Mode       string `json:"mode"`
+	Policy     string `json:"policy"`
+	PeerPolicy string `json:"peer-policy,omitempty"`
+	Primary    bool   `json:"primary"`
+	Single     bool   `json:"single"`
+}
+
 // newNif returns a properly set up JSON networkInterface, given a discovered
 // network.NetworkInterface.
 func newNif(nif network.Interface) networkInterface {
@@ -94,21 +109,36 @@ func newNif(nif network.Interface) networkInterface {
 	if nif.Nif().Bridge != nil {
 		master = newNifRef(nif.Nif().Bridge)
 	}
-	// Handle a VETH peer, if present.
+	// Handle a VETH or netkit peer, if present.
 	var peer *peerNifRef
-	if veth, ok := nif.(network.Veth); ok {
-		if p := veth.Veth().Peer; p != nil {
-			peer = &peerNifRef{
-				ID:    nifID(p),
-				Index: p.Nif().Index,
-				Name:  p.Nif().Name,
-			}
+	if p := network.PeerOf(nif); p != nil {
+		peer = &peerNifRef{
+			ID:    nifID(p),
+			Index: p.Nif().Index,
+			Name:  p.Nif().Name,
+		}
+	}
+	var netkitcfg *netkitConfig
+	if netkit, ok := nif.(network.Netkit); ok {
+		nk := netkit.Netkit()
+		netkitcfg = &netkitConfig{
+			Mode:    nk.Mode.String(),
+			Policy:  nk.Policy.String(),
+			Primary: nk.Primary,
+			Single:  nk.Single,
+		}
+		if !nk.Single {
+			netkitcfg.PeerPolicy = nk.PeerPolicy.String()
 		}
 	}
 	// Handle a MACVLAN master.
 	var macvlanmaster *nifRef
 	if macvlan, ok := nif.(network.Macvlan); ok {
 		macvlanmaster = newNifRef(macvlan.Macvlan().Master)
+	}
+	var ipvlanmaster *nifRef
+	if ipvlan, ok := nif.(network.Ipvlan); ok {
+		ipvlanmaster = newNifRef(ipvlan.Ipvlan().Master)
 	}
 	// Handle slaves of bridges, but also of other masters, and even of PFs.
 	var slaves []*nifRef
@@ -117,13 +147,16 @@ func newNif(nif network.Interface) networkInterface {
 			slaves = append(slaves, newNifRef(port))
 		}
 	}
-	var macvlans []*nifRef
+	var macvlans, ipvlans []*nifRef
 	for _, nif := range nif.Nif().Slaves {
-		if nif.Nif().Kind == "macvlan" {
+		switch nif.Nif().Kind {
+		case "macvlan":
 			macvlans = append(macvlans, newNifRef(nif))
-			continue
+		case "ipvlan":
+			ipvlans = append(ipvlans, newNifRef(nif))
+		default:
+			slaves = append(slaves, newNifRef(nif))
 		}
-		slaves = append(slaves, newNifRef(nif))
 	}
 	// Handle a VF.
 	var pf *nifRef
@@ -199,17 +232,19 @@ func newNif(nif network.Interface) networkInterface {
 
 	nifattrs := nif.Nif()
 	return networkInterface{
-		ID:    nifID(nif),
-		Name:  nifattrs.Name,
-		Alias: nifattrs.Alias,
-		Index: nifattrs.Index,
-		Kind:  nifattrs.Kind,
+		ID:       nifID(nif),
+		Name:     nifattrs.Name,
+		Alias:    nifattrs.Alias,
+		AltNames: nifattrs.AltNames,
+		Index:    nifattrs.Index,
+		Kind:     nifattrs.Kind,
 		Addresses: addresses{
 			MAC:  nifattrs.L2Addr.String(),
 			IPv4: nifattrs.Addrsv4,
 			IPv6: nifattrs.Addrsv6,
 		},
 		Physical:      nifattrs.Physical,
+		Loopback:      nifattrs.Loopback,
 		DriverInfo:    nifattrs.DriverInfo,
 		Promiscuous:   nifattrs.Promiscuous,
 		Operstate:     nifattrs.State.Name(),
@@ -217,7 +252,10 @@ func newNif(nif network.Interface) networkInterface {
 		Master:        master,
 		MacvlanMaster: macvlanmaster,
 		Macvlans:      macvlans,
+		IpvlanMaster:  ipvlanmaster,
+		Ipvlans:       ipvlans,
 		Peer:          peer,
+		Netkit:        netkitcfg,
 		Slaves:        slaves,
 		Vxlan:         vxlancfg,
 		TunTap:        tuntapcfg,

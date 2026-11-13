@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { IpAddress } from "./address"
-import { NetworkNamespace } from "./netns"
-import { PortUser } from "./ports"
+import type { IpAddress } from "./address"
+import type { NetworkNamespace } from "./netns"
+import type { PortUser } from "./ports"
 
 export interface ForwardedPort {
     protocol: string

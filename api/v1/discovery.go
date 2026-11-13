@@ -5,8 +5,9 @@
 package v1
 
 import (
-	gostwire "github.com/siemens/ghostwire/v2"
 	"github.com/thediveo/lxkns/model"
+
+	gostwire "github.com/siemens/ghostwire/v2"
 )
 
 // DiscoveryResult represents a Ghostwire v1 discovery result, consisting of

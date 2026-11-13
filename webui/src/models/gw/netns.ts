@@ -2,11 +2,11 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { isContainer, Pod, PrimitiveContainee, Project, sortContaineesByName } from './containee'
-import { ForwardedPort } from './forwardedports'
-import { NetworkInterfaces } from './nif'
-import { TransportPort } from './ports'
-import { IpRoute } from './route'
+import { isContainer, type Pod, type PrimitiveContainee, type Project, sortContaineesByName } from './containee'
+import type { ForwardedPort } from './forwardedports'
+import type { NetworkInterfaces } from './nif'
+import type { TransportPort } from './ports'
+import type { IpRoute } from './route'
 
 export type NetworkNamespaces = { [key: number]: NetworkNamespace }
 
@@ -61,7 +61,7 @@ export const isNetworkNamespace = (netns: unknown): netns is NetworkNamespace =>
  * @param netns network namespace object.
  */
 export const firstContainee = (netns: NetworkNamespace) => {
-    const containee = netns.containers.sort(sortContaineesByName)[0]
+    const containee = [...netns.containers].sort(sortContaineesByName)[0]
     return (isContainer(containee) && containee.pod) || containee
 }
 
@@ -84,3 +84,60 @@ export const emptyNetns = (netns: NetworkNamespace) => {
     const nifs = Object.values(netns.nifs)
     return nifs.length === 1 && nifs[0].name === 'lo'
 }
+
+/**
+ * Returns true, if the given network namespace only has a single and lonely
+ * loopback "lo" network interface and isn't used by any (OCI) container.
+ */
+export const emptyNonContainerNetns = (netns: NetworkNamespace) =>
+    emptyNetns(netns) && !netns.containers.some(isContainer)
+
+/**
+ * Returns true if the given network namespace matches the specified containee
+ * name filter predicate. This predicate is the single source of truth for the
+ * containee filter semantics shared by the wiring view, the details view, and
+ * the containee navigator.
+ *
+ * A network namespace matches if, and only if, at least one of the following
+ * names matches the filter predicate:
+ *
+ * - the name of an attached stand-alone container or process,
+ * - the name of an attached pod'ed container,
+ * - the name of an attached pod,
+ * - the name of the composer project this network namespace belongs to; this
+ *   way, filtering by project name reveals the complete composer project, even
+ *   where individual container names do not contain the project name (such as
+ *   with explicitly set container names).
+ *
+ * Consumers must not re-filter the member network namespaces of the project
+ * groups returned by `sortedNetnsProjects`, as these are already restricted to
+ * the (filtered) network namespaces passed in.
+ *
+ * @param netns network namespace object.
+ * @param matchfn name matching predicate, such as returned by `getFilterFn`.
+ */
+export const netnsMatchesFilter = (netns: NetworkNamespace, matchfn: (name: string) => boolean) =>
+    netns.containers.some(cntee => matchfn(cntee.name))
+    || netns.pods.some(pod => matchfn(pod.name))
+    || (!!netns.project && matchfn(netns.project.name))
+
+/**
+ * Returns true, if the given network namespace only has a single and lonely
+ * loopback "lo" network interface and is used by at least one (OCI) container.
+ */
+export const emptyContainerNetns = (netns: NetworkNamespace) =>
+    emptyNetns(netns) && netns.containers.some(isContainer)
+
+/**
+ * Returns a network namespace with the lo interface filtered out, if told so.
+ * Otherwise returns the original network namespace. Lo-only container network
+ * namespaces always keep their lo interface.
+ */
+export const loFiNetns = (netns: NetworkNamespace, noLo: boolean): NetworkNamespace =>
+    !noLo || emptyContainerNetns(netns)
+        ? netns
+        : {
+            ...netns,
+            nifs: Object.fromEntries(
+                Object.entries(netns.nifs).filter(([, nif]) => nif.name !== 'lo')),
+        }

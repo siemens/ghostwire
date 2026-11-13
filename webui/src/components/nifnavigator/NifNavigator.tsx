@@ -6,7 +6,7 @@ import React from 'react'
 
 import { Menu, MenuItem, styled } from '@mui/material'
 
-import { AddressFamilySet, firstContainee, NetworkInterface, nifId, orderNifByNameAndContainee } from 'models/gw'
+import { type AddressFamilySet, firstContainee, type NetworkInterface, nifId, orderNifByNameAndContainee } from 'models/gw'
 import { NifBadge } from 'components/nifbadge'
 import { ContaineeBadge } from 'components/containeebadge'
 
@@ -27,7 +27,7 @@ const AliasName = styled('span')(() => ({
 const relatedItem = (nif: NetworkInterface) => {
     const containee = firstContainee(nif.netns)
     let nifname = nif.name
-    let alias = ''
+    let alias: string
     // Do we want to show an alias or a container engine network name instead of
     // some incomprehensible interface name?
     if (nif.master && nif.master.kind === 'bridge') {
@@ -90,7 +90,7 @@ export interface NifNavigatorProps {
 /**
  * A `NifNavigator` is a network interface (button) badge that can be clicked
  * and then shows a pop-up menu with options to navigate to related network
- * interfaces (VETH peers, MACVLAN master, MACVLANs, et cetera).
+ * interfaces (VETH peers, MACVLAN/IPVLAN masters, MACVLANs, IPVLANs, et cetera).
  *
  * The pop-up menu list of related network interfaces is sorted first by
  * related network interface name, and only then by the names of the
@@ -130,6 +130,12 @@ export const NifNavigator = ({
     }
     if (nif.macvlans) {
         relatedNifs.push(...nif.macvlans)
+    }
+    if (nif.ipvlan) {
+        relatedNifs.push(nif.ipvlan)
+    }
+    if (nif.ipvlans) {
+        relatedNifs.push(...nif.ipvlans)
     }
     if (nif.peer) {
         relatedNifs.push(nif.peer)

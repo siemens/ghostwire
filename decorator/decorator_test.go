@@ -7,10 +7,11 @@ package decorator
 import (
 	"context"
 
-	"github.com/siemens/ghostwire/v2/network"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+
+	"github.com/siemens/ghostwire/v2/network"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

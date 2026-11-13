@@ -5,8 +5,15 @@
 package network
 
 import (
+	"os"
+
+	"github.com/thediveo/notwork/dummy"
+	"github.com/thediveo/spacetest/netns"
+	"github.com/vishvananda/netlink"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/thediveo/success"
 )
 
 var _ = Describe("network interface", func() {
@@ -32,11 +39,44 @@ var _ = Describe("network interface", func() {
 			&VxlanAttrs{NifAttrs: NifAttrs{Name: "vxlan666", Kind: "vxlan"}},
 		}
 		Expect(nifs.OfKind("veth")).To(ContainElements(
-			HaveInterfaceOfKindWithName("veth", "vethdead"),
-			HaveInterfaceOfKindWithName("veth", "vethbeef"),
+			HaveInterfaceKindAndName("veth", "vethdead"),
+			HaveInterfaceKindAndName("veth", "vethbeef"),
 		))
 		Expect(nifs.OfKind("foobar")).To(BeEmpty())
 		Expect(Interfaces{}.OfKind("lo")).To(BeEmpty())
+	})
+
+	It("picks up alternate names", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
+		defer netns.EnterTransient()()
+		dmy := dummy.NewTransient()
+		Expect(netlink.LinkAddAltName(dmy, "twoflower")).To(Succeed())
+		Expect(netlink.LinkAddAltName(dmy, "rincewind")).To(Succeed())
+
+		nlh := Successful(netlink.NewHandle())
+		defer func() { _ = nlh.Close() }()
+		nif := NewInterface(nlh, nil, Successful(nlh.LinkByName(dmy.Attrs().Name)))
+		Expect(nif.Nif().AltNames).To(ConsistOf("twoflower", "rincewind"))
+	})
+
+	It("flags loopback interfaces", func() {
+		if os.Getuid() != 0 {
+			Skip("needs root")
+		}
+
+		defer netns.EnterTransient()()
+		dmy := dummy.NewTransient()
+
+		nlh := Successful(netlink.NewHandle())
+		defer func() { _ = nlh.Close() }()
+		lo := NewInterface(nlh, nil, Successful(nlh.LinkByName("lo")))
+		Expect(lo.Nif().Loopback).To(BeTrue())
+		Expect(lo.Nif().Physical).To(BeFalse())
+		nif := NewInterface(nlh, nil, Successful(nlh.LinkByName(dmy.Attrs().Name)))
+		Expect(nif.Nif().Loopback).To(BeFalse())
 	})
 
 	When("sorting interfaces", func() {

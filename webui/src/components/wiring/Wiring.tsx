@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import clsx from 'clsx'
-import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import React, { type JSX, type ReactElement, useLayoutEffect, useState } from 'react'
 
 import { styled, useTheme } from '@mui/material'
 
@@ -254,7 +254,7 @@ const layoutExternals = (wires: Wire[], nifContainerDomId: string): ExternalWire
 // be drawn on top of earlier SVG elements.
 const sortHotJSXElements = (els: JSX.Element[], hotWires: string[], domIdBase: string) => (
     // We need a stable sort and we want to sort "hot" elements near the end,
-    // but keep the order stable inbetween hot elements. So we first need to
+    // but keep the order stable in between hot elements. So we first need to
     // gather the needed additional properties and only then sort.
     els.map((el, idx) => [
         idx,
@@ -273,6 +273,8 @@ const sortHotJSXElements = (els: JSX.Element[], hotWires: string[], domIdBase: s
 // element ID context, to separate them from other element IDs.
 const markerSpace = 'marker-'
 
+const netkitStripes = 'netkit-stripes'
+
 /**
  * Renders the SVG path of a (virtual) wire connecting two network interfaces.
  *
@@ -282,9 +284,11 @@ const markerSpace = 'marker-'
 const TwoEndedWire = (slw: SwimlaneWire, laneWidth: number, domIdBase: string, wireClass: string, ghostwireClass: string) => {
     const width = (slw.lane + 0.5) * laneWidth
     const radius = laneWidth / 2
-    let path = ''
+    let path: string
     switch (slw.kind) {
         case 'macvlan':
+        case 'ipvlan':
+        case 'vlan':
         case 'vxlan':
             if (slw.reverse) {
                 // The master interface is located above the MACVLAN slave
@@ -325,7 +329,7 @@ l ${-(slw.toInset + width - radius)} 0`
     const down = slw.operStateDown ? 'down' : ''
 
     const relation = relationClassNameFromIds(domIdBase, slw.nif1Element.id, slw.nif2Element.id)
-    const marker = `url(#${domIdBase}${markerSpace}${slw.kind})`
+    const marker = `url(#${domIdBase}${markerSpace}${slw.kind}${down})`
 
     return [
         <path
@@ -336,6 +340,9 @@ l ${-(slw.toInset + width - radius)} 0`
         <path
             key={`${slw.nif1Element.id}-${slw.nif2Element.id}`}
             className={clsx(wireClass, slw.kind, relation, down)}
+            style={slw.kind === 'netkit'
+                ? { '--netkit-stripes': `url(#${domIdBase}${netkitStripes}${down})` } as React.CSSProperties
+                : undefined}
             markerStart={slw.reverse ? marker : undefined}
             markerEnd={slw.reverse ? undefined : marker}
             d={path}
@@ -430,9 +437,30 @@ const WireArea = styled('svg')(({ theme }) => ({
     '& .wire.veth': {
         stroke: theme.palette.wire.veth,
     },
+    '& .wire.netkit, & .wire.netkit.down': {
+        // the pattern id is per wiring instance, so it's passed in per wire.
+        stroke: 'var(--netkit-stripes)',
+    },
+    '& .netkit-stripe': {
+        fill: theme.palette.wire.netkit,
+    },
+    '& .netkit-stripe-down': {
+        fill: theme.palette.wire.down,
+    },
+    '& .netkit-band': {
+        fill: '#000',
+    },
     '& .wire.macvlan': {
         stroke: theme.palette.wire.maclvan,
         strokeDasharray: '2.5ex 0.5ex 1ex 0.5ex',
+    },
+    '& .wire.ipvlan': {
+        stroke: theme.palette.wire.ipvlan,
+        strokeDasharray: '2.5ex 0.5ex 1ex 0.5ex',
+    },
+    '& .wire.vlan': {
+        stroke: theme.palette.wire.vlan,
+        strokeDasharray: '2ex 0.5ex 0.5ex 0.5ex 0.5ex 0.5ex',
     },
     '& .wire.vxlan': {
         stroke: theme.palette.wire.vxlan,
@@ -457,7 +485,28 @@ const WireArea = styled('svg')(({ theme }) => ({
         fill: theme.palette.wire.maclvan,
     },
     '& .macvlan-marker-down': {
-        fill: `${theme.palette.text.disabled} !important`,
+        fill: `${theme.palette.wire.down} !important`,
+    },
+
+    '& .ipvlan-marker': {
+        fill: theme.palette.wire.ipvlan,
+    },
+    '& .ipvlan-marker-down': {
+        fill: `${theme.palette.wire.down} !important`,
+    },
+
+    '& .vlan-marker': {
+        fill: theme.palette.wire.vlan,
+    },
+    '& .vlan-marker-down': {
+        fill: `${theme.palette.wire.down} !important`,
+    },
+
+    '& .vxlan-marker': {
+        fill: theme.palette.wire.vxlan,
+    },
+    '& .vxlan-marker-down': {
+        fill: `${theme.palette.wire.down} !important`,
     },
 }))
 
@@ -475,7 +524,7 @@ const WireArea = styled('svg')(({ theme }) => ({
  * @param cnamedown CSS class name for marker in operstate "down".
  * @param m marker SVG element acting as template.
  */
-const marker = (id: string, cname: string, cnamedown: string, m: ReactElement) =>
+const marker = (id: string, cname: string, cnamedown: string, m: ReactElement<React.SVGProps<SVGMarkerElement>>) =>
     [
         React.cloneElement(m, { id: id, className: cname, key: id }),
         React.cloneElement(m, { id: `${id}down`, className: cnamedown, key: `${id}down` }),
@@ -521,7 +570,7 @@ export interface WiringProps {
 
 /**
  * `Wiring` renders a wire "pane" as well as the wiring on top of it. The
- * wiring is described using `Wire` objects; bascially, the wire objects
+ * wiring is described using `Wire` objects; basically, the wire objects
  * describe two (one) network interface DOM element to wire with each other,
  * as well as the "kind" of wire (such as "veth", "macvlan", et cetera.)
  *
@@ -560,6 +609,8 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
         const [p2pw, lc] = layoutWires(p2pWires, nifContainerDomId)
         const extw = layoutExternals(externalWires, nifContainerDomId)
 
+        // Layout depends on measuring the rendered DOM, so state must be set here.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSvgWires(
             sortHotJSXElements(
                 extw.map(ew => ExternallyFacingWire(ew, lc, laneWidth, domIdBase, 'wire', 'ghostwire'))
@@ -579,6 +630,7 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
         // ... except that in real life even things don't break all the time.
         // How often do we expect classes and classes.wire to change?!!
         // Seriously!
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layoutToken,
         // These are breaking our necks: p2pWires, externalWires, 
         hotWires,
@@ -595,6 +647,23 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
     return (
         <WireArea className={className} width={lanesCount * laneWidth}>
             <defs>
+                <pattern
+                    id={`${domIdBase}${netkitStripes}`}
+                    patternUnits="userSpaceOnUse"
+                    width="16" height="16"
+                    patternTransform="rotate(45)"
+                >
+                    <rect className="netkit-stripe" width="8" height="16" />
+                    <rect className="netkit-band" x="8" width="8" height="16" />
+                </pattern>
+                <pattern
+                    id={`${domIdBase}${netkitStripes}down`}
+                    patternUnits="userSpaceOnUse"
+                    width="16" height="16"
+                    patternTransform="rotate(45)"
+                >
+                    <rect className="netkit-stripe-down" width="8" height="16" />
+                </pattern>
                 {marker(
                     `${domIdBase}${markerSpace}external`,
                     'ext-marker', 'ext-marker-down',
@@ -608,6 +677,21 @@ export const Wiring = ({ wires, hotWires, className, layoutToken }: WiringProps)
                 {marker(
                     `${domIdBase}${markerSpace}macvlan`,
                     'macvlan-marker', 'macvlan-marker-down',
+                    macvlanMarker
+                )}
+                {marker(
+                    `${domIdBase}${markerSpace}ipvlan`,
+                    'ipvlan-marker', 'ipvlan-marker-down',
+                    macvlanMarker
+                )}
+                {marker(
+                    `${domIdBase}${markerSpace}vlan`,
+                    'vlan-marker', 'vlan-marker-down',
+                    macvlanMarker
+                )}
+                {marker(
+                    `${domIdBase}${markerSpace}vxlan`,
+                    'vxlan-marker', 'vxlan-marker-down',
                     macvlanMarker
                 )}
             </defs>

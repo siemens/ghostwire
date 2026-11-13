@@ -2,16 +2,16 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useState, useRef, useMemo, LegacyRef, useEffect } from 'react'
+import React, { useState, useRef, useMemo, type RefObject } from 'react'
 
 import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
 import useResizeObserver from 'beautiful-react-hooks/useResizeObserver'
 
 import { useContextualId } from 'components/idcontext'
-import { Wire, Wiring } from 'components/wiring'
-import { NetworkInterface, NetworkNamespace, NetworkNamespaces, nifId, OperationalState } from 'models/gw'
-import { isRelationClassName } from 'utils/relclassname'
+import { type Wire, Wiring } from 'components/wiring'
+import { type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, OperationalState } from 'models/gw'
+import { isRelationClassName, passiveRelationClassName } from 'utils/relclassname'
 import { rgba } from 'utils/rgba'
 
 
@@ -199,27 +199,40 @@ const extractWiring = (
                 // this special relationship in details, but not in the wiring
                 // view.
                 case 'veth':
+                case 'netkit':
                     if (nif.peer && !wires.has(nif.peer) && !wires.has(nif)) {
                         wires.set(nif, {
                             kind: nif.kind,
-                            operStateDown: nif.operstate === OperationalState.Down,
+                            operStateDown: (nif.operstate === OperationalState.Down) || (nif.peer.operstate === OperationalState.Down),
                             nif1Id: domIdBase + nifId(nif),
                             nif2Id: domIdBase + nifId(nif.peer),
                         } as Wire)
                     }
                     break;
                 case 'macvlan':
-                    wires.set(nif, {
-                        kind: nif.kind,
-                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.macvlan!.operstate === OperationalState.Down),
-                        nif1Id: domIdBase + nifId(nif),
-                        nif2Id: domIdBase + nifId(nif.macvlan!),
-                    } as Wire)
+                    if (nif.macvlan) {
+                        wires.set(nif, {
+                            kind: nif.kind,
+                            operStateDown: (nif.operstate === OperationalState.Down) || (nif.macvlan.operstate === OperationalState.Down),
+                            nif1Id: domIdBase + nifId(nif),
+                            nif2Id: domIdBase + nifId(nif.macvlan),
+                        } as Wire)
+                    }
+                    break;
+                case 'ipvlan':
+                    if (nif.ipvlan) {
+                        wires.set(nif, {
+                            kind: nif.kind,
+                            operStateDown: (nif.operstate === OperationalState.Down) || (nif.ipvlan.operstate === OperationalState.Down),
+                            nif1Id: domIdBase + nifId(nif),
+                            nif2Id: domIdBase + nifId(nif.ipvlan),
+                        } as Wire)
+                    }
                     break;
                 case 'vlan':
                     wires.set(nif, {
                         kind: nif.kind,
-                        operStateDown: nif.operstate === OperationalState.Down,
+                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.master?.operstate === OperationalState.Down),
                         nif1Id: domIdBase + nifId(nif),
                         nif2Id: domIdBase + nifId(nif.master!),
                     } as Wire)
@@ -227,7 +240,7 @@ const extractWiring = (
                 case 'vxlan':
                     wires.set(nif, {
                         kind: nif.kind,
-                        operStateDown: nif.operstate === OperationalState.Down,
+                        operStateDown: (nif.operstate === OperationalState.Down) || (nif.underlay?.operstate === OperationalState.Down),
                         nif1Id: domIdBase + nifId(nif),
                         nif2Id: domIdBase + nifId(nif.underlay!),
                     } as Wire)
@@ -292,8 +305,12 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
 
     const breadboardref = useRef<HTMLDivElement>(null)
 
-    const prevnetnsref = useRef<NetworkNamespaces | NetworkNamespace[] | NetworkNamespace | null>(null)
+    const [prevNetns, setPrevNetns] = useState(netns)
     const [generation, setGeneration] = useState(0)
+    if (netns !== prevNetns) {
+        setPrevNetns(netns)
+        setGeneration(generation + 1)
+    }
 
     // beautiful react hooks to the (layouting) rescue, as they offer us a slick
     // resize observer with integrated debouncing/throttling. We need to
@@ -303,35 +320,33 @@ export const Breadboard = ({ children, netns }: BreadboardProps) => {
     // the wires in those circumstances, we simply derive a "layout token"
     // changing whenever the dimensions of the content change (as this then can
     // shuffle the wired network interfaces around) and we need to follow.
-    const contentref = useRef<HTMLElement>(null)
-    const contentRect = useResizeObserver(contentref, 100/*ms*/)
-    const layoutToken = contentRect 
-        ? `${contentRect.width}x${contentRect.height}-${generation}` 
+    const contentref = useRef<HTMLDivElement>(null)
+    const contentRect = useResizeObserver(contentref as RefObject<HTMLElement>, 100/*ms*/)
+    const layoutToken = contentRect
+        ? `${contentRect.width}x${contentRect.height}-${generation}`
         : generation.toString()
 
     const contentMemo = useMemo(() => (
-        <ContentPane id={nifContainerDomId} ref={contentref as LegacyRef<HTMLDivElement>}>
+        <ContentPane id={nifContainerDomId} ref={contentref}>
             {children}
         </ContentPane>
     ), [nifContainerDomId, children])
-
-    useEffect(() => {
-        prevnetnsref.current = netns
-        setGeneration(generation+1)
-    }, [netns])
 
     const wires = extractWiring(netns, domIdBase)
 
     // tag or untag the wires identified by their wire classes as "hot" (to
     // highlight) or "cold" (normal appearance).
-    const tagElementsWithClasses = (wireClasses: string[], hot: boolean) => {
-        const alreadyHotEls = hotWireClasses
-            .map(className => breadboardref.current ? [...breadboardref.current.getElementsByClassName(className)] : [])
-            .flat()
-        if (hot) {
-            const els = wireClasses
-                .map(className => breadboardref.current ? [...breadboardref.current.getElementsByClassName(className)] : [])
+    const relationElements = (wireClasses: string[]) => wireClasses
+        .map(className => breadboardref.current
+            ? [className, passiveRelationClassName(className)]
+                .map(cls => [...breadboardref.current!.getElementsByClassName(cls)])
                 .flat()
+            : [])
+        .flat()
+    const tagElementsWithClasses = (wireClasses: string[], hot: boolean) => {
+        const alreadyHotEls = relationElements(hotWireClasses)
+        if (hot) {
+            const els = relationElements(wireClasses)
             // cool down wires that shouldn't be hot anymore but where Firefox
             // incorrectly swallows the corresponding mouse out events.
             alreadyHotEls

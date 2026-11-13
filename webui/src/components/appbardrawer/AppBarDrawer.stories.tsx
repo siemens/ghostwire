@@ -36,7 +36,7 @@ export const Basic: Story = {
                 &nbsp;0.0.0
             </Typography>
         </>,
-        drawer: (closeDrawer) => (
+        drawer: ({ closeDrawer }) => (
             <List onClick={closeDrawer}>
                 <DrawerLinkItem
                     key="home"

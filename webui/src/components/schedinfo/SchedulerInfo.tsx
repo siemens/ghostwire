@@ -2,11 +2,10 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
-import { Process } from 'models/gw/process'
+import { type Process } from 'models/gw/process'
 import { HistoryToggleOff } from '@mui/icons-material'
 import { rgba } from 'utils/rgba'
 
@@ -31,7 +30,7 @@ const SchedInformation = styled('span')(({ theme }) => ({
         color: theme.palette.sched.prio,
     },
     '& > .MuiSvgIcon-root': {
-        color: rgba(theme.palette.text.primary, 0.1),
+        color: rgba(theme.palette.text.primary, 0.2),
         verticalAlign: 'text-top',
         position: 'relative',
         top: '-0.15ex',

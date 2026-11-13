@@ -2,14 +2,21 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react'
 
 import { styled } from "@mui/material"
 import ProcessIcon from 'icons/Process'
 
-const Details = styled('span')(() => ({
+const Details = styled('span')(({ theme }) => ({
     display: 'inline-block',
     whiteSpace: 'nowrap',
+
+    '& .MuiSvgIcon-root': {
+        marginRight: '0.1em',
+        verticalAlign: 'baseline',
+        position: 'relative',
+        top: '0.2ex',
+        color: theme.palette.text.disabled,
+    },
 }))
 
 const Cmdline = styled('span')(() => ({

@@ -5,6 +5,8 @@
 package ieappicon
 
 import (
+	"slices"
+
 	"github.com/thediveo/lxkns/decorator/composer"
 	"github.com/thediveo/lxkns/decorator/industrialedge"
 	"github.com/thediveo/lxkns/model"
@@ -120,10 +122,8 @@ func (ap ieAppProjects) pruneAndUpdate(engines []*model.ContainerEngine) []ieApp
 // container ID in the before and now lists of container IDs.
 func isNewProject(befores, nows []string) bool {
 	for _, before := range befores {
-		for _, now := range nows {
-			if before == now {
-				return false
-			}
+		if slices.Contains(nows, before) {
+			return false
 		}
 	}
 	return true

@@ -5,8 +5,9 @@
 package network
 
 import (
+	"log/slog"
+
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/vishvananda/netlink"
 )
 
@@ -57,22 +58,35 @@ func (n *MacvlanAttrs) ResolveRelations(allns NetworkNamespaces) {
 	// must be present in such cases (as MACVLAN cannot be its own master) so we
 	// can detect and properly handle this WTF.
 	netnsid := NSID(attrs.NetNsID)
-	if idx := attrs.ParentIndex; idx != 0 || netnsid != NSID_NONE {
-		if idx == 0 {
-			idx = n.Index // rtnetlink idio(t)syncrasy
+	idx := attrs.ParentIndex
+	slog.Debug("MACVLAN", slog.Uint64("nsid", uint64(netnsid)), slog.Int("parent-index", idx))
+	if idx == 0 && netnsid == NSID_NONE {
+		return
+	}
+	if idx == 0 {
+		idx = n.Index // rtnetlink idio(t)syncrasy
+	}
+	netns := n.Netns
+	if netnsid != NSID_NONE {
+		netns = netns.related(netnsid)
+	}
+	if netns != nil {
+		if master := netns.Nifs[idx]; master != nil {
+			n.Master = master
+			master.Nif().Slaves = append(master.Nif().Slaves, n.Interface())
+			slog.Debug("MACVLAN master relation",
+				slog.String("interface", n.Name),
+				slog.Uint64("netns", n.Netns.ID().Ino),
+				slog.Group("master",
+					slog.Uint64("netns", master.Nif().Netns.ID().Ino),
+					slog.String("interface", master.Nif().Name),
+				),
+			)
 		}
-		netns := n.Netns
-		if NSID(attrs.NetNsID) != NSID_NONE {
-			netns = netns.related(netnsid)
-		}
-		if netns != nil {
-			if master := netns.Nifs[idx]; master != nil {
-				n.Master = master
-				master.Nif().Slaves = append(master.Nif().Slaves, n.Interface())
-			}
-		} else {
-			log.Warnf("unknown NSID %d in net:[%d]", netnsid, n.Netns.ID().Ino)
-		}
+	} else {
+		slog.Warn("unknown NSID",
+			slog.Uint64("nsid", uint64(netnsid)),
+			slog.Uint64("netns", n.Netns.ID().Ino))
 	}
 }
 

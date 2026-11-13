@@ -7,24 +7,28 @@ package nerdctlnet
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
+
+	"github.com/siemens/turtlefinder/v2"
+	"github.com/thediveo/go-plugger/v3"
+	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/whalewatcher/v2/watcher/containerd"
 
 	"github.com/siemens/ghostwire/v2/decorator"
 	"github.com/siemens/ghostwire/v2/internal/discover"
 	"github.com/siemens/ghostwire/v2/network"
 	"github.com/siemens/ghostwire/v2/test/nerdctl"
 	"github.com/siemens/ghostwire/v2/util"
-	"github.com/siemens/turtlefinder"
-	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/model"
-	"github.com/thediveo/whalewatcher/watcher/containerd"
+
+	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 	. "github.com/onsi/gomega/gleak"
 	. "github.com/thediveo/fdooze"
+	. "github.com/thediveo/success"
 )
 
 const testNetworkName = "gostwire-test-nerdctlnet"
@@ -55,7 +59,7 @@ var _ = Describe("nerdctlnet decorator", func() {
 				nerdctl.NerdctlIgnore(ctx, "rm", "-f", testWorkloadName)
 				nerdctl.NerdctlIgnore(ctx, "network", "rm", testNetworkName)
 
-				Eventually(Goroutines).WithTimeout(2 * time.Second).WithPolling(250 * time.Millisecond).
+				Eventually(Goroutines).WithTimeout(5 * time.Second).WithPolling(250 * time.Millisecond).
 					ShouldNot(HaveLeaked(goodgos))
 				Expect(Filedescriptors()).NotTo(HaveLeakedFds(goodfds))
 
@@ -67,6 +71,11 @@ var _ = Describe("nerdctlnet decorator", func() {
 				Skip("needs root")
 			}
 			nerdctl.SkipWithout()
+
+			DeferCleanup(slog.SetDefault, slog.Default())
+			slog.SetDefault(slog.New(slog.NewTextHandler(GinkgoWriter, &slog.HandlerOptions{
+				Level: slog.LevelDebug,
+			})))
 
 			By(fmt.Sprintf("creating a test bridge network %q", testNetworkName))
 			cmdctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -101,7 +110,7 @@ var _ = Describe("nerdctlnet decorator", func() {
 			Expect(wlnetns.NamedNifs).To(network.ContainInterfaceWithName("eth0"))
 			eth0 := wlnetns.NamedNifs["eth0"]
 			Expect(eth0.Nif().Kind).To(Equal("veth"))
-			veth, _ := eth0.(network.Veth)
+			veth := AssignableTo[network.Veth](eth0)
 			Expect(veth).NotTo(BeNil())
 			Expect(veth.Veth().Peer).NotTo(BeNil())
 
@@ -111,7 +120,6 @@ var _ = Describe("nerdctlnet decorator", func() {
 			Expect(bridge).To(network.HaveInterfaceAlias(testNetworkName))
 			Expect(bridge.Nif().Labels).To(HaveKeyWithValue(GostwireNetworkNameKey, testNetworkName))
 			Expect(bridge.Nif().Labels).To(HaveKeyWithValue("foo", "bar"))
-
 		})
 
 	})

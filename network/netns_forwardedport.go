@@ -5,17 +5,22 @@
 package network
 
 import (
+	"context"
+	"log/slog"
 	"net"
 	"syscall"
 
 	"github.com/google/nftables"
-	"github.com/siemens/ghostwire/v2/network/portfwd"
-	_ "github.com/siemens/ghostwire/v2/network/portfwd/all" // activate all port forwarding detectors.
 	"github.com/thediveo/go-plugger/v3"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
+	"github.com/thediveo/nonstd/xslog"
 	"github.com/thediveo/nufftables"
 	"github.com/thediveo/nufftables/portfinder"
+
+	"github.com/siemens/ghostwire/v2/innetns"
+	"github.com/siemens/ghostwire/v2/network/portfwd"
+	_ "github.com/siemens/ghostwire/v2/network/portfwd/all" // activate all port forwarding detectors.
+	"github.com/siemens/ghostwire/v2/network/portfwd/slogpfwd"
 )
 
 // ForwardedPort is Gostwire's view on forwarded ports (actually port ranges)
@@ -46,23 +51,25 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 	// If netfilters doesn't come to us, we simply come to netfilters ;) The
 	// reson is that nftables uses @mdlayher/netlink and that really is a major
 	// P.I.T.A. with its network namespace "support". Luckily, we have
-	// OpenInNetworkNamespace that properly supports the more complex use cases
-	// of namespace references so we simply wrap creating a netfilter netlink
+	// innetns.Run that properly supports the more complex use cases of
+	// namespace references so we simply wrap creating a netfilter netlink
 	// socket in it.
 	var conn *nftables.Conn
-	err := n.OpenInNetworkNamespace(func() error {
+	err := innetns.Run(n, func() error {
 		var err error
 		conn, err = nftables.New(nftables.AsLasting())
 		return err
 	})
 	if err != nil {
 		if conn != nil {
-			conn.CloseLasting()
+			_ = conn.CloseLasting()
 		}
-		log.Errorf("cannot connect to netfilters, reason: %s", err.Error())
+		slog.LogAttrs(context.Background(), netnsErrLevel(err), "cannot connect to netfilters",
+			slog.Uint64("netns", n.ID().Ino),
+			xslog.Error(err))
 		return
 	}
-	defer conn.CloseLasting()
+	defer func() { _ = conn.CloseLasting() }()
 	n.ForwardedPortsv4 = n.discoverForwardedPortsOfFamily(conn, nufftables.TableFamilyIPv4)
 	n.ForwardedPortsv6 = n.discoverForwardedPortsOfFamily(conn, nufftables.TableFamilyIPv6)
 }
@@ -74,15 +81,16 @@ func (n *NetworkNamespace) discoverForwardedPorts() {
 func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, family nufftables.TableFamily) []ForwardedPort {
 	iptables, err := nufftables.GetFamilyTables(conn, family)
 	if err != nil {
-		log.Errorf("cannot retrieve %s netfilter tables, reason: %s",
-			family, err.Error())
+		slog.Error("cannot retrieve netfilter tables",
+			slog.String("family", family.String()),
+			xslog.Error(err))
 		return nil
 	}
 	forwardedPorts := []ForwardedPort{}
 	for _, portForwardings := range plugger.Group[portfwd.PortForwardings]().Symbols() {
 		fwdports := portForwardings(iptables, family)
 		for _, fwdp := range fwdports {
-			log.Debugf("discovered %s", fwdp)
+			slog.Debug("discovered port forwarding", slogpfwd.ForwardedPortAttrs(fwdp)...)
 			var proto Protocol
 			switch fwdp.Protocol {
 			case "tcp":
@@ -104,7 +112,8 @@ func (n *NetworkNamespace) discoverForwardedPortsOfFamily(conn *nftables.Conn, f
 // Relate the destinations ports are forwarded to to their network
 // namespaces and matching sockets, if any.
 func completeForwardedPortInformation(netspaces NetworkNamespaces) {
-	log.Debugf("resolving forwarded port destinations...")
+	slog.Debug("resolving forwarded port destinations")
+	defer slog.Debug("finished resolving forwarded port destinations")
 	for _, netns := range netspaces {
 		for idx := range netns.ForwardedPortsv4 {
 			ResolveForwardedPort(&netns.ForwardedPortsv4[idx], netns)
@@ -229,15 +238,11 @@ func (n *NetworkNamespace) WhereIs(destIP net.IP) (*NetworkNamespace, Interface)
 			return nil, nil
 		}
 		return nif.Nif().Netns.WhereIs(destIP)
-	case "veth":
-		// It's a directly connected VETH, for what that is worth. The other
-		// VETH end must be either the next hop or the ultimate destination,
+	case "veth", "netkit":
+		// It's a directly connected VETH or netkit, for what that is worth. The
+		// other end must be either the next hop or the ultimate destination,
 		// otherwise we know it's a complete and utter miss.
-		veth, ok := bestRoute.Nif.(Veth)
-		if !ok {
-			return nil, nil
-		}
-		peer := veth.Veth().Peer
+		peer := PeerOf(bestRoute.Nif)
 		if peer == nil {
 			return nil, nil
 		}
@@ -249,7 +254,7 @@ func (n *NetworkNamespace) WhereIs(destIP net.IP) (*NetworkNamespace, Interface)
 	return nil, nil
 }
 
-// NifInBridgeNetwork returns the network Interface with the specified IP
+// NifInBridgedNetwork returns the network Interface with the specified IP
 // address connected somehow to the specified bridge; otherwise, nil.
 func (n *NetworkNamespace) NifInBridgedNetwork(bridge Interface, addr net.IP) Interface {
 	br, ok := bridge.Interface().(Bridge) // grmpf ... first get the proper Interface
@@ -257,11 +262,7 @@ func (n *NetworkNamespace) NifInBridgedNetwork(bridge Interface, addr net.IP) In
 		return nil
 	}
 	for _, port := range br.Bridge().Ports {
-		veth, ok := port.Interface().(Veth)
-		if !ok {
-			continue
-		}
-		peer := veth.Veth().Peer
+		peer := PeerOf(port.Interface())
 		if peer == nil {
 			continue
 		}

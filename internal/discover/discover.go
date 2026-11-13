@@ -6,16 +6,16 @@ package discover
 
 import (
 	"context"
+	"log/slog"
 
-	"github.com/siemens/ghostwire/v2/decorator"
-	"github.com/siemens/ghostwire/v2/network"
-	"github.com/siemens/turtlefinder"
 	"github.com/thediveo/go-plugger/v3"
 	"github.com/thediveo/lxkns/containerizer"
 	lxknsdiscover "github.com/thediveo/lxkns/discover"
-	"github.com/thediveo/lxkns/log"
 	"github.com/thediveo/lxkns/model"
 	"github.com/thediveo/lxkns/species"
+
+	"github.com/siemens/ghostwire/v2/decorator"
+	"github.com/siemens/ghostwire/v2/network"
 )
 
 // Discover returns the discovered network stacks, virtual network topology, and
@@ -25,8 +25,10 @@ import (
 func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map[string]string) (network.NetworkNamespaces, *lxknsdiscover.Result) {
 	// First phase: run a Linux-kernel namespace (+container) discovery,
 	// courtesy of lxkns.
+	tuntaps := &network.TapTunProcessors{}
 	discoverednetns := lxknsdiscover.Namespaces(
 		lxknsdiscover.FromProcs(),
+		lxknsdiscover.FromFds(),
 		lxknsdiscover.FromBindmounts(),
 		lxknsdiscover.WithNamespaceTypes(
 			species.CLONE_NEWNET|species.CLONE_NEWPID|species.CLONE_NEWNS|species.CLONE_NEWUTS),
@@ -35,24 +37,24 @@ func Discover(ctx context.Context, cizer containerizer.Containerizer, labels map
 		lxknsdiscover.WithPIDMapper(),
 		lxknsdiscover.WithLabels(labels),
 		lxknsdiscover.WithAffinityAndScheduling(),
+		lxknsdiscover.WithSocketProcesses(),
+		lxknsdiscover.WithFdCallback(tuntaps.Visit),
 	)
 	// Second phase: create the Gostwire-specific information model based on the
 	// lxkns discovery and augment the model with additional network-related
 	// details, such as tenant DNS resolver configuration, Docker network names,
 	// et cetera.
-	log.Debugf("discovering network namespace details (interfaces, address, routes, ...)")
+	slog.Debug("discovering network namespace details (interfaces, address, routes, ...)")
 	allnetns := network.NewNetworkNamespaces(
 		discoverednetns.Namespaces[model.NetNS],
 		discoverednetns.Processes,
-		discoverednetns.Containers)
-	engines := []*model.ContainerEngine{}
-	if overseer, ok := cizer.(turtlefinder.Overseer); ok {
-		engines = overseer.Engines()
-	}
-	log.Debugf("running gostwire decorators")
+		discoverednetns.Containers,
+		network.WithSocketProcesses(discoverednetns.SocketProcessMap),
+		network.WithTapTunProcessors(tuntaps))
+	slog.Debug("running gostwire decorators")
 	for _, decorateur := range plugger.Group[decorator.Decorate]().Symbols() {
-		decorateur(ctx, allnetns, discoverednetns.Processes, engines)
+		decorateur(ctx, allnetns, discoverednetns.Processes, discoverednetns.ContainerEngines)
 	}
-	log.Debugf("gostwire discovery finished")
+	slog.Debug("gostwire discovery finished")
 	return allnetns, discoverednetns
 }

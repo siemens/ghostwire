@@ -1,6 +1,6 @@
 # Architecture
 
-An important aspect of G(h)ostwire's architecture is that it **focuses on
+An important aspect of Ghostwire's architecture is that it **focuses on
 network discovery** and thus **leverages existing open-source Go modules for the
 non-focus tasks**:
 
@@ -9,28 +9,28 @@ non-focus tasks**:
 - background tracking of container workloads via
   [@thediveo/whalewatcher](https://github.com/thediveo/whalewatcher)
 
-Then, G(h)ostwire brings in the specifically network and communication related
+Then, Ghostwire brings in the specifically network and communication related
 discovery aspects, such as (virtual) layer 2 network elements and port
 forwarding.
 
-Another feature is G(h)ostwire's **unique container engine discovery** – which
+Another feature is Ghostwire's **unique container engine discovery** – which
 also is nicknamed the "turtles finder" in reminiscence of Terry Pratchett's
 [Discworld](https://en.wikipedia.org/wiki/Discworld). This discovery snoops out
 container engines from their engine processes, wherever they are.
 
-In several places, G(h)ostwire uses network-related
+In several places, Ghostwire uses network-related
 "[decorators](/terminology?id=decorator)": they detect, for instance Docker and
 nerdctl/CNI container networks and thus allow labelling their data-link layer
 bridges with the network names.
 
-> [!INFO] In case you wonder about how some types are designed – especially when
+> [!NOTE] In case you wonder about how some types are designed – especially when
 > describing the properties and topology of network interfaces – then please see
 > [embedding](embedding) for background information on why "embedding" isn't any
 > substitute for "inheritance".
 
 ## Information Model
 
-Very simply spoken, G(h)ostwire is a network-centric discovery service, it is
+Very simply spoken, Ghostwire is a network-centric discovery service, it is
 **centered around network namespaces (~network/IP stacks)** and **their
 interconnections**. In addition, **processes** are attached to these network
 namespaces. And then there are **containers** related to these processes. And
@@ -40,9 +40,209 @@ containers are managed by **container engines**.
 At a high level this now looks like this, but don't despair: we'll give you a
 general walk-through.
 
-![Gostwire Information Model](media/gostwire-overview.png)
+```mermaid
+classDiagram
+    direction TB
 
-Please note that Gostwire-specific classes/types are shown in petrol.
+    namespace ghostwire.turtlefinder {
+        class TurtleFinder
+    }
+
+    namespace lxkns.containerizer {
+        class Containerizer {
+            <<interface>>
+        }
+    }
+
+    namespace ghostwire {
+        class Discover["Discover()"] {
+            <<global function>>
+            Discover(cizer containerizer.Containerizer) DiscoveryResult
+        }
+        class DiscoveryResult {
+            Netns network.NetworkNamespaces
+            Lxkns discover.Result
+        }
+    }
+
+    namespace ghostwire.decorator {
+        class decorator {
+            <<plugin group>>
+        }
+    }
+
+    namespace ghostwire.decorator.dockernet {
+        class dockernetDecorate["Decorate"] {
+            <<plugin function>>
+        }
+    }
+
+    namespace ghostwire.decorator.nerdctlnet {
+        class nerdctlnetDecorate["Decorate"] {
+            <<plugin function>>
+        }
+    }
+
+    namespace lxkns.discover {
+        class Result
+    }
+
+    namespace ghostwire.network {
+        class NetworkNamespaces {
+            <<map>>
+        }
+        class NetworkNamespace {
+            Namespace model.Namespace
+            Nifs map[int]Interface
+            NamedNifs map[string]Interface
+            Tenants []*Tenant
+            Routesv4 []Route
+            Routesv6 []Route
+            Portsv4 []ProcessSocket
+            Portsv6 []ProcessSocket
+        }
+        class Interface {
+            <<interface>>
+            Netns *NetworkNamespace
+            Link netlink.Link
+            Labels map[string]string
+        }
+        class Tenant {
+            Process *model.Process
+            DNS DnsConfiguration
+            BoundingCaps []byte
+        }
+        class Bridge
+        class Macvlan
+        class Veth
+        class Vxlan
+        class TunTap
+    }
+
+    namespace netlink {
+        class Link
+    }
+
+    namespace lxkns.model {
+        class lxNamespace["Namespace"] {
+            <<interface>>
+            ID() NamespaceID
+            Type() NamespaceType
+            Owner() Ownership
+            Ref() NamespaceRef
+            Ealdorman() *Process
+            Leaders() []*Process
+        }
+        class Process {
+            PID PIDType
+            PPID PIDType
+            Parent *Process
+            Children []*Process
+            Name string
+            Cmdline []string
+            Starttime uint64
+            CpuCgroup string
+            FridgeCgroup string
+            FridgeFrozen bool
+            Namespaces [8]Namespace
+            Container *Container
+        }
+        class Container {
+            <<interface>>
+            ID() string
+            Name() string
+            Type() string
+            Flavor() string
+            PID() PIDType
+            Paused() bool
+            Labels() map[string]string
+            Groups() []*Group
+            Engine() *ContainerEngine
+            Process() *Process
+        }
+        class Group {
+            Name string
+            Type string
+            Flavor string
+            Containers []*Container
+            Labels map[string]string
+        }
+        class ContainerEngine {
+            ID string
+            Type string
+            API string
+            PID PIDType
+            Containers []*Container
+        }
+    }
+
+    TurtleFinder ..|> Containerizer
+    Discover ..> Containerizer
+    Discover ..> DiscoveryResult : «create»
+    Discover ..> decorator
+    decorator ..> dockernetDecorate
+    decorator ..> nerdctlnetDecorate
+
+    DiscoveryResult *-- Result
+    DiscoveryResult *-- NetworkNamespaces
+    NetworkNamespaces --> "*" NetworkNamespace : by namespace ID
+
+    NetworkNamespace --> lxNamespace
+    NetworkNamespace --> "*" Interface : Nifs
+    NetworkNamespace --> "*" Interface : NamedNifs
+    NetworkNamespace --> "*" Tenant : Tenants
+    Interface --> NetworkNamespace : NetworkNamespace
+    Interface --> "0..1" Interface : Bridge
+    Interface --> "*" Interface : Slaves
+    Interface *-- Link
+    Tenant --> Process : Process
+
+    Bridge --|> Interface
+    Bridge --> "*" Interface : Port
+    Macvlan --|> Interface
+    Macvlan --> Interface : Master
+    Veth --|> Interface
+    Veth "1" --> "1" Veth : Peer
+    Vxlan --|> Interface
+    Vxlan --> Interface : Master
+    TunTap --|> Interface
+    TunTap --> "*" Process
+
+    Process --> "0..1" Process : Parent
+    Process --> "*" Process : Children
+    Process --> "*" lxNamespace : Namespaces
+    lxNamespace --> Process : Ealdorman
+    lxNamespace --> "*" Process : Leaders
+    Process -- Container
+    Group "*" -- "*" Container
+    Container "*" -- "1" ContainerEngine
+
+    style TurtleFinder fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Discover fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style DiscoveryResult fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style decorator fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style dockernetDecorate fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style nerdctlnetDecorate fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style NetworkNamespaces fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style NetworkNamespace fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Interface fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Tenant fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Bridge fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Macvlan fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Veth fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Vxlan fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style TunTap fill:#e0f2f2,stroke:#009999,stroke-width:2px,color:#000
+    style Containerizer fill:#f4f4f4,stroke:#888888,color:#000
+    style Result fill:#f4f4f4,stroke:#888888,color:#000
+    style Link fill:#f4f4f4,stroke:#888888,color:#000
+    style lxNamespace fill:#f4f4f4,stroke:#888888,color:#000
+    style Process fill:#f4f4f4,stroke:#888888,color:#000
+    style Container fill:#f4f4f4,stroke:#888888,color:#000
+    style Group fill:#f4f4f4,stroke:#888888,color:#000
+    style ContainerEngine fill:#f4f4f4,stroke:#888888,color:#000
+```
+
+Please note that Ghostwire-specific classes/types are shown in petrol.
 
 ## Discovery
 
@@ -67,28 +267,28 @@ container engines.
 
 A call to `gostwire.Discover()` returns a `gostwire.DiscoveryResult`. This
 result then contains a map of network namespaces, indexed by the namespace IDs
-and pointing to Gostwire's `network.NetworkNamespace` type.
+and pointing to Ghostwire's `network.NetworkNamespace` type.
 
-Technically, Gostwire's discovery inside `gostwire.Discover()` consists of two
+Technically, Ghostwire's discovery inside `gostwire.Discover()` consists of two
 main phases (no neutral, no protective earth required):
 
 1. network _namespaces_ and container discovery (including decoration) under the
    control of the OpenSource `lxkns` module. However, the container discovery is
-   in part managed by Gostwire, as it auto-detects container engines, see the
+   in part managed by Ghostwire, as it auto-detects container engines, see the
    "Turtle Finder" section below.
 
    1. **lxkns:** discover the process tree and network namespaces (but not the
       configuration inside network namespaces),
    2. **lxkns:** discover containers and then decorate them:
-      1. **Gostwire:** container engine discovery by a Turtle Finder as well as engine-hierarchy detection,
+      1. **Ghostwire:** container engine discovery by a Turtle Finder as well as engine-hierarchy detection,
       2. **whalewatcher:** container workload queries, based on the auto-detected
           container engines sniffed out by the Turtle Finder,
-      3. **Gostwire:** container hierarchy labelling.
+      3. **Ghostwire:** container hierarchy labelling.
       4. **lxkns:** container decoration (for instance, Docker-composer groups and
           Kubernetes pods, et cetera),
 
 2. network _topology_ and network _configuration_ discovery now under the sole
-   control of **Gostwire**.
+   control of **Ghostwire**.
 
    1. discover inside network namespaces: interfaces, configuration, relations,
       ...
@@ -97,7 +297,7 @@ main phases (no neutral, no protective earth required):
 
 ## Network Stacks
 
-Each Gostwire `network.NetworkNamespace` repesents a "network stack" with its
+Each Ghostwire `network.NetworkNamespace` repesents a "network stack" with its
 network-related configuration:
 
 - the `network.Interface`s,
@@ -110,7 +310,7 @@ network-related configuration:
 
 ## Network Interfaces
 
-A Gostwire `network.Interface` describes an individual network interface with
+A Ghostwire `network.Interface` describes an individual network interface with
 several attributes, such as its name, interface index, MAC address, assigned IP
 addresses, et cetera.
 
@@ -129,13 +329,13 @@ In consequence, a some of the tenants of a network namespace might not be
 topmost in the process tree with respect to the network namespace, but deeper
 inside it.
 
-For each tenant, Gostwire discovers the name and DNS client configuration, such
+For each tenant, Ghostwire discovers the name and DNS client configuration, such
 as the hostname (differentiated between system-set hostname and
 `/etc/hostname`), `/etc/resolv.conf`, et cetera. This information depends on a
 tenant's/process' UTS and mount namespaces. This discovery aids in diagnosing
 communication problems, and especially name resolving issues.
 
-For more process details a Gostwire `network.Tenant` refers to its
+For more process details a Ghostwire `network.Tenant` refers to its
 `model.Process` counterpart from the OpenSource `lxkns` module. This reference
 is important as it relates tenants to containers. But please keep in mind that
 not every tenant is also a container.
@@ -153,13 +353,13 @@ _projects_.
 Finally, containers are associated with a simple description of their managing
 container engine, such as the engine's `ID`, `Type` and `API` endpoint path.
 
-> [!NOTE] When using Gostwire's `TurtleFinder` the `API` endpoint paths are
+> [!NOTE] When using Ghostwire's `TurtleFinder` the `API` endpoint paths are
 > always `/proc/[PID]/root/...`-based paths that can be used from processes,
 > regardless of their current mount namespaces.
 
 ## Turtle Finder
 
-Gostwire leverages the [turtlefinder](https://github.com/siemens/turtlefinder)
+Ghostwire leverages the [turtlefinder](https://github.com/siemens/turtlefinder)
 package to auto-detect container engines in the process tree and then
 continously watching their container workload in the background. Additionally,
 the hierarchy of container engines is detected, such as when operating a
@@ -174,7 +374,7 @@ and as part of the `lxkns`-controlled discovery phase in particular.
 > [!NOTE] The auto-discovery of container engines cannot be run in the
 > background, but only on-demand as part of a `ghostwire.Discover()` call. The
 > catch here is that when detecting a new container engine it takes a non-zero
-> amount of time to synchronize to that engine's container workload. Gostwire
+> amount of time to synchronize to that engine's container workload. Ghostwire
 > thus waits for up to 2s for such initial synchronizations to succeed (it waits
 > in parallel, so the maximum delay is always 2s, regardless of number of newly
 > discovered engines), before proceeding into the container and network
@@ -186,7 +386,7 @@ prefix label based on the container engine hierarchy.
 
 ## Network Decorators
 
-Gostwire's network decorators are run over the discovered network namespaces and
+Ghostwire's network decorators are run over the discovered network namespaces and
 container engines (thus including tenants, containers, ...). Sub-packages of
 `gostwire.decorator` implement decoration of network interfaces based on
 container-mananged networks. At this time, container engine-level networks for

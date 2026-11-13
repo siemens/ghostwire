@@ -1,14 +1,14 @@
-# Gostwire
+# Ghostwire
 
-![G(h)ostwire mascot](media/gostwire-gr.png ':class=gwmascot')
+![Ghostwire mascot](media/ghostwire.svg ':class=gwmascot')
 
-**G(h)ostwire** is (what we assume) a unique virtual network topology and
+**Ghostwire** is (what we assume) a unique virtual network topology and
 configuration discovery engine for Linux hosts. It discovers the virtual layer 2
 topology, as well as network address+route configuration, open transport-layer
 ports, port forwarding, and even DNS (stub) resolver configurations. It then
 correlates the networking with the containers found in a Linux system.
 
-For the Linux geeks: **G(h)ostwire** = _namespaces_ + _RT netlink_ +
+For the Linux geeks: **Ghostwire** = _namespaces_ + _RT netlink_ +
 _containers_.
 
 Our Go-based discovery engine is written in Go and offers good performance,
@@ -19,7 +19,7 @@ maintainability, and good extensibility.
 
 - **"turtles anywhere" container engine discovery** and **multi-engine
   support**: automatically detects container engines, not only in the host, but
-  also inside containers. This makes Gostwire a good analysis and diagnosis tool
+  also inside containers. This makes Ghostwire a good analysis and diagnosis tool
   not just for [Kubernetes-in-Docker
   (KinD)](https://github.com/kubernetes-sigs/kind) configurations, but also for
   engine side-by-side deployments, et cetera. Supported engines:
@@ -48,10 +48,10 @@ highly recommend at least kernel version 5.6 or later.
 
 ## Name and Mascot
 
-The name "G(h)ostwire" sprang from the view of virtual (VETH) wires somehow
+The name "Ghostwire" sprang from the view of virtual (VETH) wires somehow
 belonging to the (&#42;_cough_&#42;,
-[ethereal](https://www.wireshark.org/news/20060607.html)) world of ghosts. As a
-nod to the implementation language our mascot is a Go Gopher under a fake Ghost
-(Specte) blanket. [Spectre
-v1](https://en.wikipedia.org/wiki/Spectre_(security_vulnerability)) might have
+[ethereal](https://www.wireshark.org/news/20060607.html)) world of ghosts. So
+our mascot is a (Spectre) ghost firmly holding on to an Ethernet cable with its
+RJ45 plug. [Spectre
+v1](https://en.wikipedia.org/wiki/Spectre_(security_vulnerability)) _might_ have
 been influential, too.

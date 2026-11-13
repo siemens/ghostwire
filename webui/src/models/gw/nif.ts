@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { IpAddress } from './address'
-import { firstContainee, NetworkNamespace } from './netns'
-import { PortUser } from './ports'
+import type { IpAddress } from './address'
+import { firstContainee, type NetworkNamespace } from './netns'
+import type { PortUser } from './ports'
 
 /**
  * The network interfaces of a network namespace are keyed by their so-called
@@ -19,6 +19,7 @@ export interface NetworkInterface {
     netns: NetworkNamespace /** network namespace we belong to. */
     name: string /** name of network interface. */
     alias?: string /** some user-space assigned name for this interface. */
+    altnames?: string[] /** alternate names of this interface, if any. */
     index: number /** nif index within network namespace. */
     /**
      * kind of (virtual) network interface, or "" if this is a loopback
@@ -31,6 +32,7 @@ export interface NetworkInterface {
     operstate: OperationalState /** operational state of network interface. */
     /** true if not a virtual interface, but has (maybe virtual) hardware attached. */
     isPhysical: boolean
+    isLoopback: boolean /** true if IFF_LOOPBACK is set. */
     driverinfo: NifDriverInfo
     isPromiscuous: boolean /** true if in promiscuous mode. */
     sriovrole: SRIOVRole /** SR-IOV role PF or VF, if applicable. */
@@ -39,13 +41,15 @@ export interface NetworkInterface {
     labels: { [key: string]: string }
 
     macvlans?: NetworkInterface[] /* attached macvlan interface(s) */
+    ipvlans?: NetworkInterface[] /* attached ipvlan interface(s) */
     slaves?: NetworkInterface[]
     overlays?: NetworkInterface[]
 
     pf?: NetworkInterface /** if a VF where we found its PF */
     master?: NetworkInterface /** if enslaved, the bridge interface */
     macvlan?: NetworkInterface /** if macvlan this is our "master" interface */
-    peer?: NetworkInterface /** veth peer network interface */
+    ipvlan?: NetworkInterface /** if ipvlan this is our "master" interface */
+    peer?: NetworkInterface /** veth or netkit peer network interface */
     underlay?: NetworkInterface /** vxlan underlay network interface */
 
     addresses: IpAddress[] /** IP addresses assigned to this network interface */
@@ -53,6 +57,7 @@ export interface NetworkInterface {
     tuntapDetails?: TunTapDetails
     vxlanDetails?: VxlanDetails
     vlanDetails?: VlanDetails
+    netkitDetails?: NetkitDetails
 }
 
 export interface NifDriverInfo {
@@ -74,10 +79,13 @@ export const isNetworkInterface = (nif: unknown): nif is NetworkInterface => {
         && (nif as NetworkInterface)?.index !== undefined
 }
 
-export enum TapTunMode {
-    TAP = 'tap',
-    TUN = 'tun',
-}
+export const TapTunMode = {
+    TAP: 'tap',
+    TUN: 'tun',
+} as const
+
+export type TapTunMode = (typeof TapTunMode)[keyof typeof TapTunMode]
+
 
 export type TapTunProcessor = PortUser
 
@@ -101,31 +109,43 @@ export interface VlanDetails {
     vlanProtocol: number,
 }
 
+export interface NetkitDetails {
+    mode: string /** "L2" or "L3" */
+    policy: string /** "forward" or "blackhole" */
+    peerPolicy?: string /** not present in single-device mode */
+    primary: boolean
+    single: boolean /** single-device mode without any peer */
+}
+
 /**
  * The SR-IOV roles apply only to PCI network interfaces with SR-IOV
  * functionality enabled. To ease handling, None represents both non-SR-IOV
  * network interfaces as well as network interfaces on which SR-IOV is disabled.
  */
-export enum SRIOVRole {
-    None = 0,
-    PF,
-    VF,
-}
+export const SRIOVRole = {
+    None: 0,
+    PF: 1,
+    VF: 2,
+} as const
+
+export type SRIOVRole = (typeof SRIOVRole)[keyof typeof SRIOVRole]
 
 /**
  * The operational states of network interfaces as reported via RTNETLINK and
  * passed on by Ghostwire. Please note that some operational states are not used
  * by Linux kernels, such as Dormant, Testing, and NotPresent.
  */
-export enum OperationalState {
-    Unknown = 'UNKNOWN', /** unknown is considered to be "running", like "up". */
-    NotPresent = 'NOTPRESENT',
-    Down = 'DOWN',
-    Up = 'UP', /** considered to be "running", like "unknown". */
-    LowerLayerDown = 'LOWERLAYERDOWN',
-    Dormant = 'DORMANT',
-    Testing = 'TESTING'
-}
+export const OperationalState = {
+    Unknown: 'UNKNOWN', /** unknown is considered to be "running", like "up". */
+    NotPresent: 'NOTPRESENT',
+    Down: 'DOWN',
+    Up: 'UP', /** considered to be "running", like "unknown". */
+    LowerLayerDown: 'LOWERLAYERDOWN',
+    Dormant: 'DORMANT',
+    Testing: 'TESTING'
+} as const
+
+export type OperationalState = (typeof OperationalState)[keyof typeof OperationalState]
 
 /**
  * Returns true, if the specified network interface is operational in some
@@ -135,11 +155,11 @@ export enum OperationalState {
  * @param nif network interface object
  */
 export const isOperational = (nif: NetworkInterface) => (
-    ![
+    !([
         OperationalState.Down,
         OperationalState.NotPresent,
         OperationalState.Testing
-    ].includes(nif.operstate)
+    ] as OperationalState[]).includes(nif.operstate)
 )
 
 /**
