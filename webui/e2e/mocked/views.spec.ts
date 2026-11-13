@@ -127,6 +127,45 @@ test.describe('views', () => {
             await expect(netnsCard(page, netnsIdOf('mock_bar_1'))).toHaveCount(0)
         })
 
+        test('filters by composer project name', async ({ page }) => {
+            await gotoAndDiscover(page, '/w')
+            await openDrawer(page)
+            await page.getByPlaceholder('filter').fill('mock')
+            await page.keyboard.press('Escape')
+            await expect(main(page)).toContainText('filtering applied')
+            // "edge-iot-core" doesn't contain its composer project name
+            // "mock", so its IP stack can only match via the project name.
+            await expect(netnsCard(page, netnsIdOf('edge-iot-core'))).toBeVisible()
+            await expect(netnsCard(page, netnsIdOf('nostalgic_shannon'))).toHaveCount(0)
+        })
+
+        test('shows only the matching members of a composer project', async ({ page }) => {
+            await gotoAndDiscover(page, '/w')
+            await openDrawer(page)
+            await page.getByPlaceholder('filter').fill('edge-iot')
+            await page.keyboard.press('Escape')
+            await expect(netnsCard(page, netnsIdOf('edge-iot-core'))).toBeVisible()
+            // ...other members of the same "mock" composer project must now be
+            // filtered out.
+            await expect(netnsCard(page, netnsIdOf('mock_bar_1'))).toHaveCount(0)
+        })
+
+        test('applies project-aware filtering also in the details view', async ({ page }) => {
+            await gotoAndDiscover(page, '/n')
+            await openDrawer(page)
+            await page.getByPlaceholder('filter').fill('edge-iot')
+            await page.keyboard.press('Escape')
+            await expect(netnsCard(page, netnsIdOf('edge-iot-core'))).toBeAttached()
+            await expect(netnsCard(page, netnsIdOf('mock_bar_1'))).toHaveCount(0)
+            await openDrawer(page)
+            await page.getByPlaceholder('filter').fill('mock')
+            await page.keyboard.press('Escape')
+            // mock_bar_1 only reappears after the changed filter has been
+            // applied; edge-iot-core then proves project name matching.
+            await expect(netnsCard(page, netnsIdOf('mock_bar_1'))).toBeAttached()
+            await expect(netnsCard(page, netnsIdOf('edge-iot-core'))).toBeAttached()
+        })
+
     })
 
 })

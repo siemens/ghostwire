@@ -120,6 +120,26 @@ example: it is live!
 - &#32;<RegexpIcon className="icon"/> switches between substring match and
   regular expression match.
 
+A (virtual) IP stack – and with it all its containees – matches the filter when
+the pattern matches at least one of the following names:
+
+- the name of a container or stand-alone process attached to the IP stack,
+  including the names of containers grouped into pods,
+
+- the name of a pod attached to the IP stack,
+
+- the name of the (Docker) composer project the IP stack belongs to.
+
+Composer projects appear whenever at least one of their IP stacks matches, but
+show only their matching IP stacks. Filtering by a composer **project name**
+thus reveals the complete project – even where container names don't contain
+the project name, such as with explicitly configured container names. In
+contrast, filtering by a single **container name** shows just that container's
+IP stack within its project.
+
+These matching rules apply alike to the containee list in this drawer and to
+the wiring and details views.
+
 > **Note:** press "/" or Ctrl+f to open the drawer and move your text cursor
 > directly into the filter input field.
 

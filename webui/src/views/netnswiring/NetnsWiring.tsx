@@ -11,7 +11,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { Box, Typography } from '@mui/material'
 
 import { useDiscovery } from 'components/discovery'
-import { orderNetnsByContainees } from 'models/gw'
+import { emptyNonContainerNetns, netnsMatchesFilter, orderNetnsByContainees } from 'models/gw'
 import { NetnsBreadboard } from 'components/netnsbreadboard'
 import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, showEmptyNetnsAtom, showIpFamiliesAtom, showLoopbackAtom } from 'views/settings'
 import { Ghost } from 'components/ghost'
@@ -43,14 +43,18 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
     })
 
     const discovery = useDiscovery()
-    const orignetnses = Object.values(discovery.networkNamespaces)
-    const netnses = orignetnses
-        .filter(ns => {
-            if (ns.containers.find(primcntee => filterfn(primcntee.name))) {
-                return true
-            }
-            return ns.pods.find(pod => filterfn(pod.name))
-        })
+    // The candidate network namespaces for containee filter pattern matching:
+    // the "show empty network namespaces" user setting has already been taken
+    // into account here. These candidates also are the baseline deciding
+    // whether an empty result is due to the filter pattern ("no matches") or
+    // due to nothing having been discovered yet ("please refresh").
+    const candidateNetnses = Object.values(discovery.networkNamespaces)
+        .filter(netns => showEmptyNetns || !emptyNonContainerNetns(netns))
+    // The network namespaces to actually render, additionally narrowed down by
+    // the containee filter pattern; this is exactly what the breadboard will
+    // show, without any further dropping downstream.
+    const netnses = candidateNetnses
+        .filter(ns => netnsMatchesFilter(ns, filterfn))
         .sort(orderNetnsByContainees)
 
     return (
@@ -66,11 +70,10 @@ export const NetnsWiring = React.forwardRef<HTMLDivElement, React.BaseHTMLAttrib
                     <NetnsBreadboard
                         netns={netnses}
                         filterLo={!showLoopbacks}
-                        filterEmpty={!showEmptyNetns}
                         families={showIpFamilies}
                     />
                 </div>)
-                || (orignetnses.length &&
+                || (candidateNetnses.length &&
                     <Typography sx={{ m: 1 }} variant="body1" color="textSecondary" ref={ref}>
                         <FilterAltIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
                         no matches, please check the filter settings in the sidebar.

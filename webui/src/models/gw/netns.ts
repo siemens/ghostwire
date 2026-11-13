@@ -93,6 +93,35 @@ export const emptyNonContainerNetns = (netns: NetworkNamespace) =>
     emptyNetns(netns) && !netns.containers.some(isContainer)
 
 /**
+ * Returns true if the given network namespace matches the specified containee
+ * name filter predicate. This predicate is the single source of truth for the
+ * containee filter semantics shared by the wiring view, the details view, and
+ * the containee navigator.
+ *
+ * A network namespace matches if, and only if, at least one of the following
+ * names matches the filter predicate:
+ *
+ * - the name of an attached stand-alone container or process,
+ * - the name of an attached pod'ed container,
+ * - the name of an attached pod,
+ * - the name of the composer project this network namespace belongs to; this
+ *   way, filtering by project name reveals the complete composer project, even
+ *   where individual container names do not contain the project name (such as
+ *   with explicitly set container names).
+ *
+ * Consumers must not re-filter the member network namespaces of the project
+ * groups returned by `sortedNetnsProjects`, as these are already restricted to
+ * the (filtered) network namespaces passed in.
+ *
+ * @param netns network namespace object.
+ * @param matchfn name matching predicate, such as returned by `getFilterFn`.
+ */
+export const netnsMatchesFilter = (netns: NetworkNamespace, matchfn: (name: string) => boolean) =>
+    netns.containers.some(cntee => matchfn(cntee.name))
+    || netns.pods.some(pod => matchfn(pod.name))
+    || (!!netns.project && matchfn(netns.project.name))
+
+/**
  * Returns true, if the given network namespace only has a single and lonely
  * loopback "lo" network interface and is used by at least one (OCI) container.
  */

@@ -16,7 +16,7 @@ import { CardTray } from 'components/cardtray'
 import { NetnsDetailCard } from 'components/netnsdetailcard'
 
 import { useDiscovery } from 'components/discovery'
-import { emptyNonContainerNetns, isProject, orderNetnsByContainees, sortedNetnsProjects } from 'models/gw'
+import { emptyNonContainerNetns, isProject, netnsMatchesFilter, orderNetnsByContainees, sortedNetnsProjects } from 'models/gw'
 import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, showEmptyNetnsAtom, showIpFamiliesAtom, showLoopbackAtom, showMACAtom } from 'views/settings'
 import { Ghost } from 'components/ghost'
 import RefreshButton from 'components/refreshbutton'
@@ -64,15 +64,19 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
     const netnsid = (locmatch && parseInt(locmatch[1])) || 0
 
     const discovery = useDiscovery()
-    const orignetnses = Object.values(discovery.networkNamespaces)
+    // The candidate network namespaces for containee filter pattern matching:
+    // the "show empty network namespaces" user setting has already been taken
+    // into account here. These candidates also are the baseline deciding
+    // whether an empty result is due to the filter pattern ("no matches") or
+    // due to nothing having been discovered yet ("please refresh").
+    const candidateNetnses = Object.values(discovery.networkNamespaces)
         .filter(netns => showEmptyNetns || !emptyNonContainerNetns(netns))
-    const netnses = orignetnses
-        .filter(ns => {
-            if (ns.containers.find(primcntee => filterfn(primcntee.name))) {
-                return true
-            }
-            return ns.pods.find(pod => filterfn(pod.name))
-        })
+    // The network namespaces to actually render, additionally narrowed down by
+    // the containee filter pattern; the project groups derived next cover only
+    // these matching network namespaces, without any further dropping
+    // downstream.
+    const netnses = candidateNetnses
+        .filter(ns => netnsMatchesFilter(ns, filterfn))
         .sort(orderNetnsByContainees)
     const netnsesAndProjs = sortedNetnsProjects(netnses)
 
@@ -94,7 +98,6 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                                     project={netnsOrProj}
                                 >
                                     {Object.values(netnsOrProj.netnses)
-                                        .filter(netns => netns.containers.find(primcntee => filterfn(primcntee.name)))
                                         .sort(orderNetnsByContainees)
                                         .map(netns =>
                                             <MarkableNetnsDetailCard
@@ -122,7 +125,7 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                         })}
                     </CardTray>
                 </div>)
-                || (orignetnses.length &&
+                || (candidateNetnses.length &&
                     <Typography sx={{ m: 1 }} variant="body1" color="textSecondary" ref={ref}>
                         <FilterAltIcon color="inherit" style={{ verticalAlign: 'middle' }} />&nbsp;
                         no matches, please check the filter settings in the sidebar.

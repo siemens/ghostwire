@@ -537,12 +537,20 @@ export const orderNetnsByContainees = (netnsA: NetworkNamespace, netnsB: Network
  * namespaces for container belonging to the same project, only a single docker
  * composer group will be returned instead.
  *
- * @param netnses list of all discovered network namespaces.
+ * The composer groups returned are shallow copies of the discovered projects,
+ * restricted to exactly those member network namespaces passed in. Callers
+ * filtering the network namespaces beforehand (such as with
+ * `netnsMatchesFilter`) thus get project groups covering only the matching
+ * network namespaces and must not re-filter the group members.
+ *
+ * @param netnses list of (optionally filtered) network namespaces.
  */
 export const sortedNetnsProjects = (netnses: NetworkNamespace[]) => {
 
     const list: NetworkNamespaceOrProject[] = []
-    const projects: Project[] = [] // list of projects already seen
+    // maps the discovered projects to their shallow copies restricted to only
+    // the network namespaces passed in.
+    const projects = new Map<Project, Project>()
 
     netnses.sort(orderNetnsByContainees)
         .forEach(netns => {
@@ -552,12 +560,15 @@ export const sortedNetnsProjects = (netnses: NetworkNamespace[]) => {
             // that only once.
             if (!netns.project) {
                 list.push(netns)
-            } else {
-                if (!projects.includes(netns.project)) {
-                    list.push(netns.project)
-                    projects.unshift(netns.project)
-                }
+                return
             }
+            let project = projects.get(netns.project)
+            if (!project) {
+                project = { ...netns.project, netnses: {} }
+                projects.set(netns.project, project)
+                list.push(project)
+            }
+            project.netnses[netns.netnsid] = netns
         })
 
     return list

@@ -49,6 +49,11 @@ communication details, but without any graphical wiring. Instead, network
 interfaces related to other network interfaces will show these "relatives" next
 to them.
 
+Like the wiring view, the details view honors the containee filter from the
+navigation drawer: only the IP stacks with matching containees or composer
+projects are shown. See the [navigation drawer help](/help/drawer) for the
+exact matching rules.
+
 <Box sx={{ m: 2 }}>
   <NetnsDetailCard netns={morbidNetns} />
 </Box>
