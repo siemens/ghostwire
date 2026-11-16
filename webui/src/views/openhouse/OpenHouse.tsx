@@ -31,7 +31,7 @@ export const OpenHouse = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribut
     const netns = netnses.filter(netns => netns.isInitial).shift()
 
     return (
-        <Box sx={{ m: 1 }}>
+        <Box sx={{ m: 1, flex: 1 }}>
             {(netnses.length !== 0 &&
                 <div ref={ref} /* so we can take a snapshot */>
                     <Metadata />

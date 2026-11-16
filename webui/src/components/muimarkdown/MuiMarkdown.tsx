@@ -16,7 +16,9 @@ import {
     styled,
 } from '@mui/material'
 import { ChapterSkeleton } from 'components/chapterskeleton'
+import { LoadErrorFallback } from 'components/errorfallback'
 import type { MDXComponents, MDXContent } from 'mdx/types'
+import { ErrorBoundary } from 'react-error-boundary'
 
 
 // Defines how to map the components emitted by MDX onto Material-UI components,
@@ -136,7 +138,11 @@ export interface MuiMarkdownProps {
  * `React.lazy()`. This component will handle both use cases transparently: it
  * uses a `React.Suspense` child component and shows a
  * [ChapterSkeleton](?path=/docs/universal-chapterskeleton--description)
- * component while lazily loading MDX.
+ * component while lazily loading MDX. If loading or rendering the MDX fails,
+ * it shows an error notice together with a dialog offering to retry or to
+ * reload the page. As `React.lazy()` caches a failed import, the MDX component
+ * gets passed an `attempt` prop counting the retries; lazy loading wrappers
+ * can use it to import anew.
  *
  * - uses [mdx.js](https://github.com/mdx-js/mdx).
  * - headings automatically get `id` slugs via
@@ -203,12 +209,24 @@ export interface MuiMarkdownProps {
  * }
  * ```
  */
-export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMarkdownProps) => (
-    <React.Suspense fallback={fallback || <ChapterSkeleton />}>
-        <MarkdownArea className={className}>
-            <Mdx components={{ ...muiComponents, ...shortcodes }} />
-        </MarkdownArea>
-    </React.Suspense>
-)
+export const MuiMarkdown = ({ mdx: Mdx, className, shortcodes, fallback }: MuiMarkdownProps) => {
+    // Counts the error boundary resets, so lazy loading wrappers can import
+    // anew instead of being stuck with React.lazy's cached failed import.
+    const [attempt, setAttempt] = React.useState(0)
+
+    return (
+        <ErrorBoundary
+            FallbackComponent={LoadErrorFallback}
+            resetKeys={[Mdx]}
+            onReset={() => setAttempt(attempt => attempt + 1)}
+        >
+            <React.Suspense fallback={fallback || <ChapterSkeleton />}>
+                <MarkdownArea className={className}>
+                    <Mdx components={{ ...muiComponents, ...shortcodes }} attempt={attempt} />
+                </MarkdownArea>
+            </React.Suspense>
+        </ErrorBoundary>
+    )
+}
 
 export default MuiMarkdown

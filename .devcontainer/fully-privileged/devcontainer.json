@@ -44,7 +44,7 @@
     ],
     "remoteEnv": {
         "GOPATH": "/home/vscode/go",
-        "PATH": "/home/vscode/go/bin:/go/bin:/usr/local/go/bin:${localEnv:PATH}"
+        "PATH": "/home/vscode/go/bin:/go/bin:/usr/local/go/bin:${containerEnv:PATH}"
     },
     "postCreateCommand": {
         "node-for-all-with-yawn": "sudo ln -sf \"${NVM_BIN}/node\" /usr/local/bin/node",

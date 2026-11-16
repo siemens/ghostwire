@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 import React, { useCallback, useRef } from 'react'
-import { BrowserRouter as Router, Route, Routes, useMatch, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes, useMatch, Navigate, useLocation } from 'react-router-dom'
+
+import { ErrorBoundary } from 'react-error-boundary'
 
 import { basename } from 'utils/basename'
 
@@ -26,6 +28,7 @@ import {
     Typography,
     useMediaQuery,
     Grid,
+    ListItem,
 } from '@mui/material';
 
 import { Discovery, useDiscovery } from 'components/discovery'
@@ -58,6 +61,8 @@ import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
 import { FilterInput, type FilterPattern } from 'components/filterinput'
 import { gwDarkTheme, gwLightTheme } from 'styles/themes'
+import { AppErrorFallback, ErrorNotice } from 'components/errorfallback'
+import { UnhandledErrors } from 'components/unhandlederrors'
 
 
 const SettingsViewIcon = SettingsIcon
@@ -170,10 +175,18 @@ const GwDrawer = ({ closeDrawer, focusRef }: GwDrawerProps) => {
                 </ListSubheader>}
                 onClick={closeDrawer}
             >
-                <ContaineeNavigator
-                    allnetns={discovery.networkNamespaces}
-                    filterEmpty={!showEmptyNetns}
-                />
+                <ErrorBoundary
+                    resetKeys={[discovery.networkNamespaces]}
+                    fallbackRender={({ error }) =>
+                        <ListItem>
+                            <ErrorNotice sx={{ flex: 1 }} title="containee list unavailable" error={error} />
+                        </ListItem>}
+                >
+                    <ContaineeNavigator
+                        allnetns={discovery.networkNamespaces}
+                        filterEmpty={!showEmptyNetns}
+                    />
+                </ErrorBoundary>
             </List>
         </>}
     </>
@@ -229,6 +242,8 @@ const GhostwireApp = () => {
 
     useScrollToHash(scrollIdIntoView)
 
+    const { pathname } = useLocation()
+
     return (
         <Box
             sx={{
@@ -269,18 +284,31 @@ const GhostwireApp = () => {
             />
 
             {/* main content area */}
-            <Box component="main" sx={{ m: 0, flex: 1, overflow: "auto" }}>
-                <Routes>
-                    <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
-                    <Route path="/w" element={<NetnsWiring ref={snapshotRef} />} />
-                    <Route path="/n/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
-                    <Route path="/n" element={<EverythingView ref={snapshotRef} />} />
-                    <Route path="/lochla" element={<OpenHouse ref={snapshotRef} />} />
-                    <Route path="/settings" element={<SettingsView />} />
-                    <Route path="/about" element={<AboutView />} />
-                    <Route path="/help/*" element={<HelpView />} />
-                    <Route path="/" element={<Navigate replace to="/w" />} />
-                </Routes>
+            <Box component="main" sx={{ m: 0, flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+                {/* a crashing view must not take down the app bar and drawer;
+                    retry automatically after navigating or new discovery data. */}
+                <ErrorBoundary
+                    resetKeys={[pathname, discovery]}
+                    fallbackRender={({ error, resetErrorBoundary }) =>
+                        <ErrorNotice
+                            sx={{ m: 1 }}
+                            title="This view couldn't be shown"
+                            error={error}
+                            onRetry={resetErrorBoundary}
+                        />}
+                >
+                    <Routes>
+                        <Route path="/w/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
+                        <Route path="/w" element={<NetnsWiring ref={snapshotRef} />} />
+                        <Route path="/n/:slug" element={<NetnsDetailsView ref={snapshotRef} />} />
+                        <Route path="/n" element={<EverythingView ref={snapshotRef} />} />
+                        <Route path="/lochla" element={<OpenHouse ref={snapshotRef} />} />
+                        <Route path="/settings" element={<SettingsView />} />
+                        <Route path="/about" element={<AboutView />} />
+                        <Route path="/help/*" element={<HelpView />} />
+                        <Route path="/" element={<Navigate replace to="/w" />} />
+                    </Routes>
+                </ErrorBoundary>
             </Box>
         </Box>
     );
@@ -343,10 +371,13 @@ const ThemedApp = () => {
             <ThemeProvider theme={appTheme}>
                 <CssBaseline />
                 <SnackbarProvider maxSnack={3}>
-                    <Discovery />
-                    <ScreenShooter basename={snapshotbasename}>
-                        <GhostwireApp />
-                    </ScreenShooter>
+                    <UnhandledErrors />
+                    <ErrorBoundary FallbackComponent={AppErrorFallback}>
+                        <Discovery />
+                        <ScreenShooter basename={snapshotbasename}>
+                            <GhostwireApp />
+                        </ScreenShooter>
+                    </ErrorBoundary>
                 </SnackbarProvider>
             </ThemeProvider>
         </StyledEngineProvider>

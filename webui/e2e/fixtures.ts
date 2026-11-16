@@ -3,7 +3,10 @@ import { test as base, expect, type Page } from '@playwright/test'
 export { expect }
 
 type Options = {
-    /** console error messages expected by a test that thus must not fail it. */
+    /**
+     * console error messages and uncaught exception messages expected by a
+     * test that thus must not fail it.
+     */
     allowedConsoleErrors: RegExp[]
 }
 
@@ -12,16 +15,22 @@ type Fixtures = {
 }
 
 /**
- * Fails tests on uncaught exceptions and console errors, as the app lacks an
- * error boundary and thus otherwise silently renders a blank page.
+ * Fails tests on uncaught exceptions and console errors, as otherwise crashes
+ * might go unnoticed behind error boundary fallbacks; React logs the errors
+ * caught by error boundaries to the console.
  */
 export const test = base.extend<Options & Fixtures>({
     allowedConsoleErrors: [[], { option: true }],
     failOnErrors: [async ({ page, allowedConsoleErrors }, use) => {
         const errors: string[] = []
-        page.on('pageerror', err => errors.push(`uncaught: ${err.message}`))
+        const allowed = (message: string) => allowedConsoleErrors.some(re => re.test(message))
+        page.on('pageerror', err => {
+            if (!allowed(err.message)) {
+                errors.push(`uncaught: ${err.message}`)
+            }
+        })
         page.on('console', msg => {
-            if (msg.type() === 'error' && !allowedConsoleErrors.some(re => re.test(msg.text()))) {
+            if (msg.type() === 'error' && !allowed(msg.text())) {
                 errors.push(`console: ${msg.text()}`)
             }
         })
