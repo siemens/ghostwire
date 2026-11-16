@@ -88,6 +88,21 @@ test.describe('views', () => {
             `discovery backend engine: ${discovery.metadata['creator-id']} ${discovery.metadata['creator-version']}`)
     })
 
+    test('vertically centers the ghost while discovering', async ({ page }) => {
+        // never answer, so that the discovery stays ongoing.
+        await page.route(url => url.pathname === '/json', () => { })
+        for (const path of ['/w', '/n', '/lochla', '/n/mock_bar_1']) {
+            await test.step(path, async () => {
+                await page.goto(path)
+                await page.getByRole('banner').getByRole('button', { name: 'refresh', exact: true }).click()
+                const ghost = (await main(page).locator('svg:has(path[fill="#0f6674"])').boundingBox())!
+                const area = (await main(page).boundingBox())!
+                expect(Math.abs((ghost.y + ghost.height / 2) - (area.y + area.height / 2)))
+                    .toBeLessThan(ghost.height / 2)
+            })
+        }
+    })
+
     test.describe('navigation drawer', () => {
 
         test('links to all views', async ({ page }) => {

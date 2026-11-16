@@ -284,7 +284,7 @@ const GhostwireApp = () => {
             />
 
             {/* main content area */}
-            <Box component="main" sx={{ m: 0, flex: 1, overflow: "auto" }}>
+            <Box component="main" sx={{ m: 0, flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
                 {/* a crashing view must not take down the app bar and drawer;
                     retry automatically after navigating or new discovery data. */}
                 <ErrorBoundary
