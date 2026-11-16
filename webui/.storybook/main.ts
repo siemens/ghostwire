@@ -40,6 +40,12 @@ const config: StorybookViteConfig = {
         disableWhatsNewNotifications: true,
     },
 
+    features: {
+        // don't annoy with the "Get started" onboarding checklist in the
+        // sidebar.
+        sidebarOnboardingChecklist: false,
+    },
+
     typescript: {
         check: true,
     },
