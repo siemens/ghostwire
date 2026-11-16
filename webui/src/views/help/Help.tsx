@@ -21,10 +21,26 @@ import { useHydrateAtoms } from 'jotai/utils'
 /**
  * Convenience wrapper for lazily importing a help chapter MDX module.
  * 
+ * As `React.lazy()` caches a failed import forever, there's a separate lazy
+ * component for each `attempt` as passed in by `MuiMarkdown`, so that retrying
+ * after an error boundary reset actually attempts to import again.
+ *
  * @param name name (without .mdx extension and without any path) of a chapter
  * .mdx file; chapter files are located in the chapters/ subdirectory.
  */
-const ch = (name: string) => React.lazy(() => import(`./chapters/${name}.mdx`))
+const ch = (name: string) => {
+    const attempts = new Map<number, React.ComponentType<Record<string, unknown>>>()
+    const lazyChapter = (attempt: number) => {
+        if (!attempts.has(attempt)) {
+            attempts.set(attempt, React.lazy(() => import(`./chapters/${name}.mdx`)))
+        }
+        return attempts.get(attempt)!
+    }
+    return ({ attempt = 0, ...props }: Record<string, unknown>) => {
+        const Chapter = lazyChapter(attempt as number)
+        return <Chapter {...props} />
+    }
+}
 
 // DynamicVars represents an object "map" of dynamic variable passed into an
 // application by the server at load time (as opposed to static REACT_APP_

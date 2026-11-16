@@ -6,6 +6,8 @@ import React from 'react'
 
 import { useLocation } from 'react-router-dom'
 
+import { ErrorBoundary } from 'react-error-boundary'
+
 import { useAtom } from 'jotai'
 
 import { Box, styled, Typography } from '@mui/material'
@@ -26,6 +28,7 @@ import ProjectCard from 'components/projectcard/ProjectCard'
 import Metadata from 'components/metadata'
 import { getFilterFn } from 'components/filterinput'
 import { StripedNotice } from 'components/stripednotice'
+import { ErrorNotice } from 'components/errorfallback'
 
 
 const MarkableNetnsDetailCard = styled(NetnsDetailCard)(({ theme }) => ({
@@ -37,6 +40,26 @@ const MarkableNetnsDetailCard = styled(NetnsDetailCard)(({ theme }) => ({
         border: `1px solid ${theme.palette.background.paper}`,
     },
 }))
+
+/**
+ * Renders a network namespace detail card, but in case of the card crashing
+ * renders an error notice in its place instead, so that only the details of
+ * this particular network namespace go missing. Retries when the network
+ * namespace data has changed.
+ */
+const GuardedNetnsDetailCard = (props: React.ComponentProps<typeof MarkableNetnsDetailCard>) => (
+    <ErrorBoundary
+        resetKeys={[props.netns]}
+        fallbackRender={({ error, resetErrorBoundary }) =>
+            <ErrorNotice
+                title={`network namespace ${props.netns.netnsid} couldn't be shown`}
+                error={error}
+                onRetry={resetErrorBoundary}
+            />}
+    >
+        <MarkableNetnsDetailCard {...props} />
+    </ErrorBoundary>
+)
 
 
 /**
@@ -100,7 +123,7 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                                     {Object.values(netnsOrProj.netnses)
                                         .sort(orderNetnsByContainees)
                                         .map(netns =>
-                                            <MarkableNetnsDetailCard
+                                            <GuardedNetnsDetailCard
                                                 key={netns.netnsid}
                                                 className={netns.netnsid === netnsid ? 'highlight' : 'normal'}
                                                 netns={netns}
@@ -112,7 +135,7 @@ export const Everything = React.forwardRef<HTMLDivElement, React.BaseHTMLAttribu
                                     }
                                 </ProjectCard>
                             } else {
-                                return <MarkableNetnsDetailCard
+                                return <GuardedNetnsDetailCard
                                     key={netnsOrProj.netnsid}
                                     className={netnsOrProj.netnsid === netnsid ? 'highlight' : 'normal'}
                                     netns={netnsOrProj}

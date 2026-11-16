@@ -57,6 +57,7 @@
     "notistack": "^3.0.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-error-boundary": "^6.1.6",
     "react-hotkeys-hook": "^5.3.3",
     "react-inlinesvg": "^4.5.0",
     "react-router-dom": "^7.18.2",

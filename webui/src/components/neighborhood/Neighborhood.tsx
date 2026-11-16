@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 import { useNavigate, useMatch } from 'react-router-dom'
 import clsx from 'clsx'
+import { useSnackbar } from 'notistack'
 
 // CJS-only package: its default export doesn't survive Vite 8's CommonJS interop.
 import { useWebSocket } from 'react-use-websocket/dist/lib/use-websocket'
@@ -163,6 +164,8 @@ export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps
     const seenbyName = (seenby.find(cntr => cntr !== undefined) as Container).name
     const [runCheck, setRunCheck] = useState(false)
 
+    const { enqueueSnackbar } = useSnackbar()
+
     const handleMessage = (event: MessageEvent) => {
         let msg: JSONObject
         try {
@@ -200,6 +203,9 @@ export const Neighborhood = ({ services, seenby: rawseenby }: NeighboorhoodProps
         shouldReconnect: () => false,
         onMessage: handleMessage,
         onClose: () => setRunCheck(false),
+        onError: () => enqueueSnackbar(
+            'neighborhood check failed: websocket connection error',
+            { variant: 'error', preventDuplicate: true }),
     }, runCheck)
 
     const handleCheck = () => {

@@ -43,15 +43,18 @@ export const netnsCard = (page: Page, netnsid: number) =>
     page.locator(`[id$="netns-${netnsid}"]`)
 
 type Options = {
-    /** HTTP status of the discovery API responses; 200 serves the fixture. */
+    /** HTTP status of the discovery API responses; 200 serves discoveryData. */
     discoveryStatus: number
+    /** discovery data to serve; defaults to the discovery fixture. */
+    discoveryData: unknown
 }
 
 export const test = base.extend<Options>({
     discoveryStatus: [200, { option: true }],
-    page: async ({ page, discoveryStatus }, use) => {
+    discoveryData: [discovery, { option: true }],
+    page: async ({ page, discoveryStatus, discoveryData }, use) => {
         await page.route(url => url.pathname === '/json', route => route.fulfill(
-            discoveryStatus === 200 ? { json: discovery } : { status: discoveryStatus }))
+            discoveryStatus === 200 ? { json: discoveryData } : { status: discoveryStatus }))
         await use(page)
     },
 })
