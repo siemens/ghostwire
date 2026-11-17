@@ -1,8 +1,8 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
-package main
+package app
 
 import (
 	"encoding/json"
@@ -89,12 +89,17 @@ func requestLogger(next http.Handler) http.Handler {
 }
 
 // newHandler returns the HTTP request router with the API routes registered via
-// plugins, as well as the web UI.
-func newHandler(cmd *cobra.Command, cizer containerizer.Containerizer) http.Handler {
+// plugins, any additional routes, as well as the web UI, if any.
+func newHandler(cmd *cobra.Command, cizer containerizer.Containerizer, cfg *config) http.Handler {
 	r := mux.NewRouter()
 	r.Use(requestLogger)
 	registerRouteHandlers(r, cmd, cizer)
-	r.PathPrefix("/").Handler(newSPAHandler(uifs,
-		brand.Name(cmd), brand.Icon(cmd), appicons.PreferShowing(cmd)))
+	for _, routes := range cfg.routes {
+		routes(r, cmd, cizer)
+	}
+	if cfg.uifs != nil {
+		r.PathPrefix("/").Handler(newSPAHandler(cfg.uifs,
+			brand.Name(cmd), brand.Icon(cmd), appicons.PreferShowing(cmd)))
+	}
 	return r
 }

@@ -138,6 +138,9 @@ COPY network/ ./network/
 COPY passedthrough/ ./passedthrough/
 COPY xsk/ ./xsk/
 COPY *.go ./
+# The webui package without the web UI build itself, which only gets embedded
+# later using the "webui" build tag.
+COPY webui/*.go ./webui/
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     xx-go build -v \
@@ -194,9 +197,8 @@ ARG TARGETPLATFORM
 
 WORKDIR /ws/ghostwire
 
-# Now we need the webui package that simply consists of a go:embed directive and
-# the Webui fs.FS export.
-COPY --from=webappsrc webui.go ./webui/
+# The webui package with its go:embed directive is already in place from the
+# builder stage, so we now only need to add the web UI build to embed.
 COPY --from=webui /webui/build/ ./webui/build/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     xx-go build -v \

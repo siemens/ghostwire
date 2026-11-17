@@ -1,8 +1,8 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
-package main
+package app
 
 import (
 	"log/slog"
@@ -14,7 +14,9 @@ import (
 	"github.com/thediveo/lxkns/containerizer"
 )
 
-// RouteHandler returns information about a route to register.
+// RouteHandler returns information about a route to register. Route handlers
+// are plugins registered with the plugger.Group[RouteHandler] plugin group, so
+// that packages can register their routes in their init functions.
 type RouteHandler func(cmd *cobra.Command, cizer containerizer.Containerizer) (method string, path string, handler http.HandlerFunc)
 
 // registerRouteHandler queries all registered route handler plugins for their

@@ -14,3 +14,4 @@ __debug_bin
 decorator/ieappicon/tests/
 scripts/
 webui/
+!webui/*.go

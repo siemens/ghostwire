@@ -13,5 +13,5 @@ import (
 
 func TestWsconn(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ghostwire/internal/wsconn package")
+	RunSpecs(t, "ghostwire/cmd/gostwire/wsconn package")
 }

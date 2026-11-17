@@ -1,8 +1,8 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
-package main
+package app
 
 import (
 	"context"
@@ -23,33 +23,39 @@ import (
 	gostwire "github.com/siemens/ghostwire/v2"
 	_ "github.com/siemens/ghostwire/v2/cmd/gostwire/cli/initialcgroup"
 	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/service"
-	"github.com/siemens/ghostwire/v2/cmd/internal/wsconn"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/wsconn"
 )
 
-// newRootCmd returns the Cobra "root" command, thus the Gostwire service
-// itself.
-func newRootCmd() (rootCmd *cobra.Command) {
+// NewRootCmd returns the Cobra "root" command, thus the Gostwire service
+// itself, configured using the specified options.
+func NewRootCmd(opts ...Option) (rootCmd *cobra.Command) {
+	cfg := newConfig(opts...)
 	rootCmd = &cobra.Command{
-		Use:     "gostwire",
-		Short:   "gostwire virtual network topology and configuration discovery service",
-		Version: gostwire.SemVersion,
+		Use:     cfg.name,
+		Short:   cfg.description,
+		Version: cfg.version,
 		Args:    cobra.NoArgs,
 		// See: https://github.com/spf13/cobra/issues/340
 		SilenceUsage: true,
 		PersistentPreRunE: func(*cobra.Command, []string) error {
 			return clippy.BeforeCommand(rootCmd)
 		},
-		RunE: serve,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return serve(cmd, cfg)
+		},
 	}
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	clippy.AddFlags(rootCmd) // ...runs all registered SetupCLI plugins.
 	return
 }
 
-// serve runs the Gostwire service until the command's context is done.
-func serve(cmd *cobra.Command, _ []string) error {
-	slog.Info("Gostwire \"The Sequel\" virtual network topology and configuration discovery service",
-		slog.String("version", gostwire.SemVersion))
+// serve runs the service until the command's context is done.
+func serve(cmd *cobra.Command, cfg *config) error {
+	versionAttrs := []any{slog.String("version", cfg.version)}
+	if cfg.version != gostwire.SemVersion {
+		versionAttrs = append(versionAttrs, slog.String("ghostwire", gostwire.SemVersion))
+	}
+	slog.Info(cfg.banner, versionAttrs...)
 	slog.Info("Copyright (c) Siemens AG 2018-2026")
 
 	if pausebin := mountineer.StandaloneSandboxBinary(); pausebin != "" {
@@ -72,10 +78,10 @@ func serve(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("cannot start service: %w", err)
 	}
 	server := &http.Server{
-		Handler:           newHandler(cmd, cizer),
+		Handler:           newHandler(cmd, cizer, cfg),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	slog.Info("starting gostwire server",
+	slog.Info("starting "+cfg.name+" server",
 		slog.String("addr", listener.Addr().String()))
 	served := make(chan error, 1)
 	go func() { served <- server.Serve(listener) }()
@@ -86,7 +92,7 @@ func serve(cmd *cobra.Command, _ []string) error {
 	}
 
 	maxwait := service.ShutdownTimeout(cmd)
-	slog.Info("gracefully shutting down gostwire server, waiting...",
+	slog.Info("gracefully shutting down "+cfg.name+" server, waiting...",
 		slog.Duration("maxwait", maxwait))
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), maxwait)
 	defer cancel()
@@ -97,6 +103,6 @@ func serve(cmd *cobra.Command, _ []string) error {
 	if err := <-served; !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
-	slog.Info("gostwire server stopped")
+	slog.Info(cfg.name + " server stopped")
 	return nil
 }

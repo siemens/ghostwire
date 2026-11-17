@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package main
+package app
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ import (
 	"github.com/thediveo/whalewatcher/v2/engineclient/moby"
 
 	gostwire "github.com/siemens/ghostwire/v2"
-	"github.com/siemens/ghostwire/v2/cmd/internal/wsconn"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/wsconn"
 	"github.com/siemens/ghostwire/v2/mobydig"
 )
 

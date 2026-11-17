@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package main
+package app
 
 import (
 	"context"
@@ -25,7 +25,7 @@ var _ = Describe("gostwire command", func() {
 
 	It("shows help with all flags", func() {
 		var out safe.Buffer
-		rootCmd := newRootCmd()
+		rootCmd := NewRootCmd()
 		rootCmd.SetArgs([]string{"--help"})
 		rootCmd.SetOut(io.MultiWriter(&out, GinkgoWriter))
 		Expect(rootCmd.Execute()).To(Succeed())
@@ -46,7 +46,7 @@ var _ = Describe("gostwire command", func() {
 
 	It("shows its version", func() {
 		var out safe.Buffer
-		rootCmd := newRootCmd()
+		rootCmd := NewRootCmd()
 		rootCmd.SetArgs([]string{"--version"})
 		rootCmd.SetOut(io.MultiWriter(&out, GinkgoWriter))
 		Expect(rootCmd.Execute()).To(Succeed())
@@ -54,7 +54,7 @@ var _ = Describe("gostwire command", func() {
 	})
 
 	It("rejects arguments", func() {
-		rootCmd := newRootCmd()
+		rootCmd := NewRootCmd()
 		rootCmd.SetArgs([]string{"foo"})
 		rootCmd.SetOut(GinkgoWriter)
 		rootCmd.SetErr(GinkgoWriter)
@@ -64,7 +64,7 @@ var _ = Describe("gostwire command", func() {
 	It("fails when it cannot listen on its address", func() {
 		occupied := Successful(net.Listen("tcp", "127.0.0.1:0"))
 		DeferCleanup(occupied.Close)
-		rootCmd := newRootCmd()
+		rootCmd := NewRootCmd()
 		rootCmd.SetContext(context.Background())
 		debug.SetWriter(rootCmd, GinkgoWriter)
 		rootCmd.SetArgs([]string{"--http", occupied.Addr().String()})

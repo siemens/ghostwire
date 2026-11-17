@@ -2,11 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-// Package wsconn wraps a server-side websocket connection with its own
-// human-readable unique ID. This helps to clearly map log debug and error
-// messages to their respective websocket connections, thus keeping them clearly
-// separated. Additionally, we also associate the capturing process (if any)
-// with this connection, so we can sanely manage it.
 package wsconn
 
 import (

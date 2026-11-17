@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package main
+package app
 
 import (
 	"context"
@@ -47,12 +47,19 @@ var _ = BeforeEach(func() {
 // "host:port" address as well as its logs.
 func startService(args ...string) (string, *safe.Buffer) {
 	GinkgoHelper()
+	return startServiceWith(nil, args...)
+}
+
+// startServiceWith runs the root command configured with the passed options
+// and CLI args, otherwise the same as startService.
+func startServiceWith(opts []Option, args ...string) (string, *safe.Buffer) {
+	GinkgoHelper()
 	// Requests to the service use the default transport and its idle connections.
 	DeferCleanup(AssignableTo[*http.Transport](http.DefaultTransport).CloseIdleConnections)
 
 	var logs safe.Buffer
 	ctx, cancel := context.WithCancel(context.Background())
-	rootCmd := newRootCmd()
+	rootCmd := NewRootCmd(opts...)
 	// SetWriter attaches to the command's context, so set ours first.
 	rootCmd.SetContext(ctx)
 	debug.SetWriter(rootCmd, io.MultiWriter(&logs, GinkgoWriter))
@@ -67,7 +74,7 @@ func startService(args ...string) (string, *safe.Buffer) {
 		Eventually(done).Within(5 * time.Second).Should(Receive(BeNil()))
 	})
 
-	addrRe := regexp.MustCompile(`msg="starting gostwire server" addr=(\S+)`)
+	addrRe := regexp.MustCompile(`msg="starting \S+ server" addr=(\S+)`)
 	Eventually(logs.String).Within(5 * time.Second).Should(MatchRegexp(addrRe.String()))
 	return addrRe.FindStringSubmatch(logs.String())[1], &logs
 }
