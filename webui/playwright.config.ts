@@ -6,7 +6,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 const port = 4173
 const brandedPort = 4174
-const brandedOutDir = 'build-branded'
+// relative to the app package directory.
+const brandedOutDir = '../../build-branded'
 
 export default defineConfig({
     fullyParallel: true,
@@ -31,13 +32,13 @@ export default defineConfig({
     ],
     webServer: [
         {
-            command: `npx vite build && npx vite preview --host 127.0.0.1 --port ${port} --strictPort`,
+            command: `yarn build && yarn preview --host 127.0.0.1 --port ${port} --strictPort`,
             url: `http://127.0.0.1:${port}`,
             reuseExistingServer: false,
             timeout: 180_000,
         },
         {
-            command: `npx vite build --outDir ${brandedOutDir} && npx vite preview --outDir ${brandedOutDir} --host 127.0.0.1 --port ${brandedPort} --strictPort`,
+            command: `yarn workspace ghostwire-app vite build --outDir ${brandedOutDir} && yarn workspace ghostwire-app vite preview --outDir ${brandedOutDir} --host 127.0.0.1 --port ${brandedPort} --strictPort`,
             env: { VITE_APP_CONFIG: 'e2e/branded/overlay/config.tsx' },
             url: `http://127.0.0.1:${brandedPort}`,
             reuseExistingServer: false,

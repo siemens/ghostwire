@@ -27,7 +27,7 @@ branding (name, icon, favicon, about content, legal links, and version). All
 configuration elements default to Ghostwire's defaults; please see
 `config.ts`, `themes.ts`, and `components/branding/` for details.
 
-`src/index.tsx` creates the app using the configuration from the
-`ghostwire-app-config` module, which defaults to `defaultconfig.ts` unless the
-`VITE_APP_CONFIG` environment variable points to a different module at build
-time.
+The OSS app in `packages/app/` creates the app using the configuration from
+the `ghostwire-app-config` module, which defaults to its `src/defaultconfig.ts`
+unless the `VITE_APP_CONFIG` environment variable points to a different module
+at build time.

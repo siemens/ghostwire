@@ -207,37 +207,52 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 # -- 2nd stage ---------------------------------------------------------------
 #
-# Build Ghostwire's frontend UI browser application.
+# Build Ghostwire's frontend UI browser application from the "webappsrc" build
+# context: a yarn project (such as Ghostwire's webui/ yarn workspace, or a
+# downstream web app depending on the ghostwire-ui library) whose "yarn build"
+# writes the static web UI files into the build/ directory in its root.
+
+# stage 2.0 extracts only the manifests from webappsrc, as well as any package
+# tarballs (such as from "yarn pack"), so that installing the dependencies is
+# cached as long as these don't change.
+FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webuimanifests
+WORKDIR /webappsrc
+COPY --from=webappsrc . ./
+RUN mkdir /manifests && \
+    find . \( -name node_modules -o -name build \) -prune -o \
+        \( -name package.json -o -name yarn.lock -o -name .yarnrc.yml -o -name '*.tgz' \
+           -o -path ./.yarn/releases -o -path ./.yarn/plugins -o -path ./.yarn/patches \) -print | \
+    tar -cf - -T - | tar -xf - -C /manifests
+
 FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webui
+ARG YARN_VERSION
+# Always use this yarn version with the node-modules linker, regardless of
+# the yarn configuration of webappsrc; git is needed for git dependencies.
+WORKDIR /tmp/yarn
+RUN apk add --no-cache git && \
+    yarn set version ${YARN_VERSION} && \
+    install -D -m 0644 .yarn/releases/yarn-${YARN_VERSION}.cjs /opt/yarn/yarn.cjs && \
+    rm -rf /tmp/yarn /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
+    printf '#!/bin/sh\nexec node /opt/yarn/yarn.cjs "$@"\n' > /usr/local/bin/yarn && \
+    chmod 0755 /usr/local/bin/yarn
+ENV YARN_NODE_LINKER=node-modules YARN_YARN_PATH=/opt/yarn/yarn.cjs
 WORKDIR /webui
 ENV PATH=/webui/node_modules/.bin:$PATH
-ARG YARN_VERSION
-RUN yarn set version ${YARN_VERSION} && \
-    yarn config set nodeLinker node-modules
 # stage 2.1 :) install a full-blown node_modules dependency hell; we need to
 # tell yarn to be more patient. This gives us a nice cached layer.
-COPY --from=webappsrc package.json yarn.lock ./
-
-#RUN yarn workspaces focus --production
-RUN yarn
+COPY --from=webuimanifests /manifests/ ./
+RUN yarn install
 
 # stage 2.2 only now copy in the web ui completely and build the optimized
-# static artefacts.
-COPY --from=webappsrc \
-    eslint.config.js \
-    tsconfig.json \
-    tsconfig.app.json \
-    tsconfig.node.json \
-    vite.config.ts \
-    index.html \
-    ghostwire.svg \
-    ./
-COPY --from=webappsrc public/ ./public/
-COPY --from=webappsrc src/ ./src/
-COPY --from=webappsrc .env ./
+# static artefacts, optionally with an app configuration overlay.
+COPY --from=webappsrc . ./
 COPY --from=webappoverlay . ./overlay/
 ARG VERSION
-RUN sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${VERSION#v}/" .env
+RUN for env in .env packages/*/.env; do \
+        if [ -f "${env}" ]; then \
+            sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${VERSION#v}/" "${env}"; \
+        fi; \
+    done
 # app configuration module and static assets directory, relative to /webui.
 ARG VITE_APP_CONFIG=""
 ARG VITE_APP_PUBLIC_DIR=""

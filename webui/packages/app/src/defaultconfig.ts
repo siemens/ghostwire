@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import type { GhostwireAppConfig } from './config'
+import type { GhostwireAppConfig } from 'ghostwire-ui'
 
 /**
  * The default app configuration, which is used unless the VITE_APP_CONFIG

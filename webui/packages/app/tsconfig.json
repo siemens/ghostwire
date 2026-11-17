@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
-    "ignoreDeprecations": "6.0",
 
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
     "target": "ES2023",
     "useDefineForClassFields": true,
     "lib": [
@@ -14,7 +12,8 @@
     "module": "ESNext",
     "types": [
       "react",
-      "vite/client"
+      "vite/client",
+      "node"
     ],
     "skipLibCheck": true,
 
@@ -36,7 +35,6 @@
   },
   "include": [
     "src/**/*",
-    "vite.config.ts",
-    ".storybook/*"
+    "vite.config.ts"
   ]
 }

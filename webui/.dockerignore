@@ -1,4 +1,8 @@
-node_modules/
+**/node_modules/
 build/
 build-branded/
+**/storybook-static/
+test-results/
+playwright-report/
 styleguidist/
+.yarn/install-state.gz

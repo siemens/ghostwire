@@ -1,21 +1,16 @@
+// (c) Siemens AG 2023, 2026
+//
+// SPDX-License-Identifier: MIT
+
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
-import mdx from '@mdx-js/rollup'
 import path from 'path'
 
-import { mdxConfiguration } from './src/mdxconfig.js'
+import { ghostwireUI } from 'ghostwire-ui/vite'
 
-const srcs = [
-    'app',
-    'components',
-    'hooks',
-    'icons',
-    'models',
-    'theming',
-    'utils',
-    'views',
-]
+// The yarn workspace root (webui/), where the static build goes to, so that it
+// can get embedded into the Gostwire service binary.
+const webuiRoot = path.resolve(import.meta.dirname, '../..')
 
 // Ghostwire service to proxy API calls to; use http://localhost:5001 for Edgeshark.
 const backend = process.env.GHOSTWIRE_BACKEND || 'http://localhost:5000'
@@ -24,16 +19,17 @@ export default defineConfig(({ mode }) => {
     // Downstream builds can point VITE_APP_CONFIG to their own app configuration
     // module (default-exporting a GhostwireAppConfig), and VITE_APP_PUBLIC_DIR to
     // their own static assets, such as favicon and app icons. Both are taken
-    // from the environment or the .env files, relative to this directory.
+    // from the environment or the .env files, relative to the webui/ directory.
     const env = loadEnv(mode, import.meta.dirname, 'VITE_APP_')
     const resolved = (envpath: string | undefined, fallback: string) =>
-        path.resolve(import.meta.dirname, envpath || fallback)
+        envpath ? path.resolve(webuiRoot, envpath) : path.resolve(import.meta.dirname, fallback)
 
     return {
         base: './',
         publicDir: resolved(env.VITE_APP_PUBLIC_DIR, 'public'),
         build: {
-            outDir: 'build',
+            outDir: path.join(webuiRoot, 'build'),
+            emptyOutDir: true,
             chunkSizeWarningLimit: 1024,
         },
         server: {
@@ -47,25 +43,13 @@ export default defineConfig(({ mode }) => {
             },
         },
         resolve: {
-            tsconfigPaths: true,
             alias: {
-                ...Object.fromEntries(
-                    srcs.map(d => [d, path.resolve(import.meta.dirname, `src/${d}`)])
-                ),
-                'ghostwire-app-config': resolved(env.VITE_APP_CONFIG, 'src/app/defaultconfig.ts'),
+                'ghostwire-app-config': resolved(env.VITE_APP_CONFIG, 'src/defaultconfig.ts'),
             },
         },
         plugins: [
-            {
-                enforce: 'pre',
-                ...mdx(mdxConfiguration)
-            },
             react(),
-            svgr({
-                svgrOptions: {
-                    icon: true,
-                }
-            }),
+            ghostwireUI(),
         ],
     }
 })

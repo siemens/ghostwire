@@ -7,7 +7,7 @@
 
 import { createSvgIcon } from '@mui/material'
 
-import type { GhostwireAppConfig } from 'app'
+import type { GhostwireAppConfig } from 'ghostwire-ui'
 
 import About from './About.mdx'
 import favicon from './favicon.svg?url'

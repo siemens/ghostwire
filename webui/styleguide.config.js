@@ -6,20 +6,20 @@ module.exports = async () => {
     const mdxpluginscfg = await mdxpluginscfgfn()
     return {
         ignore: [
-            'src/**/index.{ts,tsx}',
+            'packages/ghostwire-ui/src/**/index.{ts,tsx}',
         ],
         sections: [
             {
                 name: 'Introduction',
-                content: 'src/introduction.md',
+                content: 'packages/ghostwire-ui/src/introduction.md',
             },
             {
                 name: 'UI Components',
-                components: 'src/components/**/*.{ts,tsx}',
+                components: 'packages/ghostwire-ui/src/components/**/*.{ts,tsx}',
             },
             {
                 name: 'Model Elements',
-                components: 'src/models/**/*.ts',
+                components: 'packages/ghostwire-ui/src/models/**/*.ts',
             },
             {
                 name: 'Styleguidist Support',
@@ -43,7 +43,7 @@ module.exports = async () => {
         // for the module; also remove the first "src/" path component.
         getComponentPathLine: (cpath) => {
             const cname = ['.tsx', '.ts'].reduce((name, ext) => path.basename(name, ext), cpath)
-            const cdir = path.dirname(cpath).replace(/^src\//, '')
+            const cdir = path.dirname(cpath).replace(/^packages\/ghostwire-ui\/src\//, '')
             return `import { ${cname} } from '${cdir}'`
         },
         // How uncivilized: do not list components lacking an example.
@@ -77,7 +77,7 @@ module.exports = async () => {
                 // we're allowing absolute imports to be satisfied from the src/
                 // directory.
                 modules: [
-                    path.resolve(__dirname, 'src/'),
+                    path.resolve(__dirname, 'packages/ghostwire-ui/src/'),
                     'node_modules'
                 ],
                 alias: {

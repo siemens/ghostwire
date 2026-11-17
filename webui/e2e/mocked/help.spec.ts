@@ -9,7 +9,7 @@ import {
 import { expect, test } from './discovery'
 
 const chapterFiles = readdirSync(
-    path.join(import.meta.dirname, '../../src/views/help/chapters'))
+    path.join(import.meta.dirname, '../../packages/ghostwire-ui/src/views/help/chapters'))
     .filter(name => name.endsWith('.mdx'))
 
 const viewPaths = ['/w', '/n', '/lochla', '/settings', '/about']

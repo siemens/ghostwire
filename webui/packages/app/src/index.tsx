@@ -5,7 +5,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { createGhostwireApp } from './app'
+import { createGhostwireApp } from 'ghostwire-ui'
 import config from 'ghostwire-app-config'
 
 // Import only the necessary Roboto fonts, so they are available "offline"

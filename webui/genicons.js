@@ -16,9 +16,9 @@ import {
 } from '@babel/types'
 
 // generates Typescript Material-UI <SvgIcon>s from icons/**/*.svg and writes
-// them to src/icons/**/*.tsx files.
+// them to packages/ghostwire-ui/src/icons/**/*.tsx files.
 const sourcedir = 'icons'
-const destdir = 'src/icons'
+const destdir = 'packages/ghostwire-ui/src/icons'
 
 const svgs = await glob(path.join(sourcedir, '**/*.svg'))
 for (const srcicon of svgs) {

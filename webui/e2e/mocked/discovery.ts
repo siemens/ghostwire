@@ -15,7 +15,7 @@ type JsonNetns = {
 
 /** The discovery data served instead of a real Ghostwire service. */
 export const discovery = JSON.parse(readFileSync(
-    path.join(import.meta.dirname, '../../src/models/gw/mock/mockdata.json'), 'utf8'))
+    path.join(import.meta.dirname, '../../packages/ghostwire-ui/src/models/gw/mock/mockdata.json'), 'utf8'))
 
 const netnses = discovery['network-namespaces'] as JsonNetns[]
 

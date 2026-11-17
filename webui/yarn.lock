@@ -3452,13 +3452,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ghostwire-ui@workspace:.":
+"ghostwire-app@workspace:packages/app":
   version: 0.0.0-use.local
-  resolution: "ghostwire-ui@workspace:."
+  resolution: "ghostwire-app@workspace:packages/app"
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.1"
-    "@eslint/js": "npm:^10.0.1"
+    "@fontsource/roboto": "npm:^5.3.0"
+    "@fontsource/roboto-mono": "npm:^5.3.0"
+    "@mui/icons-material": "npm:^9.2.0"
+    "@mui/material": "npm:^9.2.0"
+    "@mui/system": "npm:^9.2.0"
+    "@types/node": "npm:^26.1.2"
+    "@types/react": "npm:^19.2.18"
+    "@types/react-dom": "npm:^19.2.4"
+    "@vitejs/plugin-react": "npm:^6.0.5"
+    ghostwire-ui: "workspace:^"
+    react: "npm:^19.2.8"
+    react-dom: "npm:^19.2.8"
+    typescript: "npm:^6.0.3"
+    vite: "npm:^8.2.0"
+  languageName: unknown
+  linkType: soft
+
+"ghostwire-ui@workspace:^, ghostwire-ui@workspace:packages/ghostwire-ui":
+  version: 0.0.0-use.local
+  resolution: "ghostwire-ui@workspace:packages/ghostwire-ui"
+  dependencies:
+    "@emotion/react": "npm:^11.14.0"
+    "@emotion/styled": "npm:^11.14.1"
     "@fontsource/roboto": "npm:^5.3.0"
     "@fontsource/roboto-mono": "npm:^5.3.0"
     "@mdx-js/react": "npm:^3.1.1"
@@ -3466,7 +3488,6 @@ __metadata:
     "@mui/icons-material": "npm:^9.2.0"
     "@mui/material": "npm:^9.2.0"
     "@mui/system": "npm:^9.2.0"
-    "@playwright/test": "npm:^1.64.0"
     "@storybook/addon-docs": "npm:^10.5.5"
     "@storybook/addon-links": "npm:^10.5.5"
     "@storybook/react-vite": "npm:^10.5.5"
@@ -3483,11 +3504,6 @@ __metadata:
     beautiful-react-hooks: "npm:^5.0.3"
     clsx: "npm:^2.1.1"
     color-rgba: "npm:^3.1.1"
-    eslint: "npm:^10.8.0"
-    eslint-plugin-react-hooks: "npm:^7.1.1"
-    eslint-plugin-react-refresh: "npm:^0.5.3"
-    glob: "npm:^13.0.6"
-    globals: "npm:^17.9.0"
     html-to-image: "npm:^1.11.13"
     ipaddr.js: "npm:^2.5.0"
     jotai: "npm:^2.20.2"
@@ -3510,7 +3526,6 @@ __metadata:
     storybook: "npm:^10.5.5"
     string-similarity: "npm:^4.0.4"
     typescript: "npm:^6.0.3"
-    typescript-eslint: "npm:^8.65.0"
     typographic-apostrophes: "npm:^1.1.1"
     typographic-apostrophes-for-possessive-plurals: "npm:^1.0.5"
     typographic-ellipses: "npm:^1.0.11"
@@ -3519,6 +3534,33 @@ __metadata:
     usehooks-ts: "npm:^3.1.1"
     vite: "npm:^8.2.0"
     vite-plugin-svgr: "npm:^5.2.0"
+  peerDependencies:
+    "@emotion/react": ^11.14.0
+    "@emotion/styled": ^11.14.1
+    "@mui/icons-material": ^9.2.0
+    "@mui/material": ^9.2.0
+    "@mui/system": ^9.2.0
+    react: ^19.2.8
+    react-dom: ^19.2.8
+    vite: ^8.2.0
+  languageName: unknown
+  linkType: soft
+
+"ghostwire-webui@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "ghostwire-webui@workspace:."
+  dependencies:
+    "@eslint/js": "npm:^10.0.1"
+    "@playwright/test": "npm:^1.64.0"
+    "@svgr/core": "npm:^8.1.0"
+    "@types/node": "npm:^26.1.2"
+    eslint: "npm:^10.8.0"
+    eslint-plugin-react-hooks: "npm:^7.1.1"
+    eslint-plugin-react-refresh: "npm:^0.5.3"
+    glob: "npm:^13.0.6"
+    globals: "npm:^17.9.0"
+    typescript: "npm:^6.0.3"
+    typescript-eslint: "npm:^8.65.0"
   languageName: unknown
   linkType: soft
 

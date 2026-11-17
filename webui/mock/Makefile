@@ -5,7 +5,7 @@ help:
 	@echo "    help        shows this help."
 	@echo "    up          creates a set of test containers with serveral types of networks"
 	@echo "    kindup      creates a KinD test cluster"
-	@echo "    mockdata    writes cleaned-up discovery data to src/models/gw/mock/mockdata.json"
+	@echo "    mockdata    writes cleaned-up discovery data to packages/ghostwire-ui/src/models/gw/mock/mockdata.json"
 	@echo "    down        removes test containers and their networks"
 	@echo "    kinddown    removes the KinD test cluster"
 
@@ -32,5 +32,5 @@ kinddown:
 	docker network rm kind
 
 mockdata:
-	npx ts-node -O '{"module": "commonjs"}' getmockdata.ts "/tmp/$$$$-mockdata.json" && mv -f "/tmp/$$$$-mockdata.json" ../src/models/gw/mock/mockdata.json
-	echo "done moving to src/models/gw/mock/mockdata.json"
+	npx ts-node -O '{"module": "commonjs"}' getmockdata.ts "/tmp/$$$$-mockdata.json" && mv -f "/tmp/$$$$-mockdata.json" ../packages/ghostwire-ui/src/models/gw/mock/mockdata.json
+	echo "done moving to packages/ghostwire-ui/src/models/gw/mock/mockdata.json"

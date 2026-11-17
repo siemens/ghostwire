@@ -3,8 +3,12 @@
 // SPDX-License-Identifier: MIT
 
 import type { StorybookConfig as StorybookViteConfig } from '@storybook/react-vite'
-import { mdxConfiguration } from '../src/mdxconfig.ts'
-import type { Plugin } from 'vite'
+import { mdxConfiguration } from '../vite.js'
+import type { Plugin, PluginOption } from 'vite'
+
+// flattens nested plugin options, such as returned by the ghostwireUI() preset.
+const flattened = (plugins: PluginOption[]): PluginOption[] =>
+    plugins.flatMap(p => Array.isArray(p) ? flattened(p) : [p])
 
 const config: StorybookViteConfig = {
     framework: {
@@ -54,7 +58,7 @@ const config: StorybookViteConfig = {
         // drop the @mdx-js/rollup plugin that we get from the vite
         // configuration, as this otherwise causes problems with the mdx plugin
         // brought in by @storybook/addon-docs.
-        config.plugins = config.plugins?.filter(e => (e as Plugin)?.name !== '@mdx-js/rollup')
+        config.plugins = flattened(config.plugins ?? []).filter(e => (e as Plugin)?.name !== '@mdx-js/rollup')
         return config
     },
 
