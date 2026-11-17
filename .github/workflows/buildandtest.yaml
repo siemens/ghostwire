@@ -41,6 +41,42 @@ jobs:
           go test -v -p 1 -tags=matchers -exec sudo ./...
           go test -v -p 1 -tags=matchers ./...
 
+  downstream:
+    name: Downstream Build Extension Points
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build example downstream module
+        working-directory: examples/downstream
+        run: |
+          go vet ./...
+          go build ./...
+
+      # Exercises the Dockerfile's bctxN, MODN, WSDISKPATHS, and MAINPKG build
+      # args, as well as pinning the Ghostwire module to the in-build workspace
+      # module instead of the example's replace directive.
+      - name: Build example downstream image
+        run: |
+          mkdir -p "${RUNNER_TEMP}/ws"
+          (cd "${RUNNER_TEMP}/ws" && go work init "${GITHUB_WORKSPACE}" "${GITHUB_WORKSPACE}/examples/downstream")
+          GOWORK="${RUNNER_TEMP}/ws/go.work" MAINPKG=./examples/downstream/cmd/gostwire \
+            scripts/docker-build.sh deployments/gostwire/Dockerfile \
+              --load -t gostwire:downstream \
+              --build-arg VERSION=$(git describe --tags --always) \
+              --build-arg LDFLAGS="-s -w -extldflags=-static -X main.Version=$(git rev-parse --short HEAD)" \
+              --build-context webappsrc=./webui
+
+      - name: Smoke test example downstream image
+        run: examples/downstream/smoketest.sh gostwire:downstream
+
   webuie2e:
     name: Web UI End-to-End Tests
     runs-on: ubuntu-latest

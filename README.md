@@ -153,6 +153,13 @@ go build -tags=osusergo,netgo,sqlite_omit_load_extension,webui \
 sudo ./gostwire --debug
 ```
 
+### Downstream Distributions
+
+Downstream builds can compose their own service binaries and container images
+from this repository without forking it, adding their own decorators, HTTP
+endpoints, and web UI theming and branding. Please see [Downstream
+Distributions](docs/downstream.md) for details.
+
 ## Go Module Documentation
 
 Inside the dev container, the Go module documentation is automatically served by
