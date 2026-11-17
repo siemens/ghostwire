@@ -1,0 +1,2 @@
+# The Go module build context does not need the web app.
+webui/

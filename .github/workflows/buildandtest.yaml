@@ -77,6 +77,23 @@ jobs:
       - name: Smoke test example downstream image
         run: examples/downstream/smoketest.sh gostwire:downstream
 
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      # Exercises consuming the ghostwire-ui library from a web app with its
+      # own package.json, themes, and branding.
+      - name: Build example downstream web app
+        working-directory: examples/downstream/webui
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+        run: |
+          corepack enable
+          yarn install
+          yarn build
+
   webuie2e:
     name: Web UI End-to-End Tests
     runs-on: ubuntu-latest

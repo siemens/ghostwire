@@ -150,16 +150,15 @@ The solution deployed by our Ghostwire UI is thus as follows:
 
 ## Development
 
-- `nodejs` and `yarn` (nodejs package manager) installed. `yarn` can be
-  installed via `npm`, the nodejs package manager. And yes, you need `yarn`
-  and not just plain `npm`.
+- `nodejs` and `yarn` 4 (via corepack) installed. And yes, you need `yarn` and
+  not just plain `npm`, as this is a yarn workspace.
 
 - to read and develop individual Ghostwire UI components outside the full-blown
-  application: `yarn styleguidist`, then navigate to <http://localhost:6060>.
+  application: `yarn storybook`, then navigate to <http://localhost:6006>.
 
-- to develop and serve the Ghostwire UI web app: `yarn start`, make sure you
+- to develop and serve the Ghostwire UI web app: `yarn dev`, make sure you
   have the Ghostwire service running on port 5000 and then navigate to
-  <http://localhost:3000> (sic!) to load the new Ghostwire web app.
+  <http://localhost:3400> to load the Ghostwire web app.
 
 - to develop and test the static build serving with correct base href handling
   behind rewriting proxies, run both
@@ -176,6 +175,10 @@ The solution deployed by our Ghostwire UI is thus as follows:
 - to build with different MUI themes and branding: `VITE_APP_CONFIG=<config
   module> yarn build`, please see [Downstream
   Distributions](../docs/downstream.md#web-ui-themes-and-branding).
+
+- to lint and type-check: `yarn lint` and `yarn typecheck`.
+
+- to run the end-to-end tests: `yarn e2e` and `yarn e2e:live`.
 
 ## Ghostwire Discovery Information Model
 
@@ -203,26 +206,41 @@ extremely cumbersome.
 
 ## Overall Project Structure
 
-- `src/`
-  - `app/` – the App component which stitches everything together. The chaos
-    starts here. The individual views are to be found in `views/`.
-  - `components/` – many, many nice React components making up Ghostwire's new
-    UI. Please see below on a list of OpenSource components used in this
-    project, and their licenses.
-  - `hooks/` – useful React hooks.
-  - `icons/` – Typescript'ed SVG icons for immediate use in the UI; please note
-    that we don't package the SVG icon source files directly, but instead use
-    only their SVG paths and cleanly re-package them. See `yarn icons` as well
-    as the top-level `icon/` directory for details.
-  - `models/gw/` – Ghostwire's information model, ready for easy navigation
-    because it has the JSON textual references resolved into JS object
-    references. Also contains the conversion from JSON into the final and easily
-    navigatable object mess.
-  - `utils/` – misc. non-component things.
-  - `views/` – the individual views/routes of the Ghostwire UI.
-- `public/` – static assets needed for the Ghostwire UI when generating a static
-  build as well as running the development server.
+This directory is a yarn workspace with two packages:
+
+- `packages/ghostwire-ui/` – the `ghostwire-ui` library that downstream web
+  apps can use, please see [Downstream
+  Distributions](../docs/downstream.md#own-web-app-using-the-library).
+  - `src/`
+    - `app/` – the App component which stitches everything together, as well
+      as `createGhostwireApp` and the theme creation. The chaos starts here. The
+      individual views are to be found in `views/`.
+    - `components/` – many, many nice React components making up Ghostwire's
+      new UI. Please see below on a list of OpenSource components used in this
+      project, and their licenses.
+    - `hooks/` – useful React hooks.
+    - `icons/` – Typescript'ed SVG icons for immediate use in the UI; please
+      note that we don't package the SVG icon source files directly, but instead
+      use only their SVG paths and cleanly re-package them. See `yarn icons` as
+      well as the top-level `icon/` directory for details.
+    - `models/gw/` – Ghostwire's information model, ready for easy navigation
+      because it has the JSON textual references resolved into JS object
+      references. Also contains the conversion from JSON into the final and
+      easily navigatable object mess.
+    - `styles/` – the Ghostwire-specific theme palette elements.
+    - `utils/` – misc. non-component things.
+    - `views/` – the individual views/routes of the Ghostwire UI.
+    - `index.ts` – the public API of the library.
+  - `vite.js` – the Vite plugin preset for apps using the library.
+  - `.storybook/` – the Storybook configuration; the stories live next to their
+    components.
+- `packages/app/` – the OSS web app that gets embedded into the Gostwire
+  service binary.
+  - `src/` – the app's entry point and default app configuration.
+  - `public/` – static assets needed for the Ghostwire UI when generating a
+    static build as well as running the development server.
 - `build/` – the output directory for a static build after running `yarn build`.
+- `e2e/` – the Playwright end-to-end tests.
 - `fakegw/` – contains development helpers in form of a static build and
   discovery API server (note: needs a running Ghostwire instance) as well as a
   rewriting proxy server. They are used to test the general mechanics of
@@ -230,17 +248,13 @@ extremely cumbersome.
 - `icons/` – icon SVG sources. Please note that these sources are not directly
   included in the web bundle. In the sources, we use Typescript SvgIcon
   components instead. These are generated from the SVG icon sources in this
-  directory by running `yarn icons` in the repository top-level directory.
+  directory by running `yarn icons` in this directory.
 - `images/` – app screenshots. Please note that the app icons are to be found in
   `icons/` instead.
 - `mock/` – supplemental stuff to set up a set of example containers with weird
   wirings. Also to be used for generating mock discovery data from such a
   running example configuration.
-- `styleguidist/` – support code to allow viewing and developing Ghostwire's UI
-  components using the [React
-  Styleguidist](https://github.com/styleguidist/react-styleguidist). Use `yarn
-  styleguidist` to start the Styleguidist server, then connect your browser to
-  port `6060`.
+- `webui.go` – the Go package embedding `build/` into the service binary.
 
 ## Licenses
 

@@ -113,3 +113,5 @@ require (
 // Local development against the enclosing Ghostwire repository; container
 // image builds instead pin to the Ghostwire module in their Go workspace.
 replace github.com/siemens/ghostwire/v2 => ../..
+
+ignore ./webui/node_modules
