@@ -6,7 +6,7 @@ import type { Process } from './process'
 import type { NetworkNamespace, NetworkNamespaces } from './netns'
 import type { IpAddress } from './address'
 import { GHOSTWIRE_LABEL_ROOT } from './model'
-import { notDockerDefaultCaps } from 'utils/capabilities'
+import { notDockerDefaultCaps } from '../../utils/capabilities'
 
 
 /**

@@ -8,8 +8,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Provider, useSetAtom } from 'jotai'
 
-import { discoveryRefreshingAtom } from 'components/discovery'
-import mockdata from 'models/gw/mock/mockdata.json'
+import { discoveryRefreshingAtom } from '../discovery'
+import mockdata from '../../models/gw/mock/mockdata.json'
 
 import Metadata from './Metadata'
 

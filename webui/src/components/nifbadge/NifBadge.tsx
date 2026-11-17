@@ -8,17 +8,17 @@ import clsx from 'clsx'
 import { Button, styled, type SvgIconProps } from '@mui/material'
 import HearingIcon from '@mui/icons-material/Hearing'
 
-import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from 'icons/operstates'
+import { DormantIcon, DownIcon, LowerLayerDownIcon, UpIcon } from '../../icons/operstates'
 
-import { AddressFamily, type AddressFamilySet, GHOSTWIRE_LABEL_ROOT, type NetworkInterface, nifId, orderAddresses, SRIOVRole } from 'models/gw'
-import { OperationalState } from 'models/gw'
-import { useContextualId } from 'components/idcontext'
-import { TooltipWrapper } from 'utils/tooltipwrapper'
-import { passiveRelationClassName, relationClassName } from 'utils/relclassname'
-import { rgba } from 'utils/rgba'
-import { TargetCapture } from 'components/targetcapture'
-import { NifCheckbox } from 'components/nifcheckbox'
-import { NifIcon } from 'components/nificon'
+import { AddressFamily, type AddressFamilySet, GHOSTWIRE_LABEL_ROOT, type NetworkInterface, nifId, orderAddresses, SRIOVRole } from '../../models/gw'
+import { OperationalState } from '../../models/gw'
+import { useContextualId } from '../idcontext'
+import { TooltipWrapper } from '../../utils/tooltipwrapper'
+import { passiveRelationClassName, relationClassName } from '../../utils/relclassname'
+import { rgba } from '../../utils/rgba'
+import { TargetCapture } from '../targetcapture'
+import { NifCheckbox } from '../nifcheckbox'
+import { NifIcon } from '../nificon'
 
 
 // The outer span holding together an optional "hardware" NIC icon as well

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import React, { useContext } from 'react'
-import { type NetworkInterface } from 'models/gw'
+import { type NetworkInterface } from '../../models/gw'
 
 export const NifInfoModalContext = React.createContext<
     undefined | React.Dispatch<React.SetStateAction<NetworkInterface | undefined>>>(undefined)

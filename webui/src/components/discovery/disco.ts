@@ -4,8 +4,8 @@
 
 import { atom, useAtom, type Setter } from 'jotai'
 
-import { type Discovery as DiscoveryResult, fromjson } from 'models/gw'
-import { showIEAppIconsAtom } from 'views/settings'
+import { type Discovery as DiscoveryResult, fromjson } from '../../models/gw'
+import { showIEAppIconsAtom } from '../../views/settings'
 
 /** Internal discovery result state; can be used only via useDiscovery(). */
 const discoveryResultAtom = atom({

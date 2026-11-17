@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { dockerdefaultcaps } from 'utils/capabilities'
+import { dockerdefaultcaps } from '../../utils/capabilities'
 import { styled } from '@mui/material';
 
 

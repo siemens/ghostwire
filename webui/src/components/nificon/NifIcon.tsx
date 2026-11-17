@@ -6,16 +6,16 @@ import type { JSX } from 'react'
 
 import { type SvgIconProps } from '@mui/material'
 
-import { type NetworkInterface } from 'models/gw/nif'
-import BridgeIcon from 'icons/nifs/Bridge'
-import DummyIcon from 'icons/nifs/Dummy'
-import MacvlanIcon from 'icons/nifs/Macvlan'
-import TapIcon from 'icons/nifs/Tap'
-import TunIcon from 'icons/nifs/Tun'
-import VethIcon from 'icons/nifs/Veth'
-import { BridgeInternalIcon, LoopbackIcon, MacvlanMasterIcon, NetkitIcon, NetkitSingleIcon, NicIcon, OverlayIcon } from 'icons/nifs'
-import { GHOSTWIRE_LABEL_ROOT } from 'models/gw/model'
-import { NifHWIcon } from 'components/nifhwicon'
+import { type NetworkInterface } from '../../models/gw/nif'
+import BridgeIcon from '../../icons/nifs/Bridge'
+import DummyIcon from '../../icons/nifs/Dummy'
+import MacvlanIcon from '../../icons/nifs/Macvlan'
+import TapIcon from '../../icons/nifs/Tap'
+import TunIcon from '../../icons/nifs/Tun'
+import VethIcon from '../../icons/nifs/Veth'
+import { BridgeInternalIcon, LoopbackIcon, MacvlanMasterIcon, NetkitIcon, NetkitSingleIcon, NicIcon, OverlayIcon } from '../../icons/nifs'
+import { GHOSTWIRE_LABEL_ROOT } from '../../models/gw/model'
+import { NifHWIcon } from '../nifhwicon'
 
 // Known network interface type icons, indexed by the kind property of network
 // interface objects (and directly taken from what Linux' RTNETLINK tells us).

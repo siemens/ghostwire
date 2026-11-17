@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { AddressFamily, type IpAddress, type NetworkNamespace } from 'models/gw'
-import { crowdedNetns, initialNetns } from 'models/gw/mock'
+import { AddressFamily, type IpAddress, type NetworkNamespace } from '../../models/gw'
+import { crowdedNetns, initialNetns } from '../../models/gw/mock'
 
 import { ForwardPortTable } from './ForwardPortTable'
 

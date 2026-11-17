@@ -11,12 +11,12 @@ import '@fontsource/roboto/700.css'
 import '@fontsource/roboto-mono/400.css'
 
 import { MemoryRouter } from "react-router-dom"
-import { gwDarkTheme, gwLightTheme } from 'styles/themes'
+import { gwDarkTheme, gwLightTheme } from '../src/styles/themes'
 import { StyledEngineProvider, ThemeProvider, createTheme } from '@mui/material/styles'
 import Box from '@mui/material/Box'
 import CssBaseline from '@mui/material/CssBaseline'
 import { Markdown } from '@storybook/addon-docs/blocks'
-import { IdContext } from 'components/idcontext'
+import { IdContext } from '../src/components/idcontext'
 
 // For themes:Themes exported constant, see:
 // https://github.com/storybookjs/storybook/blob/514890e4cdd4e344c43f3dd03e03e9aaa626b7d9/code/core/src/theming/create.ts#L20

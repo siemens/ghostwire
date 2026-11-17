@@ -20,7 +20,7 @@ import {
     type Theme,
 } from '@mui/material'
 
-import { errorMessage, reloadPage } from 'utils/errors'
+import { errorMessage, reloadPage } from '../../utils/errors'
 
 
 export interface ErrorNoticeProps {

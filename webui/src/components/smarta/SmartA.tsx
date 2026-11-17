@@ -5,7 +5,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-import { ExtLink } from 'components/extlink'
+import { ExtLink } from '../extlink'
 
 
 export interface SmartAProps {

@@ -4,9 +4,9 @@
 
 import { type JSX } from 'react'
 
-import { MuiMarkdown } from 'components/muimarkdown'
+import { MuiMarkdown } from '../muimarkdown'
 import { styled } from '@mui/material';
-import { SmartA } from 'components/smarta';
+import { SmartA } from '../smarta';
 import type { MDXComponents } from 'mdx/types';
 
 

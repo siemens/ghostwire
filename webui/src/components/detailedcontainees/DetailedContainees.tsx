@@ -5,9 +5,9 @@
 
 import { styled, Tooltip } from '@mui/material'
 
-import { ContaineeDetails } from 'components/containeedetails'
-import { type AddressFamilySet, containeesOfNetns, isPod, isSandbox, type NetworkNamespace, sortContaineesByName } from 'models/gw'
-import { ContaineeIcon } from 'utils/containeeicon'
+import { ContaineeDetails } from '../containeedetails'
+import { type AddressFamilySet, containeesOfNetns, isPod, isSandbox, type NetworkNamespace, sortContaineesByName } from '../../models/gw'
+import { ContaineeIcon } from '../../utils/containeeicon'
 
 
 const Containees = styled('div')(({ theme }) => ({

@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 
-import { crowdedNetns, initialNetns } from 'models/gw/mock'
+import { crowdedNetns, initialNetns } from '../../models/gw/mock'
 
 import { NamespaceContainees } from './NamespaceContainees'
 

@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Route, Routes, useMatch, Navigate, useLocation
 
 import { ErrorBoundary } from 'react-error-boundary'
 
-import { basename } from 'utils/basename'
+import { basename } from '../utils/basename'
 
 import { SnackbarProvider } from 'notistack'
 
@@ -30,39 +30,39 @@ import {
     ListItem,
 } from '@mui/material';
 
-import { Discovery, useDiscovery } from 'components/discovery'
-import Refresher from 'components/refresher'
-import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
+import { Discovery, useDiscovery } from '../components/discovery'
+import Refresher from '../components/refresher'
+import AppBarDrawer, { DrawerLinkItem } from '../components/appbardrawer'
 
 import SettingsIcon from '@mui/icons-material/Settings'
 import HelpIcon from '@mui/icons-material/Help'
 
-import ScreenshotIcon from 'icons/Screenshot'
-import WiringViewIcon from 'icons/views/Wiring'
-import NetnsViewIcon from 'icons/views/Details'
-import OpenHouseIcon from 'icons/views/OpenHouse'
+import ScreenshotIcon from '../icons/Screenshot'
+import WiringViewIcon from '../icons/views/Wiring'
+import NetnsViewIcon from '../icons/views/Details'
+import OpenHouseIcon from '../icons/views/OpenHouse'
 
-import { About as AboutView } from 'views/about'
-import { Help as HelpView } from 'views/help'
-import { Settings as SettingsView, showEmptyNetnsAtom, themeAtom, THEME_DARK, THEME_USERPREF, filterPatternAtom, filterCaseSensitiveAtom, filterRegexpAtom } from 'views/settings'
-import { Everything as EverythingView } from 'views/everything'
-import { NetnsWiring } from 'views/netnswiring'
-import { NetnsDetails as NetnsDetailsView } from 'views/netnsdetails'
-import { ContaineeNavigator } from 'components/containeenavigator'
-import { useScrollToHash } from 'hooks/scrolltohash'
-import { scrollIdIntoView } from 'utils'
-import { emptyNonContainerNetns, type NetworkNamespace } from 'models/gw'
-import { Brand } from 'components/brand'
-import { BrandIcon } from 'components/brandicon'
+import { About as AboutView } from '../views/about'
+import { Help as HelpView } from '../views/help'
+import { Settings as SettingsView, showEmptyNetnsAtom, themeAtom, THEME_DARK, THEME_USERPREF, filterPatternAtom, filterCaseSensitiveAtom, filterRegexpAtom } from '../views/settings'
+import { Everything as EverythingView } from '../views/everything'
+import { NetnsWiring } from '../views/netnswiring'
+import { NetnsDetails as NetnsDetailsView } from '../views/netnsdetails'
+import { ContaineeNavigator } from '../components/containeenavigator'
+import { useScrollToHash } from '../hooks/scrolltohash'
+import { scrollIdIntoView } from '../utils'
+import { emptyNonContainerNetns, type NetworkNamespace } from '../models/gw'
+import { Brand } from '../components/brand'
+import { BrandIcon } from '../components/brandicon'
 
-import { BrandingProvider, useBranding, useBrandName } from 'components/branding'
-import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
-import OpenHouse from 'views/openhouse/OpenHouse'
-import { FilterInput, type FilterPattern } from 'components/filterinput'
+import { BrandingProvider, useBranding, useBrandName } from '../components/branding'
+import { ScreenShooter, useScreenShooterModal } from '../components/screenshooter'
+import OpenHouse from '../views/openhouse/OpenHouse'
+import { FilterInput, type FilterPattern } from '../components/filterinput'
 import { createGhostwireTheme } from './themes'
 import { resolveBranding, type GhostwireAppConfig } from './config'
-import { AppErrorFallback, ErrorNotice } from 'components/errorfallback'
-import { UnhandledErrors } from 'components/unhandlederrors'
+import { AppErrorFallback, ErrorNotice } from '../components/errorfallback'
+import { UnhandledErrors } from '../components/unhandlederrors'
 
 
 const SettingsViewIcon = SettingsIcon

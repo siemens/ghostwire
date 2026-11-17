@@ -5,8 +5,8 @@
 import { atom, type PrimitiveAtom, type SetStateAction } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
-import { AddressFamily } from 'models/gw'
-import { NEVER } from 'components/cutoffselector'
+import { AddressFamily } from '../../models/gw'
+import { NEVER } from '../../components/cutoffselector'
 
 
 const themeKey = 'ghostwire.theme'

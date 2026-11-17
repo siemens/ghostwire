@@ -1,6 +1,6 @@
-import { ContaineeBadge } from 'components/containeebadge'
-import { standaloneBox, containerBox, containerBoxProcess, pod, boundBox } from 'views/help/mockdata'
-import { GHOSTWIRE_LABEL_ROOT, ContainerFlavors } from 'models/gw'
+import { ContaineeBadge } from '../../../components/containeebadge'
+import { standaloneBox, containerBox, containerBoxProcess, pod, boundBox } from '../mockdata'
+import { GHOSTWIRE_LABEL_ROOT, ContainerFlavors } from '../../../models/gw'
 import JSBI from "jsbi"
 export const priv = {...containerBox, name: 'Privileged_Pinhead_1', labels: {[GHOSTWIRE_LABEL_ROOT+'container/privileged']: ''}}
 export const cbp = {...containerBoxProcess, capbnd: JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(21))}
@@ -9,16 +9,16 @@ export const debugme = {...containerBox, name: 'Bug_Me_1', flavor: ContainerFlav
   [GHOSTWIRE_LABEL_ROOT+'ieapp/debuggable']: '1',
 }}
 
-import Container from 'icons/containees/Container.tsx';
-import CRI from 'icons/containees/CRI.tsx';
-import Docker from 'icons/containees/Docker.tsx';
-import DockerPlugin from 'icons/containees/DockerManagedPlugin.tsx';
-import IERuntime from 'icons/containees/IERuntime.tsx';
-import Podman from 'icons/containees/Podman.tsx';
+import Container from '../../../icons/containees/Container.tsx';
+import CRI from '../../../icons/containees/CRI.tsx';
+import Docker from '../../../icons/containees/Docker.tsx';
+import DockerPlugin from '../../../icons/containees/DockerManagedPlugin.tsx';
+import IERuntime from '../../../icons/containees/IERuntime.tsx';
+import Podman from '../../../icons/containees/Podman.tsx';
 
-import ComposerProject from 'icons/containees/ComposerProject.tsx';
-import IEApp from 'icons/containees/IEApp.tsx';
-import K8sPod from 'icons/containees/K8sPod.tsx';
+import ComposerProject from '../../../icons/containees/ComposerProject.tsx';
+import IEApp from '../../../icons/containees/IEApp.tsx';
+import K8sPod from '../../../icons/containees/K8sPod.tsx';
 
 # Containees
 

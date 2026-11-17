@@ -4,7 +4,7 @@
 
 import type { Theme, ThemeOptions } from '@mui/material'
 
-import { defaultBranding, type Branding } from 'components/branding'
+import { defaultBranding, type Branding } from '../components/branding'
 
 /**
  * Configuration of the Ghostwire app, allowing downstream builds to change

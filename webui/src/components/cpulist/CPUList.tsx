@@ -7,8 +7,8 @@ import { Fragment } from 'react'
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
-import CPUIcon from 'icons/CPUAffinity'
-import { rgba } from 'utils/rgba'
+import CPUIcon from '../../icons/CPUAffinity'
+import { rgba } from '../../utils/rgba'
 
 
 const CPURangeList = styled('span')(({ theme }) => ({

@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 
 import { useSnackbar } from 'notistack'
 
-import { errorMessage } from 'utils/errors'
+import { errorMessage } from '../../utils/errors'
 
 
 // Browsers report a ResizeObserver not being able to deliver all notifications

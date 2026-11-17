@@ -7,12 +7,12 @@ import clsx from 'clsx'
 
 import { Box, Button, styled, Tooltip } from '@mui/material'
 
-import { containeeDescription, containeeState, ContainerState, containerStateString, type Containee, containeeFullName, isPrivilegedContainer, isElevatedContainer, isContainer, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
-import { ContaineeTypeIcon } from 'utils/containeetypeicon'
-import { TargetCapture } from 'components/targetcapture'
-import { PrivilegedIcon } from 'icons/containeestates/Privileged'
-import { IEAppDebuggableStateIcon } from 'icons/containeestates/IEAppDebuggableState'
-import CapableIcon from 'icons/containeestates/Capable'
+import { containeeDescription, containeeState, ContainerState, containerStateString, type Containee, containeeFullName, isPrivilegedContainer, isElevatedContainer, isContainer, GHOSTWIRE_LABEL_ROOT } from '../../models/gw'
+import { ContaineeTypeIcon } from '../../utils/containeetypeicon'
+import { TargetCapture } from '../targetcapture'
+import { PrivilegedIcon } from '../../icons/containeestates/Privileged'
+import { IEAppDebuggableStateIcon } from '../../icons/containeestates/IEAppDebuggableState'
+import CapableIcon from '../../icons/containeestates/Capable'
 
 
 // Obviously, there is quite some styling going on here in order to render

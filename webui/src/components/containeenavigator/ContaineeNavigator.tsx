@@ -7,14 +7,14 @@ import clsx from 'clsx'
 import { Link as RouterLink, type LinkProps as RouterLinkProps, useMatch } from 'react-router-dom'
 import { Avatar, List, ListItem, ListItemAvatar, ListItemButton, ListSubheader, styled, Typography } from '@mui/material'
 
-import { type Containee, containeeState, type Container, ContainerState, containerStateString, emptyNonContainerNetns, isContainer, isElevatedContainer, isPod, isPodContainer, isPrivilegedContainer, netnsId, netnsMatchesFilter, type NetworkNamespaces, type Pod, PodFlavors, sortContaineesByName } from 'models/gw'
-import { ContaineeIcon } from 'utils/containeeicon'
-import { useContextualId } from 'components/idcontext'
-import PrivilegedIcon from 'icons/containeestates/Privileged'
-import CapableIcon from 'icons/containeestates/Capable'
+import { type Containee, containeeState, type Container, ContainerState, containerStateString, emptyNonContainerNetns, isContainer, isElevatedContainer, isPod, isPodContainer, isPrivilegedContainer, netnsId, netnsMatchesFilter, type NetworkNamespaces, type Pod, PodFlavors, sortContaineesByName } from '../../models/gw'
+import { ContaineeIcon } from '../../utils/containeeicon'
+import { useContextualId } from '../idcontext'
+import PrivilegedIcon from '../../icons/containeestates/Privileged'
+import CapableIcon from '../../icons/containeestates/Capable'
 import { useAtom } from 'jotai'
-import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom } from 'views/settings'
-import { getFilterFn } from 'components/filterinput'
+import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom } from '../../views/settings'
+import { getFilterFn } from '../filterinput'
 
 
 const ContaineeItem = styled(ListItemButton)<RouterLinkProps>(({ theme }) => ({

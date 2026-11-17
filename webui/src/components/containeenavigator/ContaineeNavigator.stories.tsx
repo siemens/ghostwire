@@ -9,8 +9,8 @@ import type { Decorator, Meta, StoryObj } from '@storybook/react-vite'
 import { Provider, type WritableAtom } from 'jotai'
 import { useHydrateAtoms } from 'jotai/utils'
 
-import { discovery } from 'models/gw/mock'
-import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, persistSettingsAtom } from 'views/settings'
+import { discovery } from '../../models/gw/mock'
+import { filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, persistSettingsAtom } from '../../views/settings'
 
 import { ContaineeNavigator } from './ContaineeNavigator'
 

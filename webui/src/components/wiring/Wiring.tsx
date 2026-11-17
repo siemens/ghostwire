@@ -7,8 +7,8 @@ import React, { type JSX, type ReactElement, useLayoutEffect, useState } from 'r
 
 import { styled, useTheme } from '@mui/material'
 
-import { useContextualId } from 'components/idcontext'
-import { isRelationClassName, relationClassNameFromIds } from 'utils/relclassname'
+import { useContextualId } from '../idcontext'
+import { isRelationClassName, relationClassNameFromIds } from '../../utils/relclassname'
 
 
 /**

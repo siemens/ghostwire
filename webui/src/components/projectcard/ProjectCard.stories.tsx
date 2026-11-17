@@ -4,9 +4,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { NetnsPlainCard } from 'components/netnsplaincard'
-import { type Container, GHOSTWIRE_LABEL_ROOT, isContainer, loFiNetns, type Project, ProjectFlavors } from 'models/gw'
-import { crowdedNetns } from 'models/gw/mock'
+import { NetnsPlainCard } from '../netnsplaincard'
+import { type Container, GHOSTWIRE_LABEL_ROOT, isContainer, loFiNetns, type Project, ProjectFlavors } from '../../models/gw'
+import { crowdedNetns } from '../../models/gw/mock'
 
 import ProjectCard from './ProjectCard'
 

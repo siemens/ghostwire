@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { OperationalState } from 'models/gw'
-import { initialNetns, nifHw } from 'models/gw/mock'
+import { OperationalState } from '../../models/gw'
+import { initialNetns, nifHw } from '../../models/gw/mock'
 
 import { TargetCapture } from './TargetCapture'
 

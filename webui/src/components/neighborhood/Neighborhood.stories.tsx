@@ -4,9 +4,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { type Container, isContainer } from 'models/gw'
-import { discovery } from 'models/gw/mock'
-import { type Service } from 'utils/neighborhood'
+import { type Container, isContainer } from '../../models/gw'
+import { discovery } from '../../models/gw/mock'
+import { type Service } from '../../utils/neighborhood'
 
 import { Neighborhood } from './Neighborhood'
 

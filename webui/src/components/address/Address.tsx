@@ -5,13 +5,13 @@
 import React from 'react'
 import clsx from 'clsx'
 
-import { AddressFamily, type IpAddress } from 'models/gw'
+import { AddressFamily, type IpAddress } from '../../models/gw'
 import { IpAddressAndPrefix, IpAddressLifetime } from './IpAddressAndPrefix'
-import { TooltipWrapper } from 'utils/tooltipwrapper'
-import MacAddress from 'icons/addresses/MacAddress'
-import Ipv4Address from 'icons/addresses/Ipv4Address'
-import Ipv6Address from 'icons/addresses/Ipv6Address'
-import { rgba } from 'utils/rgba'
+import { TooltipWrapper } from '../../utils/tooltipwrapper'
+import MacAddress from '../../icons/addresses/MacAddress'
+import Ipv4Address from '../../icons/addresses/Ipv4Address'
+import Ipv6Address from '../../icons/addresses/Ipv6Address'
+import { rgba } from '../../utils/rgba'
 import { styled } from '@mui/material'
 
 

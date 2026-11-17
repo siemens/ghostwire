@@ -4,9 +4,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { AddressFamily } from 'models/gw'
-import { initialNetns } from 'models/gw/mock'
-import { boundBox, containerBox } from 'views/help/mockdata'
+import { AddressFamily } from '../../models/gw'
+import { initialNetns } from '../../models/gw/mock'
+import { boundBox, containerBox } from '../../views/help/mockdata'
 
 import { ContaineeDetails } from './ContaineeDetails'
 

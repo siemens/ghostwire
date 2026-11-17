@@ -6,12 +6,12 @@ import clsx from 'clsx'
 
 import { Button, styled, type Theme } from '@mui/material'
 
-import { type NetworkInterface, type NetworkNamespace, type Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType, type PrimitiveContainee, isContainer } from 'models/gw'
-import { CaptureIcon } from 'icons/Capture'
-import { CaptureOffIcon } from 'icons/CaptureOff'
-import { useDynVars } from 'components/dynvars'
-import { rgba } from 'utils/rgba'
-import { type Target } from 'models/packetflix/target'
+import { type NetworkInterface, type NetworkNamespace, type Containee, isPod, isNetworkNamespace, isNetworkInterface, isContainee, isOperational, firstContainee, containeeType, type PrimitiveContainee, isContainer } from '../../models/gw'
+import { CaptureIcon } from '../../icons/Capture'
+import { CaptureOffIcon } from '../../icons/CaptureOff'
+import { useDynVars } from '../dynvars'
+import { rgba } from '../../utils/rgba'
+import { type Target } from '../../models/packetflix/target'
 import { keyframes } from '@mui/system';
 
 

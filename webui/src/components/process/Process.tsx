@@ -5,12 +5,12 @@
 import type { JSX } from 'react'
 
 import { styled } from '@mui/material'
-import AppProjectIcon from 'icons/groups/AppProject'
-import ComposerProjectIcon from 'icons/groups/ComposerProject'
-import { ProcessDetails } from "components/procdetails"
-import { useEnclosingProject } from 'components/projectcard'
-import { type PrimitiveContainee, containeeDisplayName, isContainer, ProjectFlavors } from "models/gw"
-import { ContaineeTypeIcon } from "utils/containeetypeicon"
+import AppProjectIcon from '../../icons/groups/AppProject'
+import ComposerProjectIcon from '../../icons/groups/ComposerProject'
+import { ProcessDetails } from "../procdetails"
+import { useEnclosingProject } from '../projectcard'
+import { type PrimitiveContainee, containeeDisplayName, isContainer, ProjectFlavors } from "../../models/gw"
+import { ContaineeTypeIcon } from "../../utils/containeetypeicon"
 
 const Details = styled('span')(({ theme }) => ({
     whiteSpace: 'nowrap',

@@ -4,7 +4,7 @@
 
 
 import { styled } from "@mui/material"
-import ProcessIcon from 'icons/Process'
+import ProcessIcon from '../../icons/Process'
 
 const Details = styled('span')(({ theme }) => ({
     display: 'inline-block',

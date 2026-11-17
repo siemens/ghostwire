@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 
-import { nifHw } from 'models/gw/mock'
+import { nifHw } from '../../models/gw/mock'
 
 import { NifCheckbox } from './NifCheckbox'
 

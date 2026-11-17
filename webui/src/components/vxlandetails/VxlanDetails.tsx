@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 
-import { type NetworkInterface } from 'models/gw'
+import { type NetworkInterface } from '../../models/gw'
 import { styled } from '@mui/material'
 
 

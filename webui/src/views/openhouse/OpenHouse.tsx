@@ -9,14 +9,14 @@ import { useAtom } from 'jotai'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import { Box, Typography } from '@mui/material'
 
-import { useDiscovery } from 'components/discovery'
-import { Ghost } from 'components/ghost'
-import RefreshButton from 'components/refreshbutton'
-import Metadata from 'components/metadata'
-import { OpenPortTable } from 'components/openporttable/OpenPortTable'
-import { showIpFamiliesAtom } from 'views/settings'
+import { useDiscovery } from '../../components/discovery'
+import { Ghost } from '../../components/ghost'
+import RefreshButton from '../../components/refreshbutton'
+import Metadata from '../../components/metadata'
+import { OpenPortTable } from '../../components/openporttable/OpenPortTable'
+import { showIpFamiliesAtom } from '../settings'
 
-import OpenHouseIcon from 'icons/views/OpenHouse'
+import OpenHouseIcon from '../../icons/views/OpenHouse'
 
 /**
  * Renders the discovered port forwardings and open ports from the host's

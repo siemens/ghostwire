@@ -7,12 +7,12 @@ import clsx from 'clsx'
 
 import { alpha, Avatar, Card, CardContent, CardHeader, getLuminance, getOverlayAlpha, styled, type Theme, Tooltip, useTheme } from '@mui/material'
 
-import AppProjectIcon from 'icons/groups/AppProject'
-import ComposerProjectIcon from 'icons/groups/ComposerProject'
+import AppProjectIcon from '../../icons/groups/AppProject'
+import ComposerProjectIcon from '../../icons/groups/ComposerProject'
 
-import { ContainerFlavors, GHOSTWIRE_LABEL_ROOT, type Project, projectDescription } from 'models/gw'
+import { ContainerFlavors, GHOSTWIRE_LABEL_ROOT, type Project, projectDescription } from '../../models/gw'
 import { lighten } from '@mui/material'
-import { useImageLuminance } from 'hooks/imageluminance'
+import { useImageLuminance } from '../../hooks/imageluminance'
 
 import { ProjectContext } from './context'
 

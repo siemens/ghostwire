@@ -7,9 +7,9 @@ import { fn } from 'storybook/test'
 
 import { Box } from '@mui/material'
 
-import { DynVarsProvider } from 'components/dynvars'
-import { type Containee, ContainerFlavors, ContainerState } from 'models/gw'
-import { boundBox, containerBox, pod, standaloneBox } from 'views/help/mockdata'
+import { DynVarsProvider } from '../dynvars'
+import { type Containee, ContainerFlavors, ContainerState } from '../../models/gw'
+import { boundBox, containerBox, pod, standaloneBox } from '../../views/help/mockdata'
 
 import { ContaineeBadge } from './ContaineeBadge'
 

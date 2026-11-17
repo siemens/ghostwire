@@ -5,10 +5,10 @@
 import { type ReactNode } from 'react'
 import { atomWithStorage } from 'jotai/utils'
 import { Collapse, IconButton, styled } from '@mui/material'
-import { useDiscovery } from 'components/discovery'
+import { useDiscovery } from '../discovery'
 import { useAtom } from 'jotai'
 import { ExpandLess, ExpandMore } from '@mui/icons-material'
-import { CPUList } from 'components/cpulist'
+import { CPUList } from '../cpulist'
 
 const expandMetadata = 'ghostwire.expandmd'
 

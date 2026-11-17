@@ -15,8 +15,8 @@ import {
     lighten,
     styled,
 } from '@mui/material'
-import { ChapterSkeleton } from 'components/chapterskeleton'
-import { LoadErrorFallback } from 'components/errorfallback'
+import { ChapterSkeleton } from '../chapterskeleton'
+import { LoadErrorFallback } from '../errorfallback'
 import type { MDXComponents, MDXContent } from 'mdx/types'
 import { ErrorBoundary } from 'react-error-boundary'
 

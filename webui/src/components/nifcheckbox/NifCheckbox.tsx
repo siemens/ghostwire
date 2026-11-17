@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 import { Checkbox, styled } from '@mui/material'
-import CaptureCheckIcon from 'icons/CaptureCheck'
-import { type NetworkInterface, isOperational } from 'models/gw'
+import CaptureCheckIcon from '../../icons/CaptureCheck'
+import { type NetworkInterface, isOperational } from '../../models/gw'
 import React from 'react'
 
 const NifChecker = styled(Checkbox)(() => ({

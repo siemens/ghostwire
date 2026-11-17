@@ -7,9 +7,9 @@ import { fn } from 'storybook/test'
 
 import { Box } from '@mui/material'
 
-import { DynVarsProvider } from 'components/dynvars'
-import { orderNifByName } from 'models/gw'
-import { discovery, nifHw, nifLo, nifVeth1, nifVeth2 } from 'models/gw/mock'
+import { DynVarsProvider } from '../dynvars'
+import { orderNifByName } from '../../models/gw'
+import { discovery, nifHw, nifLo, nifVeth1, nifVeth2 } from '../../models/gw/mock'
 
 import { NifNavigator } from './NifNavigator'
 

@@ -4,7 +4,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { containerBoxProcess } from 'views/help/mockdata'
+import { containerBoxProcess } from '../../views/help/mockdata'
 
 import SchedulerInfo from './SchedulerInfo'
 

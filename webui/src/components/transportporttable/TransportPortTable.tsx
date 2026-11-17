@@ -16,10 +16,10 @@ import {
 } from '@mui/material'
 
 import HearingIcon from '@mui/icons-material/Hearing'
-import ConnectedIcon from 'icons/portstates/Connected'
+import ConnectedIcon from '../../icons/portstates/Connected'
 
-import { AddressFamily, type AddressFamilySet, containeeDisplayName, isContainer, type NetworkNamespace, orderAddresses, orderByState, type PortUser, type TransportPort } from 'models/gw'
-import { Process } from 'components/process'
+import { AddressFamily, type AddressFamilySet, containeeDisplayName, isContainer, type NetworkNamespace, orderAddresses, orderByState, type PortUser, type TransportPort } from '../../models/gw'
+import { Process } from '../process'
 
 
 /**

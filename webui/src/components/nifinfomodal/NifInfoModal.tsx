@@ -4,11 +4,11 @@
 
 import React, { useState } from 'react'
 import { styled } from '@mui/material'
-import { type NetworkInterface } from 'models/gw'
+import { type NetworkInterface } from '../../models/gw'
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
-import { NifIcon } from 'components/nificon'
+import { NifIcon } from '../nificon'
 import { NifInfoModalContext } from './context'
 import { NifInfo } from './NifInfo'
 

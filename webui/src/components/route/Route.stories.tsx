@@ -7,8 +7,8 @@ import { fn } from 'storybook/test'
 
 import { Box } from '@mui/material'
 
-import { orderRoutes, RouteTableLocal, RouteType } from 'models/gw'
-import { initialNetns } from 'models/gw/mock'
+import { orderRoutes, RouteTableLocal, RouteType } from '../../models/gw'
+import { initialNetns } from '../../models/gw/mock'
 
 import { Route } from './Route'
 

@@ -8,7 +8,7 @@ import { Provider, useAtomValue } from 'jotai'
 
 import { Typography } from '@mui/material'
 
-import { discoveryRefreshIntervalAtom } from 'components/discovery'
+import { discoveryRefreshIntervalAtom } from '../discovery'
 
 import Refresher from './Refresher'
 

@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Box } from '@mui/material'
 
-import { nifBr, nifHw, nifLo, nifVeth1 } from 'models/gw/mock'
+import { nifBr, nifHw, nifLo, nifVeth1 } from '../../models/gw/mock'
 
 import { NifInfo } from './NifInfo'
 

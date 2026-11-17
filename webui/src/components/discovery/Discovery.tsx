@@ -8,7 +8,7 @@ import { useAtom } from 'jotai'
 
 import { useSnackbar } from 'notistack'
 
-import useInterval from 'hooks/interval'
+import useInterval from '../../hooks/interval'
 
 import { 
     discoveryRefreshingAtom, discoveryRefreshIntervalAtom, discoveryErrorAtom, 

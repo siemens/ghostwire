@@ -5,8 +5,8 @@
 import React, { useMemo, useState } from 'react'
 
 import { Box, IconButton, TextField, ToggleButton, ToggleButtonGroup, debounce } from '@mui/material'
-import CaseIcon from 'icons/Case'
-import RegexpIcon from 'icons/Regexp'
+import CaseIcon from '../../icons/Case'
+import RegexpIcon from '../../icons/Regexp'
 import { Clear } from '@mui/icons-material'
 import { type FilterPattern } from './filter'
 

@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { GHOSTWIRE_LABEL_ROOT, type NetworkInterface, TapTunMode } from 'models/gw'
-import { nifBr, nifHw, nifLo, nifMacvlan } from 'models/gw/mock'
+import { GHOSTWIRE_LABEL_ROOT, type NetworkInterface, TapTunMode } from '../../models/gw'
+import { nifBr, nifHw, nifLo, nifMacvlan } from '../../models/gw/mock'
 
 import { NifIcon } from './NifIcon'
 

@@ -4,9 +4,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { TapTunMode } from 'models/gw'
-import { nifHw } from 'models/gw/mock'
-import { containerBox, standaloneBox } from 'views/help/mockdata'
+import { TapTunMode } from '../../models/gw'
+import { nifHw } from '../../models/gw/mock'
+import { containerBox, standaloneBox } from '../../views/help/mockdata'
 
 import { TunTapDetails } from './TunTapDetails'
 

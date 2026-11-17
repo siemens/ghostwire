@@ -8,7 +8,7 @@ import { Alert, IconButton, Snackbar, styled, Tooltip } from '@mui/material'
 import ClearIcon from '@mui/icons-material/Clear'
 import { ContentCopy } from '@mui/icons-material'
 
-import { type NetworkInterface } from 'models/gw'
+import { type NetworkInterface } from '../../models/gw'
 
 // nif details are a grid (table) of key-value pairs; even if some values are
 // arrays consisting of multiple values themselves, but we won't notice at this

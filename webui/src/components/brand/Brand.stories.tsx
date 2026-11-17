@@ -4,7 +4,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { DynVarsProvider } from 'components/dynvars'
+import { DynVarsProvider } from '../dynvars'
 
 import { Brand } from './Brand'
 

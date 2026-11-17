@@ -13,12 +13,12 @@ import { useWebSocket } from 'react-use-websocket/dist/lib/use-websocket'
 
 import { Button, styled, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import { Label as LabelIcon, HourglassTop, LocalHospital, QuestionMark, Verified, VerifiedOutlined } from '@mui/icons-material'
-import { type Service, shareContainers, sortServices } from 'utils/neighborhood'
-import { ContaineeBadge } from 'components/containeebadge'
-import { rgba } from 'utils/rgba'
-import { AddressFamily, type Containee, type Container, type IpAddress, isContainer, type JSONObject, orderAddresses } from 'models/gw'
-import { basename } from 'utils/basename'
-import { Address } from 'components/address'
+import { type Service, shareContainers, sortServices } from '../../utils/neighborhood'
+import { ContaineeBadge } from '../containeebadge'
+import { rgba } from '../../utils/rgba'
+import { AddressFamily, type Containee, type Container, type IpAddress, isContainer, type JSONObject, orderAddresses } from '../../models/gw'
+import { basename } from '../../utils/basename'
+import { Address } from '../address'
 
 
 const ServiceTable = styled(TableContainer)(({ theme }) => ({

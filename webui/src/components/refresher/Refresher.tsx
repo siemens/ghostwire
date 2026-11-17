@@ -12,8 +12,8 @@ import SyncIcon from '@mui/icons-material/Sync'
 import SyncDisabledIcon from '@mui/icons-material/SyncDisabled'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
-import { discoveryRefreshingAtom, discoveryRefreshIntervalAtom } from 'components/discovery'
-import useId from 'hooks/id/id'
+import { discoveryRefreshingAtom, discoveryRefreshIntervalAtom } from '../discovery'
+import useId from '../../hooks/id/id'
 
 
 const defaultThrobberThreshold = 500/* ms */

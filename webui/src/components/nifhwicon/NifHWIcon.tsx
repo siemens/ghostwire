@@ -5,10 +5,10 @@
 
 import { type SvgIconProps } from '@mui/material'
 
-import HardwareNicIcon from 'icons/nifs/HardwareNic'
-import HardwareNicPFIcon from 'icons/nifs/HardwareNicPF'
-import HardwareNicVFIcon from 'icons/nifs/HardwareNicVF'
-import { type NetworkInterface, SRIOVRole } from 'models/gw/nif'
+import HardwareNicIcon from '../../icons/nifs/HardwareNic'
+import HardwareNicPFIcon from '../../icons/nifs/HardwareNicPF'
+import HardwareNicVFIcon from '../../icons/nifs/HardwareNicVF'
+import { type NetworkInterface, SRIOVRole } from '../../models/gw/nif'
 
 const nifSRIOVIcons = {
     [SRIOVRole.None]: HardwareNicIcon,

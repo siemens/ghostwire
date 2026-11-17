@@ -6,8 +6,8 @@ import React, { useContext } from 'react'
 import type { SvgIconProps } from '@mui/material'
 import type { MDXContent } from 'mdx/types'
 
-import GhostwireIcon from 'icons/Ghostwire'
-import { useDynVars } from 'components/dynvars'
+import GhostwireIcon from '../../icons/Ghostwire'
+import { useDynVars } from '../dynvars'
 
 /**
  * A link to legal information, such as an imprint, privacy statement, or open

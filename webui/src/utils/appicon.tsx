@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import { SvgIcon, type SvgIconProps } from '@mui/material'
-import { type Container, GHOSTWIRE_LABEL_ROOT } from 'models/gw'
+import { type Container, GHOSTWIRE_LABEL_ROOT } from '../models/gw'
 
 /**
  * Returns the IE app icon for the container if it is an IE app container as

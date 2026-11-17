@@ -6,9 +6,9 @@ import React from 'react'
 
 import { Menu, MenuItem, styled } from '@mui/material'
 
-import { type AddressFamilySet, firstContainee, type NetworkInterface, nifId, orderNifByNameAndContainee } from 'models/gw'
-import { NifBadge } from 'components/nifbadge'
-import { ContaineeBadge } from 'components/containeebadge'
+import { type AddressFamilySet, firstContainee, type NetworkInterface, nifId, orderNifByNameAndContainee } from '../../models/gw'
+import { NifBadge } from '../nifbadge'
+import { ContaineeBadge } from '../containeebadge'
 
 
 const AliasName = styled('span')(() => ({

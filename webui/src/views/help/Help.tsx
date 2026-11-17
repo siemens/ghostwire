@@ -8,14 +8,14 @@ import { Provider, type WritableAtom } from 'jotai'
 
 import { Box, Card, useTheme } from '@mui/material'
 
-import { Brand } from 'components/brand'
-import { BrandIcon } from 'components/brandicon'
-import { useBrandName } from 'components/branding'
-import { HelpViewer, type HelpViewerChapter } from 'components/helpviewer'
-import { GwMarkdown } from 'components/gwmarkdown'
-import { type MuiMarkdownProps } from 'components/muimarkdown'
+import { Brand } from '../../components/brand'
+import { BrandIcon } from '../../components/brandicon'
+import { useBrandName } from '../../components/branding'
+import { HelpViewer, type HelpViewerChapter } from '../../components/helpviewer'
+import { GwMarkdown } from '../../components/gwmarkdown'
+import { type MuiMarkdownProps } from '../../components/muimarkdown'
 
-import { containeesCutoffAtom, filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, nifsCutoffAtom, persistSettingsAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from 'views/settings'
+import { containeesCutoffAtom, filterCaseSensitiveAtom, filterPatternAtom, filterRegexpAtom, nifsCutoffAtom, persistSettingsAtom, portsCutoffAtom, routesCutoffAtom, showEmptyNetnsAtom, showIpv4Atom, showIpv6Atom, showLoopbackAtom, showMACAtom, showNamespaceIdsAtom, showSandboxesAtom } from '../settings'
 import { useHydrateAtoms } from 'jotai/utils'
 
 

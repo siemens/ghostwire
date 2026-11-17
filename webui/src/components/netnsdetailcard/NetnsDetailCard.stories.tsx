@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { AddressFamily } from 'models/gw'
-import { crowdedNetns, initialNetns, loOnlyContainerNetns } from 'models/gw/mock'
+import { AddressFamily } from '../../models/gw'
+import { crowdedNetns, initialNetns, loOnlyContainerNetns } from '../../models/gw/mock'
 
 import { NetnsDetailCard } from './NetnsDetailCard'
 

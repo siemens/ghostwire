@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { MuiMarkdown, type MuiMarkdownProps } from 'components/muimarkdown'
+import { MuiMarkdown, type MuiMarkdownProps } from '../muimarkdown'
 
 import { HelpViewer } from './HelpViewer'
 

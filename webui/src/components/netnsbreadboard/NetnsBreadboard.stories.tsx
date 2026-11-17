@@ -4,9 +4,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { getFilterFn } from 'components/filterinput'
-import { AddressFamily, emptyNonContainerNetns, netnsMatchesFilter, orderNetnsByContainees } from 'models/gw'
-import { discovery, loOnlyContainerNetns } from 'models/gw/mock'
+import { getFilterFn } from '../filterinput'
+import { AddressFamily, emptyNonContainerNetns, netnsMatchesFilter, orderNetnsByContainees } from '../../models/gw'
+import { discovery, loOnlyContainerNetns } from '../../models/gw/mock'
 
 import { NetnsBreadboard } from './NetnsBreadboard'
 

@@ -9,8 +9,8 @@ import { SnackbarProvider } from 'notistack'
 
 import { Stack, Typography } from '@mui/material'
 
-import Refresher from 'components/refresher'
-import mockdata from 'models/gw/mock/mockdata.json'
+import Refresher from '../refresher'
+import mockdata from '../../models/gw/mock/mockdata.json'
 
 import { Discovery } from './Discovery'
 import { useDiscovery } from './disco'

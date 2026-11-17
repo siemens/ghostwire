@@ -4,8 +4,8 @@
 
 import { styled } from '@mui/material'
 
-import { type PrimitiveContainee, type NetworkNamespace, sortContaineesByName, containeesOfNetns, isPod, type Containee } from 'models/gw'
-import { ContaineeBadge } from 'components/containeebadge'
+import { type PrimitiveContainee, type NetworkNamespace, sortContaineesByName, containeesOfNetns, isPod, type Containee } from '../../models/gw'
+import { ContaineeBadge } from '../containeebadge'
 
 
 // default maximum number of containee badges to show when the limit property

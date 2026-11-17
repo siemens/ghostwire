@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 
-import { Process } from "components/process"
-import { type NetworkInterface } from "models/gw"
+import { Process } from "../process"
+import { type NetworkInterface } from "../../models/gw"
 
 export interface TunTapDetailsProps {
     /** (VXLAN) network interface object. */

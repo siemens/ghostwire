@@ -4,9 +4,9 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import ProjectCard from 'components/projectcard'
-import { type Container, type Project, ProjectFlavors } from 'models/gw'
-import { containerBox, podBox, standaloneBox } from 'views/help/mockdata'
+import ProjectCard from '../projectcard'
+import { type Container, type Project, ProjectFlavors } from '../../models/gw'
+import { containerBox, podBox, standaloneBox } from '../../views/help/mockdata'
 
 import { Process } from './Process'
 

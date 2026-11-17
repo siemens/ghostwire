@@ -9,7 +9,7 @@ import { useAtom } from 'jotai'
 import { Box, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
 
-import { discoveryRefreshingAtom } from 'components/discovery'
+import { discoveryRefreshingAtom } from '../discovery'
 
 
 // We need an outer box (div) with its overflow hidden to avoid the scale

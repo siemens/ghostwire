@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import { indigo, purple, blue, red, green, amber, yellow, orange, grey, pink, lightGreen } from '@mui/material/colors'
-import { rgba } from 'utils/rgba'
+import { rgba } from '../../utils/rgba'
 
 // The (basic) light theme parts specific to Ghostwire. Please note that this is
 // incomplete, so you normally want to use it with createTheme with the options

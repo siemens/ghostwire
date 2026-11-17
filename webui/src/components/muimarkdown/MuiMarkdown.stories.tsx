@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import intro from 'components/helpviewer/01-intro.mdx'
-import foobar from 'components/helpviewer/02-foobar.mdx'
+import intro from '../helpviewer/01-intro.mdx'
+import foobar from '../helpviewer/02-foobar.mdx'
 
 import { MuiMarkdown } from './MuiMarkdown'
 

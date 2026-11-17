@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import React, { useContext } from 'react'
-import { type Project } from 'models/gw'
+import { type Project } from '../../models/gw'
 
 export const ProjectContext = React.createContext<Project | undefined>(undefined)
 

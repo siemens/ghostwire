@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 
-import { type NetworkInterface } from 'models/gw'
-import { AddressFamily, type AddressFamilySet, orderAddresses } from 'models/gw/address'
-import { Address } from 'components/address'
+import { type NetworkInterface } from '../../models/gw'
+import { AddressFamily, type AddressFamilySet, orderAddresses } from '../../models/gw/address'
+import { Address } from '../address'
 
 export interface NifAddressListProps {
     /** network interface object with address configuration. */

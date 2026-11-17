@@ -10,7 +10,7 @@ import { Provider, useSetAtom } from 'jotai'
 
 import { Box, Typography } from '@mui/material'
 
-import { discoveryRefreshingAtom } from 'components/discovery'
+import { discoveryRefreshingAtom } from '../discovery'
 
 import { Ghost } from './Ghost'
 

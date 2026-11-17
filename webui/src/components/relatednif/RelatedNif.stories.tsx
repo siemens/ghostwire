@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 
-import { nifHw, nifMacvlan, nifVeth1, nifVeth2 } from 'models/gw/mock'
+import { nifHw, nifMacvlan, nifVeth1, nifVeth2 } from '../../models/gw/mock'
 
 import { RelatedNif } from './RelatedNif'
 

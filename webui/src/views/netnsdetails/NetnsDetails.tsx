@@ -13,15 +13,15 @@ import { findBestMatch } from 'string-similarity'
 import { Box, styled, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 
-import { useDiscovery } from 'components/discovery'
-import { type Containee, isPod, type NetworkNamespace } from 'models/gw'
-import { NetnsDetailCard } from 'components/netnsdetailcard'
-import { showIpFamiliesAtom, showLoopbackAtom, showMACAtom } from 'views/settings'
-import { Ghost } from 'components/ghost'
-import { ContaineeBadge } from 'components/containeebadge'
-import RefreshButton from 'components/refreshbutton'
-import Metadata from 'components/metadata';
-import { NifInfoModalProvider } from 'components/nifinfomodal';
+import { useDiscovery } from '../../components/discovery'
+import { type Containee, isPod, type NetworkNamespace } from '../../models/gw'
+import { NetnsDetailCard } from '../../components/netnsdetailcard'
+import { showIpFamiliesAtom, showLoopbackAtom, showMACAtom } from '../settings'
+import { Ghost } from '../../components/ghost'
+import { ContaineeBadge } from '../../components/containeebadge'
+import RefreshButton from '../../components/refreshbutton'
+import Metadata from '../../components/metadata';
+import { NifInfoModalProvider } from '../../components/nifinfomodal';
 
 
 const SeeAlsoList = styled('ul')(({ theme }) => ({

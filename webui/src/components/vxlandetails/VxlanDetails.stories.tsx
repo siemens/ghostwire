@@ -4,7 +4,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { discovery } from 'models/gw/mock'
+import { discovery } from '../../models/gw/mock'
 
 import { VxlanDetails } from './VxlanDetails'
 

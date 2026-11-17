@@ -5,7 +5,7 @@
 
 import { useAtom } from 'jotai'
 
-import { discoveryRefreshingAtom } from 'components/discovery'
+import { discoveryRefreshingAtom } from '../discovery'
 
 import { IconButton, Tooltip } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'

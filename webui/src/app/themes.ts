@@ -5,7 +5,7 @@
 import { createTheme, type PaletteMode, type Theme, type ThemeOptions } from '@mui/material'
 import { mergeWith } from 'lodash'
 
-import { gwDarkTheme, gwLightTheme } from 'styles/themes'
+import { gwDarkTheme, gwLightTheme } from '../styles/themes'
 
 // Deeply merges the sources into a new object, with arrays getting replaced
 // instead of merged element-wise, like MUI's own deepmerge.

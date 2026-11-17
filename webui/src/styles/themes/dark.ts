@@ -5,7 +5,7 @@
 import { indigo, blue, red, green, orange, grey, pink, lightGreen } from '@mui/material/colors'
 import { cloneDeep, merge as mergeDeep } from 'lodash'
 
-import { rgba } from 'utils/rgba'
+import { rgba } from '../../utils/rgba'
 import { gwLightTheme } from './light'
 
 // The dark theme, based on the light theme. Please note that this is

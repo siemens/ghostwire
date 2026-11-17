@@ -4,15 +4,15 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { infiniteLifetime } from 'components/address/IpAddressAndPrefix'
-import { CardTray } from 'components/cardtray'
-import { NetnsPlainCard } from 'components/netnsplaincard'
+import { infiniteLifetime } from '../address/IpAddressAndPrefix'
+import { CardTray } from '../cardtray'
+import { NetnsPlainCard } from '../netnsplaincard'
 import {
     AddressFamily, loFiNetns, type NetworkInterface, type NetworkNamespace, OperationalState,
     orderNetnsByContainees, type PrimitiveContainee, SRIOVRole,
-} from 'models/gw'
-import { discovery } from 'models/gw/mock'
-import { containerBox, standaloneBox } from 'views/help/mockdata'
+} from '../../models/gw'
+import { discovery } from '../../models/gw/mock'
+import { containerBox, standaloneBox } from '../../views/help/mockdata'
 
 import { Breadboard } from './Breadboard'
 

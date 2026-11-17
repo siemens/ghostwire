@@ -7,12 +7,12 @@ import { fn } from 'storybook/test'
 
 import { Box, Typography } from '@mui/material'
 
-import { DynVarsProvider } from 'components/dynvars'
-import { useContextualId } from 'components/idcontext'
-import { type NetworkInterface, nifId, OperationalState, TapTunMode } from 'models/gw'
-import { initialNetns, nifHw, nifLo, nifMacvlan } from 'models/gw/mock'
-import { Tile, Tiles } from 'stories'
-import { scrollIdIntoView } from 'utils'
+import { DynVarsProvider } from '../dynvars'
+import { useContextualId } from '../idcontext'
+import { type NetworkInterface, nifId, OperationalState, TapTunMode } from '../../models/gw'
+import { initialNetns, nifHw, nifLo, nifMacvlan } from '../../models/gw/mock'
+import { Tile, Tiles } from '../../stories'
+import { scrollIdIntoView } from '../../utils'
 
 import { NifBadge } from './NifBadge'
 

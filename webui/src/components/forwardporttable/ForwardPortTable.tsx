@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import type { ForwardedPort } from 'models/gw/forwardedports'
+import type { ForwardedPort } from '../../models/gw/forwardedports'
 import React, { type JSX, useState } from 'react'
 
 import {
@@ -16,14 +16,14 @@ import {
     TableSortLabel,
 } from '@mui/material'
 
-import ProcessIcon from 'icons/Process'
+import ProcessIcon from '../../icons/Process'
 
-import { AddressFamily, type AddressFamilySet, type Containee, containeeDisplayName, isContainer, isPod, netnsId, type NetworkNamespace, orderAddresses, type PortUser, type PrimitiveContainee } from 'models/gw'
-import { ContaineeTypeIcon } from 'utils/containeetypeicon'
-import { ContaineeBadge } from 'components/containeebadge'
-import { scrollIdIntoView } from 'utils'
+import { AddressFamily, type AddressFamilySet, type Containee, containeeDisplayName, isContainer, isPod, netnsId, type NetworkNamespace, orderAddresses, type PortUser, type PrimitiveContainee } from '../../models/gw'
+import { ContaineeTypeIcon } from '../../utils/containeetypeicon'
+import { ContaineeBadge } from '../containeebadge'
+import { scrollIdIntoView } from '../../utils'
 import { useNavigate, useMatch } from 'react-router-dom'
-import { useContextualId } from 'components/idcontext'
+import { useContextualId } from '../idcontext'
 
 /**
  * A row in the forwarded port table is showing information for the (unique)

@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 
-import { type AddressFamilySet, type PrimitiveContainee, type NetworkInterface, SRIOVRole } from 'models/gw'
-import { NifBadge } from 'components/nifbadge'
-import { NamespaceContainees } from 'components/namespacecontainees'
+import { type AddressFamilySet, type PrimitiveContainee, type NetworkInterface, SRIOVRole } from '../../models/gw'
+import { NifBadge } from '../nifbadge'
+import { NamespaceContainees } from '../namespacecontainees'
 import { styled } from '@mui/material'
 
 const Via = styled(NifBadge)(({ theme }) => ({

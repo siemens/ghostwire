@@ -8,11 +8,11 @@ import { darken, lighten, styled } from '@mui/material'
 import { keyframes } from '@mui/system'
 import useResizeObserver from 'beautiful-react-hooks/useResizeObserver'
 
-import { useContextualId } from 'components/idcontext'
-import { type Wire, Wiring } from 'components/wiring'
-import { type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, OperationalState } from 'models/gw'
-import { isRelationClassName, passiveRelationClassName } from 'utils/relclassname'
-import { rgba } from 'utils/rgba'
+import { useContextualId } from '../idcontext'
+import { type Wire, Wiring } from '../wiring'
+import { type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, OperationalState } from '../../models/gw'
+import { isRelationClassName, passiveRelationClassName } from '../../utils/relclassname'
+import { rgba } from '../../utils/rgba'
 
 
 // The dash array to use for drawing "hot wire" paths.

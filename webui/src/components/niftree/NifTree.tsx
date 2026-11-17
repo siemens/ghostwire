@@ -8,14 +8,14 @@ import { TransitionGroup } from 'react-transition-group'
 import { Collapse, IconButton, Tooltip, styled } from '@mui/material'
 import InfoIcon from '@mui/icons-material/Info'
 
-import { AddressFamily, type AddressFamilySet, emptyContainerNetns, type PrimitiveContainee, type NetworkInterface, type NetworkNamespace, orderNifByName } from 'models/gw'
-import { NifBadge } from 'components/nifbadge'
-import { RelatedNif } from 'components/relatednif'
-import { NifAddressList } from 'components/nifaddresslist'
-import { VxlanDetails } from 'components/vxlandetails'
-import { NamespaceContainees } from 'components/namespacecontainees'
-import { TunTapDetails } from 'components/tuntapdetails'
-import { useNifInfoModal } from 'components/nifinfomodal'
+import { AddressFamily, type AddressFamilySet, emptyContainerNetns, type PrimitiveContainee, type NetworkInterface, type NetworkNamespace, orderNifByName } from '../../models/gw'
+import { NifBadge } from '../nifbadge'
+import { RelatedNif } from '../relatednif'
+import { NifAddressList } from '../nifaddresslist'
+import { VxlanDetails } from '../vxlandetails'
+import { NamespaceContainees } from '../namespacecontainees'
+import { TunTapDetails } from '../tuntapdetails'
+import { useNifInfoModal } from '../nifinfomodal'
 
 
 // Indent of (1) nif properties, addresses, etc.; (2) sub-level nifs.

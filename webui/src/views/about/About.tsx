@@ -5,17 +5,17 @@
 
 import { Box, Link } from '@mui/material'
 
-import { Brand } from 'components/brand'
-import { BrandIcon } from 'components/brandicon'
-import { useBranding } from 'components/branding'
-import { GwMarkdown } from 'components/gwmarkdown'
-import { useDiscovery } from "components/discovery"
+import { Brand } from '../../components/brand'
+import { BrandIcon } from '../../components/brandicon'
+import { useBranding } from '../../components/branding'
+import { GwMarkdown } from '../../components/gwmarkdown'
+import { useDiscovery } from "../../components/discovery"
 
 
 // As the "about" markdown text is very short, we don't import it lazily, but
 // directly and thus synchronously (for a suitable definition of "synchronous").
 import AboutMDX from './About.mdx'
-import { useDynVars } from 'components/dynvars'
+import { useDynVars } from '../../components/dynvars'
 
 // MDX "shortcode" component rendering the discovery data creator identifier and
 // version, if available. 

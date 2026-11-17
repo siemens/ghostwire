@@ -7,8 +7,8 @@ import { useLocation, useMatch, useNavigate } from 'react-router-dom'
 
 import { Box, Button, Divider, IconButton, Menu, MenuItem, styled, Tooltip } from '@mui/material';
 
-import { MuiMarkdown, type MuiMarkdownProps } from 'components/muimarkdown'
-import { ChapterSkeleton } from 'components/chapterskeleton'
+import { MuiMarkdown, type MuiMarkdownProps } from '../muimarkdown'
+import { ChapterSkeleton } from '../chapterskeleton'
 import { ChevronLeft, ChevronRight, Toc as TocIcon } from '@mui/icons-material'
 import type { MDXComponents, MDXContent } from 'mdx/types';
 

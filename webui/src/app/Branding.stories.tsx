@@ -6,11 +6,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Box, Button, createSvgIcon, List, ThemeProvider, Typography, type Theme } from '@mui/material'
 
-import AppBarDrawer, { DrawerLinkItem } from 'components/appbardrawer'
-import { Brand } from 'components/brand'
-import { BrandIcon } from 'components/brandicon'
-import { BrandingProvider } from 'components/branding'
-import { About } from 'views/about'
+import AppBarDrawer, { DrawerLinkItem } from '../components/appbardrawer'
+import { Brand } from '../components/brand'
+import { BrandIcon } from '../components/brandicon'
+import { BrandingProvider } from '../components/branding'
+import { About } from '../views/about'
 
 import { resolveBranding, type GhostwireAppConfig } from './config'
 import { createGhostwireTheme } from './themes'

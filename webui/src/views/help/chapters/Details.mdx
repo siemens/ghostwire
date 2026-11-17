@@ -2,18 +2,18 @@ import { Box } from "@mui/material"
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
-import NetnsViewIcon from "icons/views/Details"
+import NetnsViewIcon from "../../../icons/views/Details"
 import FullscreenIcon from "@mui/icons-material/Fullscreen"
-import ScreenshotIcon from 'icons/Screenshot'
-import { NetnsDetailCard } from "components/netnsdetailcard"
+import ScreenshotIcon from '../../../icons/Screenshot'
+import { NetnsDetailCard } from "../../../components/netnsdetailcard"
 import {
   standaloneBox,
   containerBox,
   containerBoxProcess,
   boundBox,
   veth2Nif,
-} from "views/help/mockdata"
-import { initNetns, morbidNetns as morbid } from "views/help/mockdata"
+} from "../mockdata"
+import { initNetns, morbidNetns as morbid } from "../mockdata"
 import JSBI from "jsbi"
 export const cbp = {
   ...containerBoxProcess,

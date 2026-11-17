@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { AddressFamily } from 'models/gw'
-import { initialNetns } from 'models/gw/mock'
+import { AddressFamily } from '../../models/gw'
+import { initialNetns } from '../../models/gw/mock'
 
 import { NifAddressList } from './NifAddressList'
 

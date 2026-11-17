@@ -4,8 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { SRIOVRole } from 'models/gw'
-import { nifHw } from 'models/gw/mock'
+import { SRIOVRole } from '../../models/gw'
+import { nifHw } from '../../models/gw/mock'
 
 import { NifHWIcon } from './NifHWIcon'
 

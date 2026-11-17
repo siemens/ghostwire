@@ -5,7 +5,7 @@
 import { useMemo } from 'react'
 import { type SvgIconProps } from '@mui/material'
 
-import { type Containee } from 'models/gw'
+import { type Containee } from '../models/gw'
 import { ContaineeIcon } from './containeeicon'
 
 export interface ContaineeTypeIconProps extends SvgIconProps {

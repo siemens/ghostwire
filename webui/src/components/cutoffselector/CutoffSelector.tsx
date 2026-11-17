@@ -4,7 +4,7 @@
 
 import { type PrimitiveAtom, useAtom } from 'jotai'
 import { MenuItem, Select, type SelectChangeEvent } from '@mui/material'
-import useId from 'hooks/id/id'
+import useId from '../../hooks/id/id'
 
 
 // Arbitrary high cutoff value

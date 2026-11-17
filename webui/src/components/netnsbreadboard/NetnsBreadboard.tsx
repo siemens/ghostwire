@@ -7,14 +7,14 @@ import { useNavigate, useLocation, useMatch } from 'react-router-dom'
 
 import { styled } from '@mui/material'
 
-import { type AddressFamilySet, type PrimitiveContainee, emptyNonContainerNetns, loFiNetns, type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from 'models/gw'
-import { Breadboard } from 'components/breadboard/Breadboard'
-import { CardTray } from 'components/cardtray'
-import { NetnsPlainCard } from 'components/netnsplaincard'
-import { useContextualId } from 'components/idcontext'
-import { scrollIdIntoView } from 'utils'
-import { createMuiShadow } from 'utils/shadow'
-import ProjectCard from 'components/projectcard/ProjectCard'
+import { type AddressFamilySet, type PrimitiveContainee, emptyNonContainerNetns, loFiNetns, type NetworkInterface, type NetworkNamespace, type NetworkNamespaces, nifId, isProject, sortedNetnsProjects, orderNetnsByContainees, netnsId } from '../../models/gw'
+import { Breadboard } from '../breadboard/Breadboard'
+import { CardTray } from '../cardtray'
+import { NetnsPlainCard } from '../netnsplaincard'
+import { useContextualId } from '../idcontext'
+import { scrollIdIntoView } from '../../utils'
+import { createMuiShadow } from '../../utils/shadow'
+import ProjectCard from '../projectcard/ProjectCard'
 
 const AccentableNetnsCard = styled(NetnsPlainCard)(({ theme }) => ({
     '&.normal': {

@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { useBranding } from 'components/branding'
-import { useDynVars } from 'components/dynvars'
+import { useBranding } from '../branding'
+import { useDynVars } from '../dynvars'
 import type { SvgIconProps } from '@mui/material'
 import SVG, { type Props as SVGProps } from 'react-inlinesvg'
 

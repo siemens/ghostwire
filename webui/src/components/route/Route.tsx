@@ -5,19 +5,19 @@
 
 import { styled, Tooltip } from '@mui/material'
 
-import { AddressFamily, type IpAddress, type IpRoute, type NetworkInterface, RouteTableLocal } from 'models/gw'
-import { Address } from 'components/address'
-import { NifBadge } from 'components/nifbadge'
-import RouteVia from 'icons/routes/RouteVia'
-import DefaultRoute from 'icons/routes/DefaultRoute'
-import SomeRoute from 'icons/routes/Route'
-import DirectSubnetRoute from 'icons/routes/DirectSubnetRoute'
-import HostRoute from 'icons/routes/HostRoute'
-import NoRoute from 'icons/routes/NoRoute'
-import { rgba } from 'utils/rgba'
+import { AddressFamily, type IpAddress, type IpRoute, type NetworkInterface, RouteTableLocal } from '../../models/gw'
+import { Address } from '../address'
+import { NifBadge } from '../nifbadge'
+import RouteVia from '../../icons/routes/RouteVia'
+import DefaultRoute from '../../icons/routes/DefaultRoute'
+import SomeRoute from '../../icons/routes/Route'
+import DirectSubnetRoute from '../../icons/routes/DirectSubnetRoute'
+import HostRoute from '../../icons/routes/HostRoute'
+import NoRoute from '../../icons/routes/NoRoute'
+import { rgba } from '../../utils/rgba'
 import { Campaign as MultiBroadcastRoute } from '@mui/icons-material'
 import { useAtom } from 'jotai'
-import { showMultiBroadcastRoutesAtom } from 'views/settings'
+import { showMultiBroadcastRoutesAtom } from '../../views/settings'
 
 
 const RouteInfo = styled('div')(({ theme }) => ({

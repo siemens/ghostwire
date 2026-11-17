@@ -5,9 +5,9 @@
 import clsx from 'clsx'
 
 import { styled, Tooltip } from '@mui/material'
-import { type Process } from 'models/gw/process'
+import { type Process } from '../../models/gw/process'
 import { HistoryToggleOff } from '@mui/icons-material'
-import { rgba } from 'utils/rgba'
+import { rgba } from '../../utils/rgba'
 
 
 const SchedInformation = styled('span')(({ theme }) => ({

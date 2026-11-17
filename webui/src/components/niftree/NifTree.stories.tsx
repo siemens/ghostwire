@@ -5,9 +5,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 
-import { NifInfoModalProvider } from 'components/nifinfomodal'
-import { AddressFamily } from 'models/gw'
-import { crowdedNetns, initialNetns, loOnlyContainerNetns } from 'models/gw/mock'
+import { NifInfoModalProvider } from '../nifinfomodal'
+import { AddressFamily } from '../../models/gw'
+import { crowdedNetns, initialNetns, loOnlyContainerNetns } from '../../models/gw/mock'
 
 import { NifTree } from './NifTree'
 

@@ -20,8 +20,8 @@ import {
     Switch as Toggle,
     Typography,
 } from '@mui/material';
-import { AddressFamily } from 'models/gw'
-import { CutoffSelector } from 'components/cutoffselector'
+import { AddressFamily } from '../../models/gw'
+import { CutoffSelector } from '../../components/cutoffselector'
 import {
     THEME_DARK, THEME_LIGHT, THEME_USERPREF, themeAtom,
     containeesCutoffAtom, forwardedPortsCutoffAtom, neighborhoodCutoffAtom,

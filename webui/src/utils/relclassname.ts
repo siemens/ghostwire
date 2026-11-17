@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { type NetworkInterface, nifId } from 'models/gw'
+import { type NetworkInterface, nifId } from '../models/gw'
 
 
 /**

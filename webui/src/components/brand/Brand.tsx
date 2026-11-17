@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { useBrandName } from 'components/branding'
+import { useBrandName } from '../branding'
 
 /**
  * Renders the brand name as a simple string: this is either the build-time
