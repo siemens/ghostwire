@@ -173,6 +173,10 @@ The solution deployed by our Ghostwire UI is thus as follows:
 
 - to build a static distributable in `build/`: `yarn build`.
 
+- to build with different MUI themes and branding: `VITE_APP_CONFIG=<config
+  module> yarn build`, please see [Downstream
+  Distributions](../docs/downstream.md#web-ui-themes-and-branding).
+
 ## Ghostwire Discovery Information Model
 
 The UI uses its own discovery information model which is closely modelled after

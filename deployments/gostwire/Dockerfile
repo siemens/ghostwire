@@ -20,7 +20,17 @@
 #   --build-arg MAINPKG=../foo/cmd/foo
 #
 # scripts/docker-build.sh derives the bctxN, MODN, and WSDISKPATHS arguments
-# from a go.work file. Please see docs/downstream.md for details.
+# from a go.work file.
+#
+# Downstream builds can also theme and brand the web UI built from webappsrc by
+# passing an overlay directory as the "webappoverlay" build context, which gets
+# placed in "overlay/" inside the web UI sources, together with the
+# VITE_APP_CONFIG and optionally VITE_APP_PUBLIC_DIR build args, such as:
+#
+#   --build-context webappoverlay=../foo/webui-overlay \
+#   --build-arg VITE_APP_CONFIG=overlay/config.tsx
+#
+# Please see docs/downstream.md for details.
 
 # Debian packages come from snapshot.debian.org as of this point in time, so
 # rebuilds get the same package versions; use "make bump-debian" to pick up
@@ -77,6 +87,10 @@ FROM scratch AS bctx6
 FROM scratch AS bctx7
 FROM scratch AS bctx8
 FROM scratch AS bctx9
+
+# Empty default for the web UI overlay, unless overridden using
+# --build-context webappoverlay=...
+FROM scratch AS webappoverlay
 
 # -- 1st stage ---------------------------------------------------------------
 #
@@ -221,8 +235,12 @@ COPY --from=webappsrc \
 COPY --from=webappsrc public/ ./public/
 COPY --from=webappsrc src/ ./src/
 COPY --from=webappsrc .env ./
+COPY --from=webappoverlay . ./overlay/
 ARG VERSION
 RUN sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${VERSION#v}/" .env
+# app configuration module and static assets directory, relative to /webui.
+ARG VITE_APP_CONFIG=""
+ARG VITE_APP_PUBLIC_DIR=""
 RUN yarn build
 
 # -- 3. stage ---------------------------------------------------------------

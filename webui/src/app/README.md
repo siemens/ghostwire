@@ -18,3 +18,16 @@ Additionally, the App also provides the infrastructure in form of...
   application state to all the different places in the application.
 
 That's it.
+
+## Themes and Branding
+
+`createGhostwireApp(config)` returns the App component configured with
+different MUI theme options for light and dark mode, as well as a different
+branding (name, icon, favicon, about content, legal links, and version). All
+configuration elements default to Ghostwire's defaults; please see
+`config.ts`, `themes.ts`, and `components/branding/` for details.
+
+`src/index.tsx` creates the app using the configuration from the
+`ghostwire-app-config` module, which defaults to `defaultconfig.ts` unless the
+`VITE_APP_CONFIG` environment variable points to a different module at build
+time.

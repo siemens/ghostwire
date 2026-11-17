@@ -59,7 +59,8 @@ The available options are:
 | `WithName(name)` | command name in usage, `--version` output, and logs; defaults to `gostwire`. |
 | `WithDescription(text)` | short description in the help, logged at start. |
 | `WithVersion(version)` | version in the `--version` output and logged at start, defaults to the Ghostwire semantic version; when different, the Ghostwire version gets logged too. Discovery results always report the Ghostwire version as their creator version. |
-| `WithUI(fsys)` | serves the web UI from the complete web UI build in `fsys`; `webui.FS()` returns the web UI that the upstream `Dockerfile` builds from `webappsrc` and embeds. Without `WithUI`, the service serves only its HTTP endpoints. |
+| `WithBrand(name)` | default of the `--brand` CLI flag, that is, the brand name passed to the web UI; see [Web UI](#web-ui-themes-and-branding). |
+| `WithUI(fsys)` | serves the web UI from the complete web UI build in `fsys`; `webui.FS()` returns the web UI that the upstream `Dockerfile` builds from `webappsrc` and embeds, see [Web UI](#web-ui-themes-and-branding). Without `WithUI`, the service serves only its HTTP endpoints. |
 | `WithRoutes(fn)` | `fn(router, cmd, containerizer)` registers additional HTTP handlers with the [gorilla/mux](https://github.com/gorilla/mux) router; can be passed multiple times. |
 
 Instead of `app.Main` (which handles SIGINT/SIGTERM/SIGQUIT and the exit code),
@@ -198,3 +199,95 @@ docker buildx build -f deployments/gostwire/Dockerfile \
   --build-context webappsrc=./webui \
   --load -t downstream .
 ```
+
+## Web UI: Themes and Branding
+
+The web UI keeps all its MUI-based components, views, and mechanics, but the MUI
+themes and the branding can be configured at build time. The app is created
+using `createGhostwireApp(config)` from `src/app`, where all configuration
+elements default to the Ghostwire defaults:
+
+```tsx
+import type { GhostwireAppConfig } from 'app'
+
+const config: GhostwireAppConfig = {
+    themes: {
+        // MUI ThemeOptions (or Themes), deeply merged into the default
+        // Ghostwire theme options; light and dark mode are independent.
+        light: { palette: { primary: { main: '#6a1b9a' } } },
+        dark: { palette: { primary: { main: '#ce93d8' } } },
+    },
+    branding: {
+        name: 'Foo',               // app bar, title, about, help
+        icon: FooIcon,             // React component taking MUI SvgIconProps
+        favicon: fooFaviconUrl,    // replaces the favicon at runtime
+        about: FooAbout,           // MDX content replacing the about content
+        links: [                   // legal links at the end of the about view
+            { label: 'Imprint', href: 'https://example.org/imprint' },
+            { label: 'Open Source Software Notices', href: 'https://example.org/oss' },
+        ],
+        version: '1.2.3',          // defaults to VITE_REACT_APP_GIT_VERSION
+    },
+}
+
+export default config
+```
+
+The Ghostwire-specific palette elements (such as `palette.wire`, `palette.containee`,
+et cetera) are always present, so theme overrides only need to specify what they
+want to change, but they can also change the Ghostwire-specific elements.
+
+About content can use the `<Brand/>`, `<BrandIcon/>`, `<AppVersion/>`,
+`<DiscoveryMetadata/>`, and `<CaptureMode/>` shortcodes; please see
+`src/views/about/About.mdx` for the default about content.
+
+> [!NOTE] The brand name and icon passed in by the Gostwire service via its
+> `--brand` and `--brandicon` CLI flags take precedence over the build-time
+> branding. As `--brand` defaults to "Ghostwire", downstream main packages with
+> a differently branded web UI should set the same default brand name using
+> `app.WithBrand("Foo")`. The `--brandicon` flag defaults to empty, so the
+> build-time brand icon is used unless explicitly overridden.
+
+### Configuration Overlay
+
+The web UI entry point `src/index.tsx` imports its configuration from the
+`ghostwire-app-config` module, which the Vite configuration resolves to:
+
+- `src/app/defaultconfig.ts` (empty configuration) by default,
+- the module specified in the `VITE_APP_CONFIG` environment variable (relative
+  to `webui/`), taken from the environment or the `.env` files.
+
+Similarly, `VITE_APP_PUBLIC_DIR` optionally specifies a different directory of
+static assets instead of `public/` (favicon, app icons, `manifest.json`); it
+must contain all files referenced from `index.html`.
+
+The overlay module can import from all of the web UI's dependencies and source
+aliases (such as `app`, `components`, and `icons`), as well as MDX, SVG and
+other assets next to it; it must be placed inside `webui/` (such as in
+`webui/overlay/`) so that it can resolve the web UI's dependencies. For instance:
+
+```bash
+cd webui
+cp -r ../../foo/webui-overlay overlay
+VITE_APP_CONFIG=overlay/config.tsx yarn build
+```
+
+The e2e test overlay in `webui/e2e/branded/overlay/` is a complete example; the
+`branded` Playwright project builds and tests it (`make e2e`), and the
+"Ghostwire/App Theming and Branding" Storybook story shows it.
+
+### Container Image
+
+The `Dockerfile` copies an optional `webappoverlay` build context into
+`overlay/` inside the web UI sources, and passes the `VITE_APP_CONFIG` and
+`VITE_APP_PUBLIC_DIR` build args to the web UI build:
+
+```bash
+scripts/docker-build.sh deployments/gostwire/Dockerfile \
+    --build-context webappsrc=./webui \
+    --build-context webappoverlay=../foo/webui-overlay \
+    --build-arg VITE_APP_CONFIG=overlay/config.tsx \
+    ...
+```
+
+Without these, the default Ghostwire web UI gets built.

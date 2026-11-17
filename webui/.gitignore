@@ -12,6 +12,7 @@
 
 # production
 /build
+/build-branded
 /styleguide
 
 # misc

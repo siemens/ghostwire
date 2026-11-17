@@ -1,11 +1,12 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './app'
+import { createGhostwireApp } from './app'
+import config from 'ghostwire-app-config'
 
 // Import only the necessary Roboto fonts, so they are available "offline"
 // without CDN.
@@ -14,6 +15,8 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import '@fontsource/roboto-mono/400.css'
 import '@fontsource/roboto-mono/600.css'
+
+const App = createGhostwireApp(config)
 
 // Allow development version to temporarily drop strict mode in order to see
 // performance without strict-mode double rendering.
