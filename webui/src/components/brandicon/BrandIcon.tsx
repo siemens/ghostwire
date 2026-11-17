@@ -1,20 +1,21 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
-import GhostwireIcon from 'icons/Ghostwire'
+import { useBranding } from 'components/branding'
 import { useDynVars } from 'components/dynvars'
 import type { SvgIconProps } from '@mui/material'
 import SVG, { type Props as SVGProps } from 'react-inlinesvg'
 
 /**
- * Renders the brand icon as an icon: this is either the default "Ghostwire"
- * brand icon or an optional brand name override via the dynamic variables
- * passed to us by the Ghostwire service.
+ * Renders the brand icon as an icon: this is either the build-time brand icon
+ * (defaulting to the "Ghostwire" icon) or an optional brand icon override via
+ * the dynamic variables passed to us by the Ghostwire service.
  */
 export const BrandIcon = (props: SvgIconProps) => {
 
     const { brandicon } = useDynVars()
+    const { icon: Icon } = useBranding()
 
     if (typeof brandicon === 'string' && brandicon !== '') {
         return <SVG
@@ -27,5 +28,5 @@ export const BrandIcon = (props: SvgIconProps) => {
             src={`data:image/svg+xml;utf-8,${encodeURIComponent(brandicon)}`}
         />
     }
-    return <GhostwireIcon {...props}/>
+    return <Icon {...props}/>
 }

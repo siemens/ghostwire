@@ -1,8 +1,8 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
-import React, { type ReactNode } from 'react'
+import React, { type ReactNode, useMemo } from 'react'
 
 import { Provider, type WritableAtom } from 'jotai'
 
@@ -10,6 +10,7 @@ import { Box, Card, useTheme } from '@mui/material'
 
 import { Brand } from 'components/brand'
 import { BrandIcon } from 'components/brandicon'
+import { useBrandName } from 'components/branding'
 import { HelpViewer, type HelpViewerChapter } from 'components/helpviewer'
 import { GwMarkdown } from 'components/gwmarkdown'
 import { type MuiMarkdownProps } from 'components/muimarkdown'
@@ -42,21 +43,10 @@ const ch = (name: string) => {
     }
 }
 
-// DynamicVars represents an object "map" of dynamic variable passed into an
-// application by the server at load time (as opposed to static REACT_APP_
-// variables which are fixed at build time).
-type DynamicVars = { [key: string]: unknown }
+const brandChapter = ch('Ghostwire')
 
-// Dynamic variables from the server get passed in via dynamically served
-// "index.html" that sets the dynvars element of the window object.
-declare global {
-    interface Window {
-        dynvars: DynamicVars
-    }
-}
-
-const chapters: HelpViewerChapter[] = [
-    { title: (window.dynvars && window.dynvars.brand as string) || 'Ghostwire', chapter: ch('Ghostwire'), slug: 'gw' },
+// All chapters except for the first one, which gets titled with the brand name.
+const otherChapters: HelpViewerChapter[] = [
     { title: 'Discovery/Refresh', chapter: ch('Refresh'), slug: 'refresh' },
     { title: 'IP Stacks Galore!', chapter: ch('Badge'), slug: 'badge' },
     { title: 'Technical Features', chapter: ch('Technical'), slug: 'tech' },
@@ -137,6 +127,12 @@ const shortcodes = { Brand, BrandIcon, Example, FakeAppBar }
  * settings.
  */
 export const Help = () => {
+    const brand = useBrandName()
+    const chapters = useMemo<HelpViewerChapter[]>(() => [
+        { title: brand, chapter: brandChapter, slug: 'gw' },
+        ...otherChapters,
+    ], [brand])
+
     return <Provider>
         <HydrateAtoms initialValues={[
             [persistSettingsAtom, false],

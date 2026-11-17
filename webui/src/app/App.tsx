@@ -1,8 +1,8 @@
-// (c) Siemens AG 2023
+// (c) Siemens AG 2023, 2026
 //
 // SPDX-License-Identifier: MIT
 
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { BrowserRouter as Router, Route, Routes, useMatch, Navigate, useLocation } from 'react-router-dom'
 
 import { ErrorBoundary } from 'react-error-boundary'
@@ -16,7 +16,6 @@ import { Provider as StateProvider, useAtom } from 'jotai'
 import {
     Badge,
     Box,
-    createTheme,
     CssBaseline,
     Divider,
     IconButton,
@@ -56,11 +55,12 @@ import { emptyNonContainerNetns, type NetworkNamespace } from 'models/gw'
 import { Brand } from 'components/brand'
 import { BrandIcon } from 'components/brandicon'
 
-import { useDynVars } from 'components/dynvars'
+import { BrandingProvider, useBranding, useBrandName } from 'components/branding'
 import { ScreenShooter, useScreenShooterModal } from 'components/screenshooter'
 import OpenHouse from 'views/openhouse/OpenHouse'
 import { FilterInput, type FilterPattern } from 'components/filterinput'
-import { gwDarkTheme, gwLightTheme } from 'styles/themes'
+import { createGhostwireTheme } from './themes'
+import { resolveBranding, type GhostwireAppConfig } from './config'
 import { AppErrorFallback, ErrorNotice } from 'components/errorfallback'
 import { UnhandledErrors } from 'components/unhandlederrors'
 
@@ -317,11 +317,27 @@ const GhostwireApp = () => {
 // We need to wrap the application as otherwise we won't get a confirmer ...
 // ouch. And since we're already at wrapping things, let's just wrap up all the
 // other wrapping here, such as light/dark theme switching... *snicker*.
-const ThemedApp = () => {
+const ThemedApp = ({ themes }: Pick<GhostwireAppConfig, 'themes'>) => {
 
-    const { brand } = useDynVars()
-    const snapshotbasename = (brand || 'ghostwire').toString()
-        .toLowerCase().replace(/\W/g, '')
+    const brand = useBrandName()
+    const snapshotbasename = brand.toLowerCase().replace(/\W/g, '')
+
+    useEffect(() => { document.title = brand }, [brand])
+
+    const { favicon } = useBranding()
+    useEffect(() => {
+        if (!favicon) {
+            return
+        }
+        let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
+        if (!link) {
+            link = document.createElement('link')
+            link.rel = 'icon'
+            document.head.appendChild(link)
+        }
+        link.removeAttribute('type')
+        link.href = favicon
+    }, [favicon])
 
     const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
     const [theme] = useAtom(themeAtom)
@@ -329,42 +345,9 @@ const ThemedApp = () => {
         ? (prefersDarkMode ? 'dark' : 'light')
         : (theme === THEME_DARK ? 'dark' : 'light')
 
-    const appTheme = React.useMemo(() => {
-        const theme = createTheme({
-            components: {
-                MuiSelect: {
-                    defaultProps: {
-                        variant: 'standard', // MUI v4 default.
-                    },
-                },
-                MuiCssBaseline: {
-                    styleOverrides: {
-                        body: {
-                            fontSize: '0.875rem', // ...go back to typography body2 font size as in MUI v4.
-                            lineHeight: 1.43,
-                            letterSpacing: '0.01071em',
-                        },
-                    },
-                },
-            },
-            palette: {
-                mode: themeMode,
-                primary: { main: '#009999' },
-                secondary: { main: '#ffc400' },
-            },
-        }, themeMode === 'dark' ? gwDarkTheme : gwLightTheme)
-        const privileged = theme.palette.containee.privileged
-        return createTheme(theme, {
-            palette: {
-                containee: {
-                    privileged: {
-                        ...privileged,
-                        contrastText: theme.palette.getContrastText(privileged.main)
-                    }
-                }
-            }
-        })
-    }, [themeMode])
+    const appTheme = useMemo(
+        () => createGhostwireTheme(themeMode, themes?.[themeMode]),
+        [themeMode, themes])
 
     return (
         <StyledEngineProvider injectFirst>
@@ -384,15 +367,26 @@ const ThemedApp = () => {
     )
 }
 
+export interface AppProps {
+    /** optional app configuration; defaults to Ghostwire's themes and branding. */
+    config?: GhostwireAppConfig
+}
+
 // Finally, the exported App component wraps the themed app component into a
 // Jotai state provider, to keep state provision and app theme switching
-// separated. And we also place the router high up here.
-const App = () => (
-    <StateProvider>
-        <Router basename={basename}>
-            <ThemedApp />
-        </Router>
-    </StateProvider>
-)
+// separated. And we also place the router high up here, as well as the
+// branding.
+const App = ({ config = {} }: AppProps) => {
+    const branding = useMemo(() => resolveBranding(config), [config])
+    return (
+        <BrandingProvider value={branding}>
+            <StateProvider>
+                <Router basename={basename}>
+                    <ThemedApp themes={config.themes} />
+                </Router>
+            </StateProvider>
+        </BrandingProvider>
+    )
+}
 
 export default App
