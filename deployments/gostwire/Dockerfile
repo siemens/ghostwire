@@ -8,6 +8,19 @@
 
 # TAGS can be used to pass additional Go build tags to the service binary build
 # step.
+#
+# Downstream builds can compose their own service binary from additional Go
+# modules without forking: pass each module as a build context "bctxN" and
+# its directory inside the Go workspace as "MODN", list all workspace module
+# directories in WSDISKPATHS, and finally set MAINPKG to the main package to
+# build, relative to the Ghostwire module directory. For instance:
+#
+#   --build-context bctx1=../foo --build-arg MOD1=./foo \
+#   --build-arg WSDISKPATHS="./ghostwire ./foo" \
+#   --build-arg MAINPKG=../foo/cmd/foo
+#
+# scripts/docker-build.sh derives the bctxN, MODN, and WSDISKPATHS arguments
+# from a go.work file. Please see docs/downstream.md for details.
 
 # Debian packages come from snapshot.debian.org as of this point in time, so
 # rebuilds get the same package versions; use "make bump-debian" to pick up
@@ -25,6 +38,9 @@ ARG TAGS="osusergo,netgo,sqlite_omit_load_extension"
 
 # VERSION is the (git describe/tag) version to stamp the binary and web UI with.
 ARG VERSION=""
+
+# MAINPKG is the main package of the service binary to build.
+ARG MAINPKG=./cmd/gostwire
 
 # https://github.com/tonistiigi/xx/blob/master/README.md
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx:1.10.0@sha256:40fe21f44bb8cddf1eb1226db190d0a984118f62ee02a91b77d99448d28264a6 AS cc-helpers
@@ -76,6 +92,7 @@ FROM debian AS builder
 
 ARG LDFLAGS
 ARG TAGS
+ARG MAINPKG
 
 ARG TARGETPLATFORM
 
@@ -117,8 +134,32 @@ COPY --from=bctx9 . ${MOD9}
 # Make sure we have the main module containing a main package to be built...
 COPY go.mod go.sum ./ghostwire/
 
-# Establish the Go workspace
-RUN go work init ${WSDISKPATHS}
+# Establish the Go workspace. Additional modules might require (and even
+# replace) specific versions of other modules in this workspace, such as the
+# Ghostwire module itself: pin these versions to the workspace modules, so that
+# they are neither fetched nor replaced with directories outside the workspace.
+# Only versioned go.work replacements achieve this, as they override go.mod
+# replacements and need no version lookup, so pin each required version.
+#
+# Effect: without additional modules, the Ghostwire module doesn't require
+# itself, so nothing gets pinned. With a downstream module, it gets compiled
+# against exactly the Ghostwire module source in this build, regardless of
+# which version it requires (released, unreleased, or locally replaced). This
+# works in any direction, such as for downstream modules requiring each other.
+RUN go work init ${WSDISKPATHS} && \
+    go list -m -f '{{.Path}} {{.Dir}}' | while read -r modpath moddir; do \
+        for gomod in $(go list -m -f '{{.GoMod}}'); do \
+            go mod edit -print "${gomod}" | awk -v p="${modpath}" ' \
+                $1 == "require" && $2 == "(" { inreq = 1; next }; \
+                inreq && $1 == ")" { inreq = 0; next }; \
+                inreq && $1 == p { print $2 }; \
+                $1 == "require" && $2 == p { print $3 }' | \
+            while read -r version; do \
+                echo "pinning ${modpath}@${version} to ${moddir}"; \
+                go work edit -replace="${modpath}@${version}=${moddir}"; \
+            done; \
+        done; \
+    done
 
 WORKDIR /ws/ghostwire
 # We now try to cache only the dependencies in a separate layer, so we can speed
@@ -147,7 +188,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -trimpath \
     -tags="${TAGS}" \
     -ldflags="${LDFLAGS}" \
-    -o /gostwire ./cmd/gostwire && \
+    -o /gostwire ${MAINPKG} && \
     xx-verify --static /gostwire
 
 # -- 2nd stage ---------------------------------------------------------------
@@ -192,6 +233,7 @@ FROM builder AS embedder
 ARG LDFLAGS
 ARG TAGS
 ARG VERSION
+ARG MAINPKG
 
 ARG TARGETPLATFORM
 
@@ -205,7 +247,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -trimpath \
     -tags="${TAGS},webui" \
     -ldflags="${LDFLAGS} -X github.com/siemens/ghostwire/v2.SemVersion=${VERSION#v}" \
-    -o /gostwire ./cmd/gostwire && \
+    -o /gostwire ${MAINPKG} && \
     xx-verify --static /gostwire
 RUN setcap "cap_sys_admin,cap_sys_chroot,cap_sys_ptrace,cap_dac_read_search,cap_dac_override,cap_net_raw,cap_net_admin+ep" /gostwire
 
