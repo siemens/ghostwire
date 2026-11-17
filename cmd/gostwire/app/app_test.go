@@ -73,6 +73,24 @@ var _ = Describe("composing the service", func() {
 		))
 	})
 
+	It("defaults to a different brand", func() {
+		var out safe.Buffer
+		rootCmd := NewRootCmd(WithBrand("Foobar"))
+		rootCmd.SetArgs([]string{"--help"})
+		rootCmd.SetOut(io.MultiWriter(&out, GinkgoWriter))
+		Expect(rootCmd.Execute()).To(Succeed())
+		Expect(out.String()).To(MatchRegexp(`--brand string .*\(default "Foobar"\)`))
+
+		addr, _ := startServiceWith([]Option{
+			WithBrand("Foobar"),
+			WithUI(fstest.MapFS{
+				"index.html": &fstest.MapFile{Data: []byte(`<script>window.dynvars = {}</script>`)},
+			}),
+		})
+		_, body := get("http://" + addr + "/")
+		Expect(body).To(ContainSubstring(`"brand":"Foobar"`))
+	})
+
 	It("serves no web UI unless passed one", func() {
 		addr, _ := startService()
 		status, _ := get("http://" + addr + "/w")

@@ -62,6 +62,7 @@ type config struct {
 	description string
 	banner      string
 	version     string
+	brand       string
 	uifs        fs.FS
 	routes      []RoutesFunc
 }
@@ -103,6 +104,16 @@ func WithDescription(description string) Option {
 func WithVersion(version string) Option {
 	return func(c *config) {
 		c.version = version
+	}
+}
+
+// WithBrand sets the default of the “--brand” CLI flag, that is, the brand
+// name the service passes to the web UI. As the passed brand name takes
+// precedence over the brand name the web UI has been built with, downstream
+// builds with a differently branded web UI should set the same brand name here.
+func WithBrand(name string) Option {
+	return func(c *config) {
+		c.brand = name
 	}
 }
 

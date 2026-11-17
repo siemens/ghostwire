@@ -21,6 +21,7 @@ import (
 	"github.com/thediveo/lxkns/ops/mountineer"
 
 	gostwire "github.com/siemens/ghostwire/v2"
+	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/brand"
 	_ "github.com/siemens/ghostwire/v2/cmd/gostwire/cli/initialcgroup"
 	"github.com/siemens/ghostwire/v2/cmd/gostwire/cli/service"
 	"github.com/siemens/ghostwire/v2/cmd/gostwire/wsconn"
@@ -46,6 +47,16 @@ func NewRootCmd(opts ...Option) (rootCmd *cobra.Command) {
 	}
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	clippy.AddFlags(rootCmd) // ...runs all registered SetupCLI plugins.
+	// Apply WithBrand by changing the default of the "--brand" flag registered
+	// by the brand CLI plugin, also in the help. Setting the flag's value
+	// directly doesn't mark the flag as changed, so an explicit "--brand" on
+	// the command line still takes precedence.
+	if cfg.brand != "" {
+		if flag := rootCmd.PersistentFlags().Lookup(brand.BrandFlag); flag != nil {
+			_ = flag.Value.Set(cfg.brand)
+			flag.DefValue = cfg.brand
+		}
+	}
 	return
 }
 
