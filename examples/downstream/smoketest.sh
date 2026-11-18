@@ -72,6 +72,9 @@ ok "additional endpoint: ${hello}"
 curl -sf "${base}/json" | grep -q '"example.org/hello":"world"' || fail "additional decorator not applied"
 ok "additional decorator"
 
+curl -sf -D - -o /dev/null "${base}/json" | grep -qi '^X-Example-Override: hello' || fail "upstream endpoint not overridden"
+ok "overridden upstream endpoint"
+
 curl -sf "${base}/mobyshark" | grep -q '"containers"' || fail "no /mobyshark"
 ok "Gostwire API"
 

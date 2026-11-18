@@ -22,5 +22,6 @@ func main() {
 		app.WithVersion(Version),
 		app.WithUI(webui.FS()),
 		app.WithRoutes(endpoint.Register),
+		app.WithRouteOverride(app.RoutePluginJSON, endpoint.OverrideJSON),
 	)
 }

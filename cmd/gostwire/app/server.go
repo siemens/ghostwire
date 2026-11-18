@@ -93,7 +93,7 @@ func requestLogger(next http.Handler) http.Handler {
 func newHandler(cmd *cobra.Command, cizer containerizer.Containerizer, cfg *config) http.Handler {
 	r := mux.NewRouter()
 	r.Use(requestLogger)
-	registerRouteHandlers(r, cmd, cizer)
+	registerRouteHandlers(r, cmd, cizer, cfg)
 	for _, routes := range cfg.routes {
 		routes(r, cmd, cizer)
 	}

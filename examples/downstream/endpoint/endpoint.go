@@ -16,6 +16,20 @@ import (
 	"github.com/thediveo/nonstd/xslog"
 )
 
+// OverriddenHeader is the response header added to the upstream “/json”
+// endpoint.
+const OverriddenHeader = "X-Example-Override"
+
+// OverrideJSON overrides the upstream “/json” endpoint, adding the
+// [OverriddenHeader] response header before calling the upstream handler; it
+// is an app.RouteOverride.
+func OverrideJSON(upstream http.HandlerFunc, _ *cobra.Command, _ containerizer.Containerizer) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set(OverriddenHeader, "hello")
+		upstream(w, req)
+	}
+}
+
 // Hello is the response of the “/api/v1/hello” endpoint.
 type Hello struct {
 	Greeting   string `json:"greeting"`

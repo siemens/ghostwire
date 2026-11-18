@@ -62,6 +62,8 @@ The available options are:
 | `WithBrand(name)` | default of the `--brand` CLI flag, that is, the brand name passed to the web UI; see [Web UI](#web-ui-themes-and-branding). |
 | `WithUI(fsys)` | serves the web UI from the complete web UI build in `fsys`; `webui.FS()` returns the web UI that the upstream `Dockerfile` builds from `webappsrc` and embeds, see [Web UI](#web-ui-themes-and-branding). Without `WithUI`, the service serves only its HTTP endpoints. |
 | `WithRoutes(fn)` | `fn(router, cmd, containerizer)` registers additional HTTP handlers with the [gorilla/mux](https://github.com/gorilla/mux) router; can be passed multiple times. |
+| `WithRouteOverride(plugin, fn)` | `fn(upstream, cmd, containerizer)` returns the handler to use instead of the upstream handler of the route served by the named route plugin, see [HTTP Endpoints](#http-endpoints). |
+| `WithoutRoutes(plugins...)` | removes the upstream routes served by the named route plugins, see [HTTP Endpoints](#http-endpoints). |
 
 Instead of `app.Main` (which handles SIGINT/SIGTERM/SIGQUIT and the exit code),
 downstream main packages can also use `app.Run(ctx, opts...)` or
@@ -96,6 +98,41 @@ func Register(r *mux.Router, cmd *cobra.Command, cizer containerizer.Containeriz
     }).Methods(http.MethodGet)
 }
 ```
+
+#### Overriding Upstream Endpoints
+
+The upstream endpoints are served by route handler plugins, which are
+identified by their plugin names (not their URL paths):
+
+| Route plugin name | Constant | Endpoint |
+| --- | --- | --- |
+| `json` | `app.RoutePluginJSON` | `GET /json`: discovery results |
+| `mobyshark` | `app.RoutePluginMobyshark` | `GET /mobyshark`: capture target discovery results |
+| `mobydig` | `app.RoutePluginMobydig` | `GET /mobydig`: neighborhood services websocket |
+
+`app.WithRouteOverride(plugin, fn)` replaces the handler of the route served
+by the named route plugin, keeping its method and path. `fn` gets passed the
+upstream handler, so the override can call it, such as for post-processing its
+response, or completely reimplement the endpoint; multiple overrides of the
+same route plugin wrap each other in the order given:
+
+```go
+app.WithRouteOverride(app.RoutePluginJSON,
+    func(upstream http.HandlerFunc, cmd *cobra.Command, cizer containerizer.Containerizer) http.HandlerFunc {
+        return func(w http.ResponseWriter, req *http.Request) {
+            w.Header().Set("X-Foo", "bar")
+            upstream(w, req)
+        }
+    })
+```
+
+`app.WithoutRoutes(plugins...)` removes upstream routes, so their paths then get
+served by additional endpoints registered using `app.WithRoutes`, such as when
+reimplementing an endpoint with a different method, or otherwise by the web UI.
+
+Overriding or removing an unknown route plugin, or both overriding and removing
+the same route plugin, makes the service fail to start, so that typos as well
+as renamed or dropped upstream routes don't go unnoticed.
 
 Websocket endpoints should use
 [`cmd/gostwire/wsconn`](https://pkg.go.dev/github.com/siemens/ghostwire/v2/cmd/gostwire/wsconn),

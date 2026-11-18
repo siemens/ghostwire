@@ -74,5 +74,23 @@ Gostwire's own HTTP endpoints register themselves as [RouteHandler] plugins.
 Additional endpoints can be registered either as further [RouteHandler]
 plugins, or by passing [WithRoutes] options. Additional endpoints never shadow
 Gostwire's own endpoints, but always take precedence over the web UI.
+
+Gostwire's own endpoints can be explicitly overridden using [WithRouteOverride]
+by the plugin names of their route handler plugins, such as [RoutePluginJSON]
+for the “/json” endpoint, getting passed the upstream handler for optionally
+post-processing its responses:
+
+	app.WithRouteOverride(app.RoutePluginJSON,
+		func(upstream http.HandlerFunc, cmd *cobra.Command, cizer containerizer.Containerizer) http.HandlerFunc {
+			return func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("X-Foo", "bar")
+				upstream(w, req)
+			}
+		})
+
+Or they can be removed using [WithoutRoutes], so that their paths can be
+reimplemented using [WithRoutes]. Overriding or removing route plugins that
+don't exist makes the service fail to start, so that upstream route changes
+don't go unnoticed.
 */
 package app

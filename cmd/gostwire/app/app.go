@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/lxkns/containerizer"
 	_ "github.com/thediveo/lxkns/ops/mountineer/mntnssandbox" // pre-Go runtime C constructor; requires cgo.
+	"github.com/thediveo/nonstd/sets"
 
 	gostwire "github.com/siemens/ghostwire/v2"
 )
@@ -58,13 +59,15 @@ type RoutesFunc func(r *mux.Router, cmd *cobra.Command, cizer containerizer.Cont
 type Option func(*config)
 
 type config struct {
-	name        string
-	description string
-	banner      string
-	version     string
-	brand       string
-	uifs        fs.FS
-	routes      []RoutesFunc
+	name           string
+	description    string
+	banner         string
+	version        string
+	brand          string
+	uifs           fs.FS
+	routes         []RoutesFunc
+	routeOverrides map[string][]RouteOverride // by route plugin name
+	removedRoutes  sets.Set[string]           // route plugin names
 }
 
 func newConfig(opts ...Option) *config {
@@ -134,11 +137,47 @@ func WithUI(uifs fs.FS) Option {
 // WithRoutes registers additional HTTP handlers using the specified function.
 // It can be passed multiple times, registering in the order given. Additional
 // handlers cannot shadow the handlers registered as [RouteHandler] plugins,
-// but always take precedence over serving the web UI.
+// but always take precedence over serving the web UI. Use [WithRouteOverride]
+// and [WithoutRoutes] to override and remove [RouteHandler] plugin routes.
 func WithRoutes(fn RoutesFunc) Option {
 	return func(c *config) {
 		if fn != nil {
 			c.routes = append(c.routes, fn)
+		}
+	}
+}
+
+// WithRouteOverride overrides the handler of the route served by the route
+// handler plugin with the specified plugin name, such as [RoutePluginJSON],
+// keeping the route's method and path. The override gets passed the upstream
+// handler, which it can call, such as for post-processing its response, or
+// completely reimplement the route. It can be passed multiple times for the
+// same route plugin, with each override wrapping the previous one. The service
+// fails to start when there is no route plugin with the specified name.
+func WithRouteOverride(plugin string, override RouteOverride) Option {
+	return func(c *config) {
+		if override == nil {
+			return
+		}
+		if c.routeOverrides == nil {
+			c.routeOverrides = map[string][]RouteOverride{}
+		}
+		c.routeOverrides[plugin] = append(c.routeOverrides[plugin], override)
+	}
+}
+
+// WithoutRoutes removes the routes served by the route handler plugins with the
+// specified plugin names, such as [RoutePluginMobydig]. Their paths then get
+// served by any additional handlers registered using [WithRoutes], or
+// otherwise by the web UI. The service fails to start when there is no route
+// plugin with a specified name, or when it is also overridden.
+func WithoutRoutes(plugins ...string) Option {
+	return func(c *config) {
+		if c.removedRoutes == nil {
+			c.removedRoutes = sets.New[string]()
+		}
+		for _, plugin := range plugins {
+			c.removedRoutes.Add(plugin)
 		}
 	}
 }

@@ -42,7 +42,7 @@ func init() {
 							xslog.Error(err))
 					}
 				}
-		}, plugger.WithPlugin("json"))
+		}, plugger.WithPlugin(RoutePluginJSON))
 	plugger.Group[RouteHandler]().Register(
 		func(cmd *cobra.Command, cizer containerizer.Containerizer) (string, string, http.HandlerFunc) {
 			return "GET",
@@ -58,5 +58,5 @@ func init() {
 							xslog.Error(err))
 					}
 				}
-		}, plugger.WithPlugin("mobyshark"))
+		}, plugger.WithPlugin(RoutePluginMobyshark))
 }

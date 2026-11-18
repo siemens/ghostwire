@@ -102,5 +102,5 @@ func init() {
 						}
 					}
 				}
-		}, plugger.WithPlugin("mobydig"))
+		}, plugger.WithPlugin(RoutePluginMobydig))
 }

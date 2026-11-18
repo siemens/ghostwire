@@ -62,6 +62,9 @@ func NewRootCmd(opts ...Option) (rootCmd *cobra.Command) {
 
 // serve runs the service until the command's context is done.
 func serve(cmd *cobra.Command, cfg *config) error {
+	if err := cfg.checkRoutes(routePlugins()); err != nil {
+		return err
+	}
 	versionAttrs := []any{slog.String("version", cfg.version)}
 	if cfg.version != gostwire.SemVersion {
 		versionAttrs = append(versionAttrs, slog.String("ghostwire", gostwire.SemVersion))
