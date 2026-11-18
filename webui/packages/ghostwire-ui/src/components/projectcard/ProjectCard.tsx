@@ -92,6 +92,10 @@ export interface ProjectCardProps {
 
 /**
  * `Project` renders a (Docker) composer project group.
+ *
+ * Docker composer projects group sets of containers. This grouping is indicated
+ * using `ProjectCard` components. The avatar icon depends on the flavor of the
+ * project.
  */
 const ProjectCard = ({ project, children }: ProjectCardProps) => {
 

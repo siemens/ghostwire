@@ -1,1 +1,0 @@
-(*For an example, please see the `Breadboard` component.*)

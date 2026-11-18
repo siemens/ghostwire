@@ -195,7 +195,8 @@ export interface ContaineeBadgeProps {
  *   stand-alone process. Bind-mounted boxes get the theme's default color
  *   instead.
  * - a tooltip with the name and optional status of the boxed entity (can be
- *   disabled via the `notooltip` property).
+ *   disabled via the `notooltip` property). The initial process with PID 1
+ *   also gets its own distinctive tooltip description.
  */
 export const ContaineeBadge = ({
     containee,

@@ -26,6 +26,9 @@ export default meta
 
 type Story = StoryObj<typeof NetnsDetailCard>
 
+/**
+ * A single network namespace details card ... with lots of details, it seems.
+ */
 export const InitialNamespace: Story = {}
 
 export const Crowded: Story = {

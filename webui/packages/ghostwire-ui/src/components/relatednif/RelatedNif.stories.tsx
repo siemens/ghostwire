@@ -28,7 +28,13 @@ export default meta
 
 type Story = StoryObj<typeof RelatedNif>
 
-/** The related nif is in a different netns, so its containees are shown too. */
+/**
+ * For network interfaces with related interfaces, (only) these related network
+ * interfaces are rendered. If the related network interface is in a different
+ * network namespace, then additional information about the related network
+ * namespace is rendered in form of the entities (containers, stand-alone
+ * processes) "inside" the related namespace.
+ */
 export const Veth: Story = {}
 
 export const VethPeer: Story = {
@@ -43,7 +49,11 @@ export const Macvlan: Story = {
     },
 }
 
-/** Renders nothing, as there are no related network interfaces. */
+/**
+ * **Nothing gets rendered** for network interfaces without any related
+ * interfaces, such as hardware interfaces without attached macvlan interfaces,
+ * the loopback interface, et cetera.
+ */
 export const Unrelated: Story = {
     args: {
         nif: { ...nifHw, macvlans: undefined },

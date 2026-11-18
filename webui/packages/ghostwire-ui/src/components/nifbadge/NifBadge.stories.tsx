@@ -64,15 +64,30 @@ export default meta
 
 type Story = StoryObj<typeof NifBadge>
 
+/**
+ * "Physical" network interfaces are designated by a "NIC" icon preceding the
+ * badge.
+ */
 export const Physical: Story = {}
 
+/**
+ * A network interface put into promiscuous mode displays a lughole
+ * (eavesdropper) icon.
+ */
 export const Promiscuous: Story = {
     args: {
         nif: { ...nifHw, isPromiscuous: true },
     },
 }
 
-/** "Unknown" renders the same as "up": the driver doesn't report any status. */
+/**
+ * The operational status of a network interface is rendered inside the badge
+ * using an icon. As an additional visual clue, the status icon is colored
+ * according to state. Please note that the "unknown" status is rendered the
+ * same as the "up" state: "unknown" means that the corresponding network
+ * interface driver doesn't report any status, yet the interface is not
+ * considered to be down.
+ */
 export const OperationalStates: Story = {
     render: () => (
         <Tiles>
@@ -86,6 +101,7 @@ export const OperationalStates: Story = {
     ),
 }
 
+/** The type of network interface is indicated by an icon inside the badge. */
 export const Kinds: Story = {
     render: () => (
         <Tiles>
@@ -134,6 +150,12 @@ export const Button: Story = {
     },
 }
 
+/**
+ * A network interface badge optionally can stretch in order to take up the
+ * available horizontal space; this requires the `stretch` property, but also
+ * suitable element width setting, as otherwise the `NifBadge` component won't
+ * stretch.
+ */
 export const Stretched: Story = {
     args: {
         stretch: true,
@@ -141,6 +163,12 @@ export const Stretched: Story = {
     },
 }
 
+/**
+ * In some contexts where an outer component already provides a tooltip, you
+ * might not want to have an additional tooltip on the network interface badge,
+ * as this quickly gets confusing. Use `notooltip` to switch off the tooltip on
+ * a network interface badge.
+ */
 export const NoTooltip: Story = {
     args: {
         notooltip: true,
@@ -155,7 +183,13 @@ export const Checkbox: Story = {
     },
 }
 
-/** Capture buttons need the "enableMonolith" dynamic variable. */
+/**
+ * Additional network interface capture buttons need to be requested through
+ * the `capture` property and then are enabled only through the dynamic
+ * variable `enableMonolith`, passed in by the server serving the application
+ * (see also `DynVarsProvider`, which this story uses to enable capture
+ * buttons).
+ */
 export const Capture: Story = {
     args: {
         capture: true,
@@ -165,6 +199,10 @@ export const Capture: Story = {
     ],
 }
 
+/**
+ * Depending on the alignment of the badge, the capture button will be shown
+ * either to the right or left of the badge.
+ */
 export const CaptureAlignedRight: Story = {
     args: {
         capture: true,
@@ -173,4 +211,17 @@ export const CaptureAlignedRight: Story = {
     decorators: [
         (Story) => <DynVarsProvider value={{ enableMonolith: true }}><Story /></DynVarsProvider>,
     ],
+}
+
+/**
+ * A plain network interface badge side-by-side to a button badge. The button
+ * variant has rounded edges and reacts to hovering the mouse over it or
+ * clicking it, not least with a ripple animation.
+ */
+export const PlainVersusButton: Story = {
+    render: () => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <NifBadge nif={nifHw} /> ⟵ versus ⟶ <NifBadge nif={nifHw} button />
+        </Box>
+    ),
 }

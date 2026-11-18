@@ -21,6 +21,11 @@ export default meta
 
 type Story = StoryObj<typeof DynVarsProvider>
 
+/**
+ * Point in case for overriding the dynamic variables passed in to your
+ * application by the server are these stories, where we enable capture links;
+ * this story shows the working principle.
+ */
 export const Override: Story = {
     render: () => <>
         <FooBar text="default dynvars" />

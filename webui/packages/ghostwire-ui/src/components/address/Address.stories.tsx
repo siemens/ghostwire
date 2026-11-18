@@ -4,8 +4,10 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { AddressFamily } from '../../models/gw'
-import { nifHw, nifLo } from '../../models/gw/mock'
+import { Box, Paper, Typography } from '@mui/material'
+
+import { AddressFamily, orderAddresses } from '../../models/gw'
+import { mockAddresses, nifHw, nifLo } from '../../models/gw/mock'
 
 import { Address } from './Address'
 
@@ -54,6 +56,11 @@ export const AllZeroMAC: Story = {
     },
 }
 
+/**
+ * In some contexts the address family icon will clutter and distract, so it
+ * can be switched off using the `nofamilyicon` property. Hopefully, IKEA
+ * customer relationship management won't object...
+ */
 export const NoFamilyIcon: Story = {
     args: {
         address: loIPv4,
@@ -61,9 +68,34 @@ export const NoFamilyIcon: Story = {
     },
 }
 
+/**
+ * The tooltip can optionally be disabled; this is used when displaying network
+ * addresses as part of routes, where inner tooltips would be really vexing and
+ * annoying.
+ */
 export const NoTooltip: Story = {
     args: {
         address: loIPv4,
         notooltip: true,
     },
+}
+
+/**
+ * Various addresses, IPv4, IPv6, and even some MAC-layer addresses; please
+ * note that this includes an all-zero MAC address, which isn't rendered at all
+ * (such all-zero MACs pop up in the context of loopback interfaces).
+ */
+export const AllAddresses: Story = {
+    render: () => <>
+        {[...mockAddresses].sort(orderAddresses).map((addr, idx) => (
+            <Box key={idx} sx={{ py: 1 }}>
+                <Typography variant="body1" color="textSecondary">
+                    {addr.address}/{addr.prefixlen}
+                </Typography>
+                <Paper variant="outlined" sx={{ p: 1 }}>
+                    <Address address={addr} />
+                </Paper>
+            </Box>
+        ))}
+    </>,
 }

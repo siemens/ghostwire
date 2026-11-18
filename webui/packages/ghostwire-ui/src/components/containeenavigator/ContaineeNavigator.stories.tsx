@@ -60,6 +60,10 @@ type Story = StoryObj<typeof ContaineeNavigator>
 
 export const Standard: Story = {}
 
+/**
+ * Thanks to our mock data, this containee navigator shows quite some stuff,
+ * including Kubernetes pods, neatly grouped into namespaces.
+ */
 export const FilterEmpty: Story = {
     args: {
         filterEmpty: true,

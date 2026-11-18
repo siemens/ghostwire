@@ -51,6 +51,14 @@ export const Multicast: Story = {
     },
 }
 
+/**
+ * This story shows the routes of the initial network namespace, that is, of
+ * the host IP stack; please note that we don't show routing entries from the
+ * so-called "local table" (number 255) on purpose in order to avoid clutter.
+ *
+ * Just to show off in this story, we also sort the routing entries by address
+ * family first, and then by destination address.
+ */
 export const AllRoutesOfHost: Story = {
     render: (args) => <>
         {routes.map((route, idx) => (

@@ -63,7 +63,7 @@ application and using the discovery REST API directly.
   pleasingly warm hands.
 
 - UI components can be viewed and worked upon independently of the complete
-  application in form of a "UI style guide". Please see below for details.
+  application in Storybook. Please see below for details.
 
 - the component architecture of React improves development and maintenance of
   the Ghostwire UI. Additionally, the UI can now draw from several large eco
@@ -189,8 +189,8 @@ For instance, while network namespace reference their embraced (primitive)
 containees, these containees also back-reference the network namespace they're
 contained (well, confined) in.
 
-For more details, please refer to the introduction in the live style guide:
-`yarn styleguide` is your friend here.
+For more details, please refer to the introduction in Storybook: `yarn
+storybook` is your friend here.
 
 ## No Redux
 

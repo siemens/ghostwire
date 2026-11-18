@@ -24,6 +24,13 @@ export default meta
 
 type Story = StoryObj<typeof IdContext>
 
+/**
+ * This story demonstrates how to introduce separate DOM element identifier
+ * contexts, or prefixes. The decorator wrapping these stories automatically
+ * establishes identifier contexts for each story individually. However, in
+ * your own applications you need to establish different contexts "manually" as
+ * required.
+ */
 export const SeparateContexts: Story = {
     render: () => (
         <Stack spacing={2} sx={{ p: 2 }}>

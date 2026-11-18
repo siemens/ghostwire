@@ -51,6 +51,11 @@ export interface GwMarkdownProps {
  * Renders the given MDX using Material-UI typography components and applies
  * additional Ghostwire-specific styling.
  *
+ * This component is a wrapper around the `MuiMarkdown` component and sets some
+ * additional Ghostwire-specific CSS as well as allowing to specify shortcodes
+ * (components) to be made available to the MDX without the need to import them
+ * explicitly.
+ *
  * For convenience, this `GwMarkdown` component renders hyperlinks differently,
  * depending on whether they are relative or absolute hyperlinks:
  * - relative hyperlinks are considered app-internal and are thus rendering

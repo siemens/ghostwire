@@ -225,8 +225,9 @@ export default meta
 type Story = StoryObj<typeof Breadboard>
 
 /**
- * Hover over network interface badges or the wires between them to enjoy some
- * wire animation.
+ * This story puts all the discovered network namespaces on the `Breadboard`
+ * and wires up the network interfaces. Hover over network interface badges or
+ * the wires between them to enjoy some wire animation...
  */
 export const AllNetworkNamespaces: Story = {
     render: () => wired(allNetnses),

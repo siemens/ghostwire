@@ -4,5 +4,4 @@ build-branded/
 **/storybook-static/
 test-results/
 playwright-report/
-styleguidist/
 .yarn/install-state.gz

@@ -13,7 +13,6 @@ node_modules/
 # production
 /build
 /build-branded
-/styleguide
 storybook-static/
 
 # misc

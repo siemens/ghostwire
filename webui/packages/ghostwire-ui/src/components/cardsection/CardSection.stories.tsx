@@ -30,8 +30,17 @@ export default meta
 
 type Story = StoryObj<typeof CardSection>
 
+/**
+ * Unless specified otherwise, a card section shows its caption as well as its
+ * children.
+ */
 export const Standard: Story = {}
 
+/**
+ * However, card sections can be made collapsible/expandable by specifying
+ * their initial `collapsible=` state `expand` or `collapse` (but not `never`).
+ * Users then can collapse or expand a section as to their hearts' desire.
+ */
 export const Expanded: Story = {
     args: {
         collapsible: 'expand',

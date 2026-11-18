@@ -4,6 +4,8 @@
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { Paper } from '@mui/material'
+
 import { OperationalState } from '../../models/gw'
 import { initialNetns, nifHw } from '../../models/gw/mock'
 
@@ -50,4 +52,16 @@ export const Disabled: Story = {
     args: {
         disabled: true,
     },
+}
+
+/** Small-sized and medium-sized target capture buttons. */
+export const Sizes: Story = {
+    render: (args) => <>
+        <Paper variant="outlined" sx={{ p: 1, mb: 1 }}>
+            <TargetCapture {...args} size="small" />
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1 }}>
+            <TargetCapture {...args} size="medium" />
+        </Paper>
+    </>,
 }

@@ -24,7 +24,7 @@ declare global {
  * to this application (if any). This context automatically defaults to the
  * dynamic variables passed in, so applications do not necessarily put in any
  * `<DynVarsProvider>` into their component tree, unless they want to override
- * any global dynamic variables, such as in the styleguide examples.
+ * any global dynamic variables, such as in Storybook stories.
  */
 const DynVarsContext = React.createContext(
     window.dynvars || ({} as DynamicVars))

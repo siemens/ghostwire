@@ -55,16 +55,33 @@ type Story = StoryObj<typeof ContaineeBadge>
 
 export const Standard: Story = {}
 
-/** The tooltips reflect the type of containee. */
+/**
+ * These are examples of `ContaineeBadge`s for bind-mounted namespaces,
+ * stand-alone processes attached to a namespace, and containers – also with
+ * different flavors. Please notice how the tooltips reflect the type of
+ * containee as well as the type of container.
+ */
 export const Types: Story = {
     render: () => badges(types),
 }
 
-/** The tooltips reflect the container state. */
+/**
+ * Container `ContaineeBadge`s in various states. Please notice how the
+ * tooltips reflect the container status.
+ */
 export const DockerStates: Story = {
     render: () => badges(dockerStates),
 }
 
+/**
+ * Additionally, a `ContaineeBadge` might act as a button referencing/linking to
+ * the namespace UI element the containee is attached to. When acting as links,
+ * `ContaineeBadge`s appear as flat UI buttons (including ripple effect, et
+ * cetera), yet keep their status indication.
+ *
+ * Use the `button` property (as well as an `onClick` callback handler) to
+ * enable this aspect on a `ContaineeBadge`.
+ */
 export const Button: Story = {
     args: {
         button: true,
@@ -78,7 +95,13 @@ export const Angled: Story = {
     },
 }
 
-/** The capture "fin" button is rendered next to the containee badge. */
+/**
+ * A containee badge optionally can show an additional capture "fin" button,
+ * rendered next to the containee badge. The capture button always appears to
+ * the right of the containee badge; it does not obey text direction, as the
+ * badge text direction is ltr due to using ASCII latin glyphs (even if
+ * intermediate APIs or transport protocols might use Unicode).
+ */
 export const Capture: Story = {
     args: {
         capture: true,
@@ -88,6 +111,10 @@ export const Capture: Story = {
     ],
 }
 
+/**
+ * Without any tooltip, using `notooltip`, so no tooltip appears when hovering
+ * with the mouse (or a pen) over the containee badge.
+ */
 export const NoTooltip: Story = {
     args: {
         notooltip: true,

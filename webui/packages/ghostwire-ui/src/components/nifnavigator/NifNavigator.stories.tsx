@@ -2,16 +2,18 @@
 //
 // SPDX-License-Identifier: MIT
 
+import { useState } from 'react'
+
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 
-import { Box } from '@mui/material'
+import { Box, Paper, Typography } from '@mui/material'
 
 import { DynVarsProvider } from '../dynvars'
-import { orderNifByName } from '../../models/gw'
+import { firstContainee, orderNifByName } from '../../models/gw'
 import { discovery, nifHw, nifLo, nifVeth1, nifVeth2 } from '../../models/gw/mock'
 
-import { NifNavigator } from './NifNavigator'
+import { NifNavigator, type NifNavigatorProps } from './NifNavigator'
 
 // many "eth0" VETH interfaces, belonging to different containers.
 const veths = Object.values(discovery.networkNamespaces)
@@ -77,6 +79,13 @@ export const Checkable: Story = {
     },
 }
 
+/**
+ * You'll most probably see several `eth0` network interfaces, which actually
+ * are VETH interfaces ... rest assured, they belong to different containers,
+ * this story just doesn't show the containers. When you click on such a
+ * network interface badge, you'll see the related VETH peer interface and the
+ * container it belongs to (usually `init (1)`).
+ */
 export const SeveralVeths: Story = {
     render: (args) => <>
         {veths.map(nif => (
@@ -85,4 +94,38 @@ export const SeveralVeths: Story = {
             </Box>
         ))}
     </>,
+}
+
+// Keeps track of the most recent navigation in order to show it.
+const NavigatedToDemo = (args: NifNavigatorProps) => {
+    const [navigatedTo, setNavigatedTo] = useState('')
+    return <>
+        <Typography>NAVIGATED TO: {navigatedTo}</Typography>
+        {[nifHw, ...veths].map(nif => (
+            <Paper variant="outlined" sx={{ p: 1, my: 1 }} key={`${nif.netns.netnsid}-${nif.name}`}>
+                <NifNavigator
+                    {...args}
+                    nif={nif}
+                    onNavigation={(navnif) => {
+                        args.onNavigation?.(navnif)
+                        setNavigatedTo(`${navnif.name} [containee: ${firstContainee(navnif.netns).name}]`)
+                    }}
+                />
+            </Paper>
+        ))}
+    </>
+}
+
+/**
+ * This story renders some `NifNavigator` components, including a MACVLAN
+ * master interface as well as a few VETH peer interfaces. When clicking on a
+ * (navigatable) network interface badge, a pop-up menu appears listing the
+ * related network interfaces.
+ *
+ * When selecting one of the related network interfaces, the "NAVIGATED TO:"
+ * information will update accordingly to show that the callback triggered
+ * correctly and also got correct interface navigation information.
+ */
+export const NavigatedTo: Story = {
+    render: (args) => <NavigatedToDemo {...args} />,
 }

@@ -67,8 +67,23 @@ export const WithLo: Story = {
 }
 
 /**
- * Hides lo interfaces as well as non-container network namespaces with only lo;
- * the "network:none" container stays visible including its lo.
+ * This story has filtering enabled:
+ *
+ * - filter out (hide) `lo` loopback network interfaces.
+ * - filter out (hide) non-container network namespaces with only a single,
+ *   lonely loopback network interface; the "network:none" container stays
+ *   visible including its lo.
+ *
+ * Please note that this story filters out containers in order to reduce the
+ * number of network namespaces rendered, except for a few white-listed
+ * containers only and namespaces with only a loopback network interface. The
+ * latter namespaces are then filtered out in the final rendering using the
+ * `filterEmpty` property of the `NetnsBreadboard` component.
+ *
+ * A nice side effect of this story is that it shows that the wire rendering
+ * should correctly work with incomplete wiring, where some network
+ * peer/master/... network interfaces in a related set of network interfaces
+ * haven't been rendered.
  */
 export const Filtered: Story = {
     args: {

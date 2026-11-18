@@ -33,7 +33,13 @@ export default meta
 
 type Story = StoryObj<typeof NifAddressList>
 
-/** The MAC address, followed by the IPv4 and then the IPv6 addresses. */
+/**
+ * The MAC address, followed by the IPv4 and then the IPv6 addresses.
+ *
+ * Please note that the address family icon is centered vertically with respect
+ * to the font's baseline, as MAC, IPv4 and IPv6 addresses don't contain any
+ * glyphs with descenders.
+ */
 export const Standard: Story = {}
 
 /** Only the IPv4 and IPv6 addresses, without the MAC address. */

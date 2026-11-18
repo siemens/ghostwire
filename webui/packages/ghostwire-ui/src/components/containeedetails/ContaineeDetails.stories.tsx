@@ -28,6 +28,10 @@ type Story = StoryObj<typeof ContaineeDetails>
 
 export const Container: Story = {}
 
+/**
+ * This component also supports filtering by IP address family in order to
+ * avoid severe shocks with IPv6-adverse users.
+ */
 export const IPv4Only: Story = {
     name: 'IPv4 Only',
     args: {
