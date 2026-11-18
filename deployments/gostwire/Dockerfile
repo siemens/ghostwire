@@ -216,7 +216,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # stage 2.0 extracts only the manifests from webappsrc, as well as any package
 # tarballs (such as from "yarn pack"), so that installing the dependencies is
 # cached as long as these don't change.
-FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webuimanifests
+FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-trixie-slim AS webuimanifests
 WORKDIR /webappsrc
 COPY --from=webappsrc . ./
 RUN mkdir /manifests && \
@@ -225,12 +225,19 @@ RUN mkdir /manifests && \
            -o -path ./.yarn/releases -o -path ./.yarn/plugins -o -path ./.yarn/patches \) -print | \
     tar -cf - -T - | tar -xf - -C /manifests
 
-FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-alpine AS webui
+FROM --platform=${BUILDPLATFORM} node:${NODE_VERSION}-trixie-slim AS webui
 ARG YARN_VERSION
+SHELL ["/bin/bash", "-o", "pipefail", "-ec"]
+# Use the same Debian (snapshot) package sources as the other stages, as this
+# Node.js image is based on the same Debian stable release.
+COPY --from=debian /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list.d/
+COPY --from=debian /etc/apt/apt.conf.d/99snapshot /etc/apt/apt.conf.d/
 # Always use this yarn version with the node-modules linker, regardless of
 # the yarn configuration of webappsrc; git is needed for git dependencies.
 WORKDIR /tmp/yarn
-RUN apk add --no-cache git && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates git && \
+    rm -rf /var/lib/apt/lists/* && \
     yarn set version ${YARN_VERSION} && \
     install -D -m 0644 .yarn/releases/yarn-${YARN_VERSION}.cjs /opt/yarn/yarn.cjs && \
     rm -rf /tmp/yarn /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
