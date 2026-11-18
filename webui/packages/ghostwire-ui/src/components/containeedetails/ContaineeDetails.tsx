@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 
 import ClearIcon from '@mui/icons-material/Clear'
 
-import { AddressFamily, type AddressFamilySet, type PrimitiveContainee, containeeDescription, type Container, ContainerState, containerStateString, isSandbox, containeeDisplayName, isContainer, orderAddresses, hiddenLabel } from '../../models/gw'
+import { AddressFamily, type AddressFamilySet, type PrimitiveContainee, containeeDescription, type Container, ContainerState, containerStateString, containeeDisplayName, isContainer, orderAddresses, hiddenLabel } from '../../models/gw'
 import { Address } from '../address'
 import StoppedState from '../../icons/containeestates/StoppedState'
 import PausedState from '../../icons/containeestates/PausedState'
@@ -195,6 +195,8 @@ export const ContaineeDetails = ({ containee, families: fams, className }: Conta
         ]
     }
 
+    // Only containees with processes have DNS configurations (and processes);
+    // there's nothing to render for process-less bind-mounted sandboxes.
     const cntr = containee as Container
     if (!cntr.dns) {
         return null
@@ -263,7 +265,7 @@ export const ContaineeDetails = ({ containee, families: fams, className }: Conta
                     <ContaineeTypeIcon containee={containee} forceStdIcon fontSize="inherit" color="disabled" />
                     &nbsp;{containeeDescription(containee)}
                 </>)}
-                {!isSandbox(containee) && [
+                {[
                     prop('command', cntr.ealdorman.cmdline.map((cmditem, idx) =>
                         <CmdlineItem key={idx}>{cmditem}</CmdlineItem>)),
                     prop('PID', cntr.ealdorman.pid),

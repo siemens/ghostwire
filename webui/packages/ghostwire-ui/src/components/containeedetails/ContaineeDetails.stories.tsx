@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { AddressFamily } from '../../models/gw'
 import { initialNetns } from '../../models/gw/mock'
-import { boundBox, containerBox } from '../../views/help/mockdata'
+import { containerBox } from '../../views/help/mockdata'
 
 import { ContaineeDetails } from './ContaineeDetails'
 
@@ -42,11 +42,5 @@ export const IPv4Only: Story = {
 export const InitialProcess: Story = {
     args: {
         containee: initialNetns.containers[0],
-    },
-}
-
-export const BindMount: Story = {
-    args: {
-        containee: boundBox,
     },
 }
