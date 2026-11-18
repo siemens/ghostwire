@@ -148,7 +148,7 @@ standalone service binary with the web UI embedded:
 
 ```bash
 (cd webui && yarn install && yarn build)
-go build -tags=osusergo,netgo,sqlite_omit_load_extension,webui \
+go build -tags=osusergo,netgo,webui \
     -ldflags="-s -w -extldflags=-static" ./cmd/gostwire
 sudo ./gostwire --debug
 ```

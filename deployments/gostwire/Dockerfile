@@ -45,7 +45,7 @@ ARG YARN_VERSION=4.18.1
 
 # Go build settings
 ARG LDFLAGS="-s -w -extldflags=-static"
-ARG TAGS="osusergo,netgo,sqlite_omit_load_extension"
+ARG TAGS="osusergo,netgo"
 
 # VERSION is the (git describe/tag) version to stamp the binary and web UI with.
 ARG VERSION=""
