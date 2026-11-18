@@ -71,9 +71,32 @@ init functions, so downstream main packages only need to blank-import them.
 # HTTP Endpoints
 
 Gostwire's own HTTP endpoints register themselves as [RouteHandler] plugins.
-Additional endpoints can be registered either as further [RouteHandler]
-plugins, or by passing [WithRoutes] options. Additional endpoints never shadow
-Gostwire's own endpoints, but always take precedence over the web UI.
+Downstream builds add their own endpoints by passing [WithRoutes] options, or
+as further [RouteHandler] plugins.
+
+For each request, the service uses the first registered route matching the
+request's method and path. It registers the routes in this order:
+
+  - all [RouteHandler] plugins, ordered by their plugin names and optional
+    placements,
+  - the routes of the [WithRoutes] options, in the order given,
+  - the web UI, if any, serving all remaining requests.
+
+Thus, a [WithRoutes] route with the same method and path as one of Gostwire's
+own endpoints never gets used: it cannot shadow the upstream endpoint, neither
+by accident nor on purpose. Use [WithRouteOverride] or [WithoutRoutes] instead,
+see below. Requests not matching an upstream route still reach [WithRoutes]
+routes, such as requests for the same path but a different method, or for
+paths below the path of a prefix route.
+
+In turn, [WithRoutes] routes always take precedence over the web UI. Please
+note that this includes paths of the web UI's own views, such as “/about”:
+such a view then still works when navigating inside the web UI, but not when
+directly loading or reloading its URL.
+
+Additional [RouteHandler] plugins get ordered among Gostwire's own route
+plugins, so they must not register the same method and path as an upstream
+endpoint, as they might shadow it, depending on their plugin names.
 
 Gostwire's own endpoints can be explicitly overridden using [WithRouteOverride]
 by the plugin names of their route handler plugins, such as [RoutePluginJSON]

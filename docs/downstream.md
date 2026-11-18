@@ -86,9 +86,34 @@ func init() {
 ### HTTP Endpoints
 
 Additional endpoints get registered either using `app.WithRoutes`, or as
-`app.RouteHandler` plugins. Additional endpoints never shadow the upstream
-endpoints (`/json`, `/mobyshark`, `/mobydig`), but always take precedence over
-the web UI. Endpoints run discoveries using the passed containerizer:
+`app.RouteHandler` plugins. For each request, the service uses the first
+registered route matching the request's method and path, registering the
+routes in this order:
+
+1. all `app.RouteHandler` plugins, including the upstream endpoints (`/json`,
+   `/mobyshark`, `/mobydig`), ordered by their plugin names and optional
+   placements,
+2. the routes of the `app.WithRoutes` options, in the order given,
+3. the web UI, if any, serving all remaining requests.
+
+Thus, an `app.WithRoutes` route with the same method and path as an upstream
+endpoint never gets used, so it can't shadow the upstream endpoint, neither by
+accident nor on purpose; please see [Overriding Upstream
+Endpoints](#overriding-upstream-endpoints) instead. Requests not matching an
+upstream route still reach `app.WithRoutes` routes, such as requests for the
+same path but a different method, or for paths below the path of a prefix
+route.
+
+In turn, `app.WithRoutes` routes always take precedence over the web UI. This
+includes paths of the web UI's own views, such as `/about`: such a view then
+still works when navigating inside the web UI, but not when directly loading or
+reloading its URL.
+
+Additional `app.RouteHandler` plugins get ordered among the upstream route
+plugins, so they must not register the same method and path as an upstream
+endpoint, as they might shadow it, depending on their plugin names.
+
+Endpoints run discoveries using the passed containerizer:
 
 ```go
 func Register(r *mux.Router, cmd *cobra.Command, cizer containerizer.Containerizer) {
