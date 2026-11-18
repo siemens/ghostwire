@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<!-- the Gostwire service rewrites the base element and the dynamic variables -->
+	<base href="/" />
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%236a1b9a' d='M12 2 2 22h20z'/%3E%3C/svg%3E" />
+	<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" />
+	<meta name="theme-color" content="#6a1b9a" />
+	<meta name="description" content="Example Netview virtual network discovery" />
+	<title>Example Netview</title>
+	<script>window.dynvars = {}</script>
+	<script>if (!!window.dynvars.brand) { document.title = window.dynvars.brand }</script>
+	<style>
+		#root:not(:empty)+.spinner {
+			display: none;
+		}
+
+		.spinner {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 12ex;
+			margin: -6ex 0 0 -6ex;
+		}
+	</style>
+</head>
+
+<body>
+	<noscript>You need to enable JavaScript to run the Example Netview app.</noscript>
+	<div id="root"></div>
+	<div class="spinner" id="example-spinner">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+			<path fill="#6a1b9a" d="M12 2 2 22h20z" />
+		</svg>
+	</div>
+	<script type="module" src="/src/index.tsx"></script>
+</body>
+
+</html>

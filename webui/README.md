@@ -173,7 +173,8 @@ The solution deployed by our Ghostwire UI is thus as follows:
 - to build a static distributable in `build/`: `yarn build`.
 
 - to build with different MUI themes and branding: `VITE_APP_CONFIG=<config
-  module> yarn build`, please see [Downstream
+  module> yarn build`, optionally with `VITE_APP_INDEX_HTML=<page shell>`;
+  please see [Downstream
   Distributions](../docs/downstream.md#web-ui-themes-and-branding).
 
 - to lint and type-check: `yarn lint` and `yarn typecheck`.

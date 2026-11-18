@@ -18,6 +18,18 @@ test.describe('non-default theme and branding', () => {
         await expect(page.locator('link[rel~="icon"]')).toHaveAttribute('href', /6a1b9a/)
     })
 
+    test('serves its own page shell', async ({ page, request }) => {
+        const shell = await (await request.get('/')).text()
+        expect(shell).toContain('<title>Example Netview</title>')
+        expect(shell).toContain('<meta name="description" content="Example Netview virtual network discovery" />')
+        expect(shell).toContain('You need to enable JavaScript to run the Example Netview app.')
+        expect(shell).toMatch(/<script type="module" crossorigin src="\.\/assets\/index-[^"]+\.js">/)
+        expect(shell).not.toContain('Ghostwire')
+        await page.goto('/w')
+        await expect(page.locator('#example-spinner')).toBeHidden()
+        await expect(page.getByRole('banner')).toContainText(brand)
+    })
+
     test('applies the light theme options', async ({ page }) => {
         await page.emulateMedia({ colorScheme: 'light' })
         await gotoAndDiscover(page, '/w')

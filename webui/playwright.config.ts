@@ -39,7 +39,10 @@ export default defineConfig({
         },
         {
             command: `yarn workspace ghostwire-app vite build --outDir ${brandedOutDir} && yarn workspace ghostwire-app vite preview --outDir ${brandedOutDir} --host 127.0.0.1 --port ${brandedPort} --strictPort`,
-            env: { VITE_APP_CONFIG: 'e2e/branded/overlay/config.tsx' },
+            env: {
+                VITE_APP_CONFIG: 'e2e/branded/overlay/config.tsx',
+                VITE_APP_INDEX_HTML: 'e2e/branded/overlay/index.html',
+            },
             url: `http://127.0.0.1:${brandedPort}`,
             reuseExistingServer: false,
             timeout: 180_000,

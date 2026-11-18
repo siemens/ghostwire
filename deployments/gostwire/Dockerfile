@@ -25,7 +25,8 @@
 # Downstream builds can also theme and brand the web UI built from webappsrc by
 # passing an overlay directory as the "webappoverlay" build context, which gets
 # placed in "overlay/" inside the web UI sources, together with the
-# VITE_APP_CONFIG and optionally VITE_APP_PUBLIC_DIR build args, such as:
+# VITE_APP_CONFIG and optionally VITE_APP_PUBLIC_DIR and VITE_APP_INDEX_HTML
+# build args, such as:
 #
 #   --build-context webappoverlay=../foo/webui-overlay \
 #   --build-arg VITE_APP_CONFIG=overlay/config.tsx
@@ -253,9 +254,11 @@ RUN for env in .env packages/*/.env; do \
             sed -i "s/^VITE_REACT_APP_GIT_VERSION=.*/VITE_REACT_APP_GIT_VERSION=${VERSION#v}/" "${env}"; \
         fi; \
     done
-# app configuration module and static assets directory, relative to /webui.
+# app configuration module, static assets directory, and index.html page
+# shell, relative to /webui.
 ARG VITE_APP_CONFIG=""
 ARG VITE_APP_PUBLIC_DIR=""
+ARG VITE_APP_INDEX_HTML=""
 RUN yarn build
 
 # -- 3. stage ---------------------------------------------------------------

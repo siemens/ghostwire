@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 // An example app configuration overlay with non-default themes and branding,
-// built using VITE_APP_CONFIG=e2e/branded/overlay/config.tsx.
+// built using VITE_APP_CONFIG=e2e/branded/overlay/config.tsx, together with its
+// own page shell using VITE_APP_INDEX_HTML=e2e/branded/overlay/index.html.
 
 import { createSvgIcon } from '@mui/material'
 

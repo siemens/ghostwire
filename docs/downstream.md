@@ -278,6 +278,14 @@ Similarly, `VITE_APP_PUBLIC_DIR` optionally specifies a different directory of
 static assets instead of `packages/app/public/` (favicon, app icons,
 `manifest.json`); it must contain all files referenced from `index.html`.
 
+Finally, `VITE_APP_INDEX_HTML` optionally specifies a different `index.html`
+page shell instead of `packages/app/index.html`, such as with a different title,
+description, loading spinner, and links to favicon and app icons; this is what
+the browser shows before the app has loaded. Vite processes it as usual,
+bundling its scripts and assets. Besides the [page shell
+requirements](#page-shell-requirements), it must load the app using
+`<script type="module" src="/src/index.tsx"></script>`.
+
 The overlay module can import from `ghostwire-ui` and all of the web UI's
 dependencies, as well as MDX, SVG and other assets next to it; it must be placed
 inside `webui/` (such as in `webui/overlay/`) so that it can resolve the web
@@ -289,23 +297,43 @@ cp -r ../../foo/webui-overlay overlay
 VITE_APP_CONFIG=overlay/config.tsx yarn build
 ```
 
-The e2e test overlay in `webui/e2e/branded/overlay/` is a complete example; the
+The e2e test overlay in `webui/e2e/branded/overlay/` is a complete example,
+including its own page shell; the
 `branded` Playwright project builds and tests it (`make e2e`), and the
 "Ghostwire/App Theming and Branding" Storybook story shows it.
 
 In container image builds, the `Dockerfile` copies an optional `webappoverlay`
 build context into `overlay/` inside the web UI sources, and passes the
-`VITE_APP_CONFIG` and `VITE_APP_PUBLIC_DIR` build args to the web UI build:
+`VITE_APP_CONFIG`, `VITE_APP_PUBLIC_DIR`, and `VITE_APP_INDEX_HTML` build args
+to the web UI build:
 
 ```bash
 scripts/docker-build.sh deployments/gostwire/Dockerfile \
     --build-context webappsrc=./webui \
     --build-context webappoverlay=../foo/webui-overlay \
     --build-arg VITE_APP_CONFIG=overlay/config.tsx \
+    --build-arg VITE_APP_INDEX_HTML=overlay/index.html \
     ...
 ```
 
 Without these, the default Ghostwire web UI gets built.
+
+### Page Shell Requirements
+
+The Gostwire service rewrites the `index.html` page shell when serving it, so
+any page shell must contain:
+
+- `<base href="/" />`, which the service rewrites to the base path of the web
+  UI, such as when being served behind a path-rewriting reverse proxy,
+- `<script>window.dynvars = {}</script>`, verbatim, which the service fills in
+  with the brand name and icon, whether capture links are enabled, and the base
+  path,
+- the element the app gets rendered into, `<div id="root"></div>`, and the
+  app's entry module script.
+
+Optionally, `<script>if (!!window.dynvars.brand) { document.title =
+window.dynvars.brand }</script>` sets the brand name passed by the service as
+the title right away, instead of only after the app has loaded.
 
 ### Own Web App Using the Library
 
@@ -345,9 +373,8 @@ const App = createGhostwireApp({ themes: { /* ... */ }, branding: { /* ... */ } 
 createRoot(document.getElementById('root')!).render(<App />)
 ```
 
-Its `index.html` must contain `<base href="/" />` and
-`<script>window.dynvars = {}</script>`, which the service rewrites with the
-base path and the dynamic variables.
+Its `index.html` page shell must meet the [page shell
+requirements](#page-shell-requirements).
 
 The example web app in `examples/downstream/webui/` is built by CI.
 
