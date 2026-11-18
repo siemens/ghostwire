@@ -153,6 +153,25 @@ go build -tags=osusergo,netgo,sqlite_omit_load_extension,webui \
 sudo ./gostwire --debug
 ```
 
+For development, leave out the `webui` build tag: the binary then doesn't
+embed the web UI, but serves it from the `webui/build` directory relative to
+its current working directory, so start it from the repository root. After
+rebuilding the web UI, reloading it in the browser suffices, without rebuilding
+the binary:
+
+```bash
+go build ./cmd/gostwire
+sudo ./gostwire --debug
+```
+
+For web UI development with hot reloading, additionally start the Vite
+development server: it serves the web UI on port 3400 and forwards the API
+calls to the Gostwire service on port 5000:
+
+```bash
+cd webui && yarn dev
+```
+
 ### Downstream Distributions
 
 Downstream builds can compose their own service binaries and container images
