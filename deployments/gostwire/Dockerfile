@@ -60,7 +60,7 @@ FROM --platform=${BUILDPLATFORM} tonistiigi/xx:1.10.0@sha256:40fe21f44bb8cddf1eb
 #
 # Debian stable with the Go toolchain, and its package sources pointing to our
 # fixed snapshot.
-FROM --platform=${BUILDPLATFORM} golang:1.26-trixie@sha256:9ce8fcba4b6fa1ae0fc1c00d255c073cfb9f9783237bb6315512fed4051d83ce AS debian
+FROM --platform=${BUILDPLATFORM} golang:1.27-trixie@sha256:f18c3d73a184fb0582828510722e723b63a93f7188d11dd223d9be6f6880e65d AS debian
 
 ARG DEBIAN_SNAPSHOT
 
